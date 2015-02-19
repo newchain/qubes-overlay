@@ -97,11 +97,11 @@ src_install() {
 	doins qubes-rpc/qubes.{Filecopy,OpenInVM}
 
 	exeinto '/usr/bin'
-	exeopts '-m0711'
+	exeopts '-m0755'
 	doexe qubes-rpc/qvm-{copy-to-vm,move-to-vm,mru-entry,open-in-dvm,open-in-vm,run}
 
 	exeinto '/usr/lib/qubes'
-	exeopts '-m0700'
+	exeopts '-m0711'
 	doexe qubes-rpc/{qfile-agent,qfile-unpacker,tar2qfile}
 
 	insinto '/usr/lib/tmpfiles.d'
