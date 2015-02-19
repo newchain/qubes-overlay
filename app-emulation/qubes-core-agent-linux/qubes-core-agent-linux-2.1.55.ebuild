@@ -81,9 +81,6 @@ src_install() {
 
 	emake DESTDIR="${D}" install-sysvinit
 
-	insinto '/etc/tmpfiles.d'
-	doins "${FILESDIR}/qubes.conf"
-
 	insinto '/etc/qubes-rpc'
 	doins qubes-rpc/qubes.{Filecopy,OpenInVM}
 
@@ -94,4 +91,8 @@ src_install() {
 	exeinto '/usr/lib/qubes'
 	exeopts '-m0700'
 	doexe qubes-rpc/{qfile-agent,qfile-unpacker,qvm-copy-to-vm,qvm-move-to-vm,qvm-open-in-dvm,qvm-open-in-vm,tar2qfile}
+
+	insinto '/usr/lib/tmpfiles.d'
+	doins "${FILESDIR}/qubes.conf"
+
 }
