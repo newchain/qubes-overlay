@@ -38,7 +38,10 @@ DEPEND="${COMMON_DEPEND}
 	${DEPEND}
 	app-crypt/gnupg"
 
-RDEPEND="${COMMON_DEPEND}"
+# util-linux for logger
+#
+RDEPEND="${COMMON_DEPEND}
+	sys-apps/util-linux"
 
 src_prepare() {
 
