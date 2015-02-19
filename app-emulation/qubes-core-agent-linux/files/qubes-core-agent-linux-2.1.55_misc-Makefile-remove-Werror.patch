@@ -1,0 +1,9 @@
+--- misc/Makefile
++++ misc/Makefile
+@@ -1,5 +1,5 @@
+ CC=gcc
+-CFLAGS=-Wall -Wextra -Werror -g -O3
++CFLAGS=-Wall -Wextra -g -O3
+ 
+ _XENSTORE_H=$(wildcard /usr/include/xenstore.h)
+ ifneq "$(_XENSTORE_H)" ""
