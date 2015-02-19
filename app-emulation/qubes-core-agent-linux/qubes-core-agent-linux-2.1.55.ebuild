@@ -108,3 +108,26 @@ src_install() {
 	doins "${FILESDIR}/qubes.conf"
 
 }
+
+pkg_postinst() {
+
+	echo
+	ewarn "qrexec-agent must be running before qrexec_timeout"
+	ewarn "(default value = 60 seconds) is reached."
+	ewarn
+	ewarn "qrexec-agent requires the 'u2mfn' kernel module."
+	ewarn "Either emerge qubes-kernel-module or patch the kernel"
+	ewarn "manually for a static build."
+	ewarn
+	ewarn "Additionally, you must set 'qrexec_installed' to True"
+	ewarn "for your domU to use Qubes RPC."
+	echo
+	einfo "Inter-VM functions are invoked through qvm-* utils."
+	echo
+	einfo "File copying is performed inside the 'user' user's"
+	einfo "\$HOME. Look for files under /home/user/QubesIncoming".
+	echo
+	einfo "Add regular users to the 'qubes-transfer' group to read"
+	einfo "and manipulate files there."
+	echo
+}
