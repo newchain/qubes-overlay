@@ -30,13 +30,15 @@ if ( [ "${PV%%.*}" == 2 ] || [ "${PR}" == 'r200' ] ); then {
 };
 fi
 
-RDEPEND="app-emulation/qubes-core-vchan-xen:${SLOT}
+COMMON_DEPEND="app-emulation/qubes-core-vchan-xen:${SLOT}
 	app-emulation/qubes-linux-utils:${SLOT}
 	app-emulation/xen-tools"
 
-DEPEND="${DEPEND}
-	${RDEPEND}
+DEPEND="${COMMON_DEPEND}
+	${DEPEND}
 	app-crypt/gnupg"
+
+RDEPEND="${COMMON_DEPEND}"
 
 
 src_prepare() {
