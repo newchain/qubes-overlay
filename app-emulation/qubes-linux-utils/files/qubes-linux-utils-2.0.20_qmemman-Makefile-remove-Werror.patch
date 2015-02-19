@@ -1,0 +1,9 @@
+--- qmemman/Makefile
++++ qmemman/Makefile
+@@ -1,5 +1,5 @@
+ CC=gcc
+-CFLAGS=-Wall -Wextra -Werror -g -O3
++CFLAGS=-Wall -Wextra -g -O3
+ SBINDIR ?= /usr/sbin
+ 
+ all:	meminfo-writer

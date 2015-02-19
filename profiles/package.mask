@@ -1,0 +1,7 @@
+# $Header: $
+
+# Users have been recommended not to update to v3
+app-emulation/qubes-core-agent:3
+app-emulation/qubes-core-vchan-xen:3
+app-emulation/qubes-linux-utils:3
+app-emulation/qubes-vmm-xen:3

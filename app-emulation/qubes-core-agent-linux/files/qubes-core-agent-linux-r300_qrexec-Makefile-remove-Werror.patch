@@ -1,0 +1,9 @@
+--- qrexec/Makefile.old	2015-02-16 17:46:40.959497138 +0000
++++ qrexec/Makefile	2015-02-16 17:48:29.709334013 +0000
+@@ -1,5 +1,5 @@
+ CC=gcc
+-CFLAGS+=-I. -g -Wall -Wextra -Werror -pie -fPIC `pkg-config --cflags vchan-$(BACKEND_VMM)`
++CFLAGS+=-I. -g -Wall -Wextra -pie -fPIC `pkg-config --cflags vchan-$(BACKEND_VMM)`
+ LIBS=`pkg-config --libs vchan-$(BACKEND_VMM)` -lqrexec-utils
+ 
+ all: qrexec-agent qrexec-client-vm
