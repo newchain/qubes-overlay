@@ -1,0 +1,48 @@
+--- vm-init.d/qubes-qrexec-agent.old	2015-02-16 14:48:22.416395291 +0000
++++ vm-init.d/qubes-qrexec-agent	2015-02-16 20:33:25.414490433 +0000
+@@ -1,39 +1,11 @@
+-#!/bin/bash
+-#
+-# chkconfig: 345 90 90
+-# description: Executes Qubes core scripts at VM boot
+-#
+-# Source function library.
+-. /etc/rc.d/init.d/functions
++#!/sbin/runscript
+ 
+-start()
+-{
+-	echo -n $"Starting Qubes RPC agent:"
+ 
+-	/usr/lib/qubes/qrexec-agent 2>/var/log/qubes/qrexec-agent.log &
+-
+-	success
+-	echo ""
+-
+-	return 0
++start() {
++	start-stop-daemon --start --background --exec /usr/lib/qubes/qrexec-agent --make-pidfile --pidfile /run/qubes/qrexec-agent.pid --stderr /var/log/qubes/qrexec-agent.log
+ }
+ 
+-stop()
+-{
+-    killproc qrexec-agent
+-}
+ 
+-case "$1" in
+-  start)
+-	start
+-	;;
+-  stop)
+-	stop
+-	;;
+-  *)
+-	echo $"Usage: $0 {start|stop}"
+-	exit 3
+-	;;
+-esac
+-
+-exit $RETVAL
++stop() {
++	start-stop-daemon --stop --pidfile /run/qubes/qrexec-agent.pid
++}
