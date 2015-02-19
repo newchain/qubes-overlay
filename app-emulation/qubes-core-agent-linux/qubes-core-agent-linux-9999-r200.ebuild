@@ -13,6 +13,7 @@ inherit eutils git-2 python-r1 user
 DESCRIPTION='Qubes RPC agent for Linux VMs'
 HOMEPAGE='https://github.com/QubesOS/qubes-core-agent-linux'
 
+IUSE="selinux"
 KEYWORDS=""
 LICENSE='GPL-2'
 
@@ -41,6 +42,7 @@ DEPEND="${COMMON_DEPEND}
 # util-linux for logger
 #
 RDEPEND="${COMMON_DEPEND}
+	selinux? ( sec-policy/selinux-qubes )
 	sys-apps/util-linux"
 
 src_prepare() {
