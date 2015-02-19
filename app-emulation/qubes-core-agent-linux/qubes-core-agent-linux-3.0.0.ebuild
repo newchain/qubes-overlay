@@ -8,7 +8,7 @@ EGIT_REPO_URI='https://github.com/QubesOS/qubes-core-agent-linux.git'
 
 PYTHON_COMPAT=( python2_7 )
 
-inherit eutils git-2 python-r1
+inherit eutils git-2 python-r1 user
 
 DESCRIPTION='Qubes RPC agent for Linux VMs'
 HOMEPAGE='https://github.com/QubesOS/qubes-core-agent-linux'
@@ -64,6 +64,17 @@ src_prepare() {
 	fi
 
 	epatch_user
+}
+
+pkg_setup() {
+
+	# for regular users to read and place/remove files
+	enewgroup 'qubes-transfer'
+	# 'user' is used in template VMs and qrexec-agent operates
+	# within the associated $HOME when copying files.
+	enewuser 'user' -1 -1 '/home/user' 'qubes-transfer'
+
+	chgrp qubes-transfer -- /home/user /home/user/QubesIncoming
 }
 
 src_compile() {
