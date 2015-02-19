@@ -1,0 +1,108 @@
+## <summary>qubes-core-agent policy</summary>
+## <desc>
+##	<p>
+##		Policy for qubes-core-agent (RPC backdoor) and related
+##		utilities.
+##	</p>
+## </desc>
+
+
+###############################
+## <summary>
+##	Search QubesIncoming.
+## </summary>
+## <param name="domain">
+##	<summary>
+##		Domain to permit search.
+##	</summary>
+## </param>
+
+interface(`qubes_search_shared_home',`
+
+	gen_require(`
+
+		type qubes_shared_home_t;
+	')
+
+	userdom_search_user_home_dirs($1)
+
+	allow $1 qubes_shared_home_t : dir search_dir_perms;
+')
+
+
+###############################
+## <summary>
+##	Read QubesIncoming files
+## </summary>
+## <param name="domain">
+##	<summary>
+##		Domain to permit read.
+##	</summary>
+## </param>
+
+interface(`qubes_read_shared_home',`
+
+	qubes_search_shared_home($1)
+
+	allow $1 qubes_shared_home_t : file read_file_perms;
+')
+
+
+###############################
+## <summary>
+##	Transition to qvm domains.
+## </summary>
+## <param name="domain">
+##	<summary>
+##		Domain to permit transition from.
+##	</summary>
+## </param>
+
+interface(`qvm_domain_transition_pattern',`
+
+	gen_require(`
+		type qubes_shared_home_t;
+		type qvm_t;
+		type qvm-copy-to-vm_t;
+		type qvm-copy-to-vm_exec_t;
+		type qvm_exec_t;
+	')
+
+	domtrans_pattern($1, qvm_exec_t, qvm_t)
+	domtrans_pattern($1, qvm-copy-to-vm_exec_t, qvm-copy-to-vm_t)
+
+	list_dirs_pattern($1, qubes_shared_home_t, qubes_shared_home_t)
+')
+
+
+###############################
+## <summary>
+##	Permit role to use qvm utilities.
+## </summary>
+## <param name="domain">
+##	<summary>
+##		Domain to permit transition from.
+##	</summary>
+## </param>
+## <param name="role">
+##	<summary>
+##		Role to assign types.
+##	</summary>
+## </param>
+
+interface(`qvm_role',`
+
+	gen_require(`
+
+		type qfile-agent_t;
+		type qrexec-client-vm_t;
+		type qvm-copy-to-vm_worker_t;
+	')
+
+	qvm_domain_transition_pattern($1)
+
+	role $2 types { qfile-agent_t qrexec-client-vm_t qvm_t qvm-copy-to-vm_t qvm-copy-to-vm_worker_t };
+
+	allow qfile-agent_t $1 : process sigchld;
+	allow qrexec-client-vm_t $1 : process sigchld;
+')
