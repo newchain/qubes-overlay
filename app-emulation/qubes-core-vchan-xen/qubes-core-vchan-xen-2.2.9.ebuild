@@ -6,7 +6,7 @@ EAPI=4
 
 EGIT_REPO_URI='https://github.com/QubesOS/qubes-core-vchan-xen.git'
 
-inherit eutils git-2
+inherit eutils git-2 qubes
 
 DESCRIPTION='Qubes I/O libraries'
 HOMEPAGE='https://github.com/QubesOS/qubes-core-vchan-xen'
@@ -14,19 +14,7 @@ HOMEPAGE='https://github.com/QubesOS/qubes-core-vchan-xen'
 KEYWORDS="~amd64"
 LICENSE='GPL-2'
 
-if ( [ "${PV%%.*}" == 2 ] || [ "${PR}" == 'r200' ] ); then {
-
-	EGIT_BRANCH='release2'
-	SLOT=2
-	DEPEND="!${CATEGORY}/${PN}:3"
-
-	}; else {
-
-	EGIT_BRANCH='master'
-	SLOT=3
-	DEPEND="!${CATEGORY}/${PN}:2"
-};
-fi
+qubes_slot
 
 RDEPEND="app-emulation/xen-tools"
 DEPEND="app-crypt/gnupg
@@ -36,19 +24,8 @@ DEPEND="app-crypt/gnupg
 
 src_prepare() {
 
-	if [[ "${PV}" < '9999' ]]; then {
-
-		readonly version="v${PV}"
-		git checkout "${version}" 2>/dev/null
-
-	}; else {
-
-		readonly version="$(git tag --points-at HEAD | head -n 1)"
-	};
-	fi
-
-	gpg --import "${FILESDIR}/qubes-developers-keys.asc" 2>/dev/null
-	git verify-tag "${version}" || die 'Signature verification failed!'
+	readonly version_prefix='v'
+	qubes_prepare
 
 	( [ ${SLOT} == 2 ] && [ "${PV}" != '9999' ] ) && epatch "${FILESDIR}/${PN}-2.2.9_vchan-Makefile-remove-Werror.patch"
 

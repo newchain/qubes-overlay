@@ -14,7 +14,7 @@ HOMEPAGE='https://github.com/QubesOS/qubes-core-vchan-xen'
 KEYWORDS=""
 LICENSE='GPL-2'
 
-if ( [ "${PV%%.*}" == 2 ] || [ "${PR}" == 'r200' ] ); then {
+if ( [ "${PV%%.*}" == 2 ] || [ "${PR}" == r200 ] ); then {
 
 	EGIT_BRANCH='release2'
 	SLOT=2
@@ -43,12 +43,12 @@ src_prepare() {
 
 	}; else {
 
-		readonly version="$(git tag --points-at HEAD | head -n 1)"
+		readonly version="$(git tag --points-at HEAD | head 1)"
 	};
 	fi
 
 	gpg --import "${FILESDIR}/qubes-developers-keys.asc" 2>/dev/null
-	git verify-tag "${version}" || die 'Signature verification failed!'
+	git verify-tag -- "${version}" || die 'Signature verification failed!'
 
 	( [ ${SLOT} == 2 ] && [ "${PV}" != '9999' ] ) && epatch "${FILESDIR}/${PN}-2.2.9_vchan-Makefile-remove-Werror.patch"
 

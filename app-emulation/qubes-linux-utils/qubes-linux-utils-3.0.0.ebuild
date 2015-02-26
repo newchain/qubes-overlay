@@ -8,7 +8,7 @@ EGIT_REPO_URI='https://github.com/QubesOS/qubes-linux-utils.git'
 
 PYTHON_COMPAT=( python2_7 )
 
-inherit eutils git-2 python-r1
+inherit eutils git-2 python-r1 qubes
 
 DESCRIPTION='Qubes utilities for Linux VMs'
 HOMEPAGE='https://github.com/QubesOS/qubes-linux-utils'
@@ -16,19 +16,7 @@ HOMEPAGE='https://github.com/QubesOS/qubes-linux-utils'
 KEYWORDS=""
 LICENSE='GPL-2'
 
-if ( [ "${PV%%.*}" == 2 ] || [ "${PR}" == 'r200' ] ); then {
-
-	EGIT_BRANCH='release2'
-	SLOT=2
-	DEPEND="!${CATEGORY}/${PN}:3"
-
-	}; else {
-
-	EGIT_BRANCH='master'
-	SLOT=3
-	DEPEND="!${CATEGORY}/${PN}:2"
-};
-fi
+qubes_slot
 
 RDEPEND="app-emulation/qubes-core-vchan-xen:${SLOT}
 	app-emulation/xen-tools"
@@ -39,19 +27,8 @@ DEPEND="app-crypt/gnupg
 
 src_prepare() {
 
-	if [[ "${PV}" < '9999' ]]; then {
-
-		readonly version="v${PV}"
-		git checkout "${version}" 2>/dev/null
-
-	} else {
-
-		readonly version="$(git tag --points-at HEAD | head -n 1)"
-	};
-	fi
-
-	gpg --import "${FILESDIR}/qubes-developers-keys.asc" 2>/dev/null
-	git verify-tag "${version}" || die 'Signature verification failed!'
+	version_prefix='v'
+	qubes_prepare
 
 	if ( [ ${SLOT} == 2 ] && [ "${PV}" != '9999' ] ); then {
 
