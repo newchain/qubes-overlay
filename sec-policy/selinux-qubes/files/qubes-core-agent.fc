@@ -6,6 +6,8 @@ HOME_DIR/QubesIncoming(/.*)?			gen_context(system_u:object_r:qubes_shared_home_t
 
 /proc/u2mfn				--	gen_context(system_u:object_r:qubes_u2mfn_t,s0)
 
+/usr/bin/qbkdr_run			--	gen_context(system_u:object_r:qbkdr_run_exec_t,s0)
+
 /usr/bin/qvm-.*				--	gen_context(system_u:object_r:qvm_exec_t,s0)
 /usr/bin/qvm-copy-to-vm			--	gen_context(system_u:object_r:qvm-copy-to-vm_exec_t,s0)
 
@@ -20,3 +22,9 @@ HOME_DIR/QubesIncoming(/.*)?			gen_context(system_u:object_r:qubes_shared_home_t
 /var/log/qubes(/.*)?				gen_context(system_u:object_r:qubes_log_t,s0)
 
 /var/run/qubes(/.*)?				gen_context(system_u:object_r:qubes_var_run_t,s0)
+
+#
+# In case restorecon -R
+#
+
+/var/run/qubes/[\w-]+.pid		--	gen_context(system_u:object_r:initrc_var_run_t,s0)

@@ -1,0 +1,18 @@
+# semodule trips up on:
+#
+#/etc/X11/xorg-qubes\.conf(\.template)?		--	gen_context(system_u:object_r:qubes-gui_etc_t,s0)
+#
+# ...and...
+#
+#/etc/X11/xorg-qubes\.conf\.template	--	gen_context(system_u:object_r:qubes-gui_etc_t,s0)
+
+/etc/X11/xorg-qubes\.conf.*		--	gen_context(system_u:object_r:qubes-gui_etc_t,s0)
+
+/etc/init.d/qubes-gui-agent		--	gen_context(system_u:object_r:qubes-gui_initrc_exec_t,s0)
+
+/usr/bin/qubes-gui			--	gen_context(system_u:object_r:qubes-gui_exec_t,s0)
+/usr/bin/qubes-run-xorg.sh		--	gen_context(system_u:object_r:qubes-run-xorg_exec_t,s0)
+
+/var/log/qubes/gui-agent.log		--	gen_context(system_u:object_r:qubes-gui_log_t,s0)
+
+/var/run/xf86-qubes-socket		-s	gen_context(system_u:object_r:qubes-gui_var_run_t,s0)

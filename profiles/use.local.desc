@@ -1,0 +1,3 @@
+# $Header: $
+
+app-emulation/qubes-gui-agent-linux:template - Install files which are necessary for a templateVM, but interfere with regular use.

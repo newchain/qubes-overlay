@@ -1,0 +1,93 @@
+## <summary>qubes-core-agent policy</summary>
+## <desc>
+##	<p>
+##		Policy for qubes-core-agent (RPC backdoor) and related
+##		utilities.
+##	</p>
+## </desc>
+
+
+###############################
+## <summary>
+##	Connect to qubes-gui stream socket.
+## </summary>
+## <param name="domain">
+##	<summary>
+##		Domain to permit connection.
+##	</summary>
+## </param>
+
+interface(`qubes_gui_stream_connect',`
+
+	gen_require(`
+
+		type qubes-gui_t;
+	')
+
+	allow $1 qubes-gui_t : unix_stream_socket connectto;
+')
+
+
+###############################
+## <summary>
+##	Write to qubes-gui stream socket.
+## </summary>
+## <param name="domain">
+##	<summary>
+##		Domain to permit write.
+##	</summary>
+## </param>
+
+interface(`qubes_gui_stream_write',`
+
+	gen_require(`
+
+		type qubes-gui_var_run_t;
+	')
+
+	qubes_gui_stream_connect($1)
+
+	allow $1 qubes-gui_var_run_t : sock_file write;
+')
+
+
+###############################
+## <summary>
+##	Use gui-agent fds
+## </summary>
+## <param name="domain">
+##	<summary>
+##		Domain to permit use.
+##	</summary>
+## </param>
+
+interface(`qubes_gui_use_fds',`
+
+	gen_require(`
+
+		type qubes-gui_t;
+	')
+
+	allow $1 qubes-gui_t : fd use;
+')
+
+
+###############################
+## <summary>
+##	Read qubes xserver config.
+## </summary>
+## <param name="domain">
+##	<summary>
+##		Domain to permit read.
+##	</summary>
+## </param>
+
+interface(`qubes_gui_read_etc',`
+
+	gen_require(`
+
+		type qubes-gui_etc_t;
+	')
+
+	allow $1 qubes-gui_etc_t : file { read open getattr };
+')

@@ -84,12 +84,15 @@ src_install() {
 	exeopts '-m0755'
 	doexe qubes-rpc/qvm-{copy-to-vm,move-to-vm,mru-entry,open-in-dvm,open-in-vm,run}
 
+	$(use selinux) && doexe "${FILESDIR}/qbkdr_run"
+
 	exeinto '/usr/lib/qubes'
 	exeopts '-m0711'
 	doexe qubes-rpc/{qfile-agent,qfile-unpacker,tar2qfile}
 
 	insinto '/usr/lib/tmpfiles.d'
 	doins "${FILESDIR}/qubes.conf"
+
 }
 
 pkg_postinst() {
