@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
-EAPI=4
+EAPI=5
 
 EGIT_REPO_URI='https://github.com/QubesOS/qubes-core-agent-linux.git'
 
@@ -13,7 +13,7 @@ inherit eutils git-2 python-r1 qubes user
 DESCRIPTION='Qubes RPC agent for Linux VMs'
 HOMEPAGE='https://github.com/QubesOS/qubes-core-agent-linux'
 
-IUSE="selinux"
+IUSE="net selinux template"
 KEYWORDS="~amd64"
 LICENSE='GPL-2'
 
@@ -30,9 +30,14 @@ DEPEND="${CDEPEND}
 # util-linux for logger
 #
 RDEPEND="${CDEPEND}
+	net? ( sys-apps/ethtool
+		sys-apps/net-tools )
 	selinux? ( sec-policy/selinux-qubes )
+	sys-apps/haveged
 	sys-apps/util-linux"
 
+REQUIRED_USE="
+	template? ( net )"
 
 src_prepare() {
 
@@ -48,6 +53,13 @@ src_prepare() {
 	};
 	fi
 
+	if $(use net); then
+
+		sed -i -- 's|/sbin/ethtool|/usr/sbin/ethtool|g' 'network/setup-ip'
+		sed -i -- 's|/sbin/ifconfig|/bin/ifconfig|g' 'network/setup-ip'
+		sed -i -- 's|/sbin/route|/bin/route|g' 'network/setup-ip'
+	fi
+
 	epatch_user
 }
 
@@ -58,8 +70,6 @@ pkg_setup() {
 	# 'user' is used in template VMs and qrexec-agent operates
 	# within the associated $HOME when copying files.
 	enewuser 'user' -1 -1 '/home/user' 'qubes-transfer'
-
-	chgrp qubes-transfer -- /home/user /home/user/QubesIncoming
 }
 
 src_compile() {
@@ -68,6 +78,39 @@ src_compile() {
 }
 
 src_install() {
+
+	if $(use template); then {
+
+	# rw is a mountpoint for a volatile partition. That partition
+	# is what is preserved after shutdown for non-template VMs.
+
+	# home is a bind mountpoint for rw/home.
+
+	# mnt/removable is for a single block device attached through
+	# qvm-block as xvdi.
+
+	# home.orig is copied over to rw/home on an appVM's first boot.
+
+	# MAC magic could make appVMs swallow this blue pill.
+
+		diropts '-m0700'
+		dodir 'home'
+		dodir 'mnt/removable'
+		dodir 'rw'
+
+		diropts '-m0755'
+		dodir 'home.orig'
+
+		diropts '-m0770'
+		dodir 'home.orig/user'
+
+	}; else {
+
+		diropts '-m0770'
+		dodir 'home/user/QubesIncoming'
+		chgrp qubes-transfer -- "${D}/home/user" "${D}/home/user/QubesIncoming"
+	};
+	fi
 
 	cd "${S}/qrexec"
 
@@ -92,7 +135,17 @@ src_install() {
 
 	insinto '/usr/lib/tmpfiles.d'
 	doins "${FILESDIR}/qubes.conf"
+	$(use template) && doins "${FILESDIR}/qubes-template.conf"
 
+	if $(use net); then {
+
+		exeinto '/usr/lib/qubes'
+		doexe 'network/setup-ip'
+
+		insinto '/lib/udev/rules.d'
+		doins 'network/udev-qubes-network.rules'
+	};
+	fi
 }
 
 pkg_postinst() {
