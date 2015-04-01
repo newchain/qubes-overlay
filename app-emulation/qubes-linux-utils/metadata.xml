@@ -5,4 +5,8 @@
 		<email>kunjurcca@gmail.org</email>
 		<name>MB</name>
 	</maintainer>
+	<use>
+		<flag name="net">Install script and udev rule to setup a virtual network interface as configured in dom0 and exported via xenstore.</flag>
+		<flag name="template">Install files which are necessary for a templateVM, but interfere with regular use.</flag>
+	</use>
 </pkgmetadata>
