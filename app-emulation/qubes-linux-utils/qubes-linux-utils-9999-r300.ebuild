@@ -1,4 +1,4 @@
-# Copyright 1999-2015 Gentoo Foundation
+# Copyright 1999-2016 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Id$
 
@@ -34,13 +34,13 @@ src_prepare() {
 	epatch_user
 
 
-	sed -i -- '1s/^/BACKEND_VMM ?= xen\n/' 'qrexec-lib/Makefile'
+	sed -i '1s/^/BACKEND_VMM ?= xen\n/' -- 'qrexec-lib/Makefile'
 
-	sed -i -- 's|/etc/udev/rules\.d|/lib/udev/rules.d|g' 'udev/Makefile'
+	sed -i 's|/etc/udev/rules\.d|/lib/udev/rules.d|g' -- 'udev/Makefile'
 
 	for i in qmemman qrexec-lib; do {
 
-		sed -i -- 's/\ -Werror//g' "${i}/Makefile"
+		sed -i 's/\ -Werror//g' -- "${i}/Makefile"
 	};
 	done
 }

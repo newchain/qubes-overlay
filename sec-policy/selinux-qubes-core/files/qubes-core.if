@@ -273,6 +273,50 @@ interface(`qubes_core_bluepill_locale',`
 
 ###############################
 ## <summary>
+##	Search /run/qubes-service
+## </summary>
+## <param name="domain">
+##	<summary>
+##		Domain to permit search.
+##	</summary>
+## </param>
+
+interface(`qubes_core_search_qubes_service_var_run',`
+
+	gen_require(`
+
+		type qubes-service_var_run_t;
+	')
+
+	allow $1 qubes-service_var_run_t : dir search_dir_perms;
+')
+
+
+###############################
+## <summary>
+##	<p>
+##		Check read permission on files under /run/qubes-service/
+##	</p>
+##	<p>
+##		Typically this would be used by init scripts.
+##	</p>
+## </summary>
+## <param name="domain">
+##	<summary>
+##		Domain to permit check.
+##	</summary>
+## </param>
+
+interface(`qubes_core_read_inherited_qubes_service_var_run',`
+
+	qubes_core_search_qubes_service_var_run($1)
+
+	allow $1 qubes-service_var_run_t : file read;
+')
+
+
+###############################
+## <summary>
 ##	Transition to setup-ip_t
 ## </summary>
 ## <param name="domain">
@@ -291,6 +335,29 @@ interface(`qubes_core_setup_ip_domtrans',`
 
 	qubes_core_search_qubes_rpc_worker_exec($1)
 	domtrans_pattern($1, setup-ip_exec_t, setup-ip_t)
+')
+
+
+###############################
+## <summary>
+##	Transition to setup-ip_t without promiscuous IPC
+## </summary>
+## <param name="domain">
+##	<summary>
+##		Domain to permit transition.
+##	</summary>
+## </param>
+
+interface(`qubes_core_setup_ip_auto_domtrans',`
+
+	gen_require(`
+
+		type setup-ip_t;
+		type setup-ip_exec_t;
+	')
+
+	qubes_core_search_qubes_rpc_worker_exec($1)
+	domain_transition_pattern($1, setup-ip_exec_t, setup-ip_t)
 ')
 
 
@@ -1089,7 +1156,7 @@ interface(`qubes_core_qubesdb_domtrans',`
 
 ###############################
 ## <summary>
-##	Transition to qubesdb-cmd_t
+##	Transition to qubesdb-cmd_t. Use qubes_core_qubesdb_cmd_auto_domtrans instead.
 ## </summary>
 ## <param name="domain">
 ##	<summary>
@@ -1110,6 +1177,32 @@ interface(`qubes_core_qubesdb_cmd_domtrans',`
 	allow $1 qubesdb-cmd_exec_t : lnk_file read;
 
 	domtrans_pattern($1, qubesdb-cmd_exec_t, qubesdb-cmd_t)
+')
+
+
+###############################
+## <summary>
+##	Transition to qubesdb-cmd_t without promiscuous IPC permissions.
+## </summary>
+## <param name="domain">
+##	<summary>
+##		Domain to permit transition from.
+##	</summary>
+## </param>
+
+interface(`qubes_core_qubesdb_cmd_auto_domtrans',`
+
+	gen_require(`
+
+		type qubesdb-cmd_t;
+		type qubesdb-cmd_exec_t;
+	')
+
+	corecmd_search_bin($1)
+
+	allow $1 qubesdb-cmd_exec_t : lnk_file read;
+
+	domain_auto_transition_pattern($1, qubesdb-cmd_exec_t, qubesdb-cmd_t)
 ')
 
 

@@ -2,18 +2,20 @@
 # $Id$
 
 
-readonly iptables_bin="${iptables_bin:-/sbin/iptables}"
+readonly iptables_bin='/sbin/iptables'
+readonly qubesdb_read_bin='/usr/bin/qubesdb-read'
 
 
-depend() {
-
-	before net
-}
+extra_started_commands='flush_proxy'
+description_flush_proxy='Apply rules without flushing FORWARD. This is for qubes-netwatcher.'
 
 
-start() {
+rc_before='net'
 
-	ebegin 'Configuring tables'
+rc_need='qubes-service'
+
+
+flush_startstop() {
 
 	"${iptables_bin}" -P INPUT DROP
 	"${iptables_bin}" -P FORWARD DROP
@@ -21,24 +23,20 @@ start() {
 
 	"${iptables_bin}" -F
 	"${iptables_bin}" -X
+}
 
 
-	local insecure_net_sub
-	local secure_net_sub
+apply_rules() {
+
+	readonly secmark="${secmark:-1}"
+
 
 	readonly insecure_net_sub="${insecure_net_sub:-2}"
 	readonly secure_net_sub="${secure_net_sub:-3}"
 
 
-	local udp_in_rate
-	local udp_out_rate
-
 	readonly udp_in_rate="${udp_in_rate:-2,1}"
 	readonly udp_out_rate="${udp_out_rate:-2,1}"
-
-
-	local qubesdb_read_bin
-	readonly qubesdb_read_bin="${qubesdb_read_bin:-/usr/bin/qubesdb-read}"
 
 
 	local dns
@@ -46,6 +44,13 @@ start() {
 
 	readonly dns="$(${qubesdb_read_bin} /qubes-gateway 2>/dev/null)"
 	readonly ip="$(${qubesdb_read_bin} /qubes-ip 2>/dev/null)"
+
+
+	local is_proxyvm
+	local vm_type
+
+	readonly vm_type="$(${qubesdb_read_bin} /qubes-vm-type 2> /dev/null)"
+	[ "${vm_type}" == 'ProxyVM' ] && readonly is_proxyvm='1'
 
 
 	if [ -n "${is_proxyvm}" ]; then {
@@ -66,20 +71,64 @@ start() {
 
 	local net_type
 
-	if [ "${net_sub}" = "${secure_net_sub}" ]; then {
+	if [ "${net_sub}" == "${secure_net_sub}" ]; then {
 
 		readonly net_type='secure'
 	};
-	elif [ "${net_sub}" = "${insecure_net_sub}" ]; then {
+	elif [ "${net_sub}" == "${insecure_net_sub}" ]; then {
 
 		readonly net_type='insecure'
 	};
 	fi
 
+
+
+	if [ "${secmark}" == '1' ]; then {
+
+		"${iptables_bin}" -t security -F INPUT
+		"${iptables_bin}" -t security -F OUTPUT
+
+		if [ "${net_type}" == 'secure' ]; then {
+
+			"${iptables_bin}" -t security -A INPUT -j SECMARK -i lo -p tcp -m tcp --sport 9150:9151 --selctx system_u:object_r:tor_torbrowser_server_packet_t:s0
+
+			"${iptables_bin}" -t security -A OUTPUT -j SECMARK -o lo -p tcp -m tcp --dport 9150:9151 --selctx system_u:object_r:tor_torbrowser_client_packet_t:s0
+			"${iptables_bin}" -t security -A OUTPUT -j SECMARK -o lo -p tcp -m tcp --sport 9150:9151 --selctx system_u:object_r:tor_torbrowser_server_packet_t:s0
+		};
+		elif [ "${secmark}" == '1' ] && [ "${net_type}" == 'insecure' ]; then {
+
+			"${iptables_bin}" -t security -A INPUT -j SECMARK ! -s "${net_local}"/16 -d "${ip}" -p tcp -m tcp --sport 80 --selctx system_u:object_r:http_client_packet_t:s0
+			"${iptables_bin}" -t security -A INPUT -j SECMARK ! -s "${net_local}"/16 -d "${ip}" -p tcp -m tcp --sport 443 --selctx system_u:object_r:http_client_packet_t:s0
+			"${iptables_bin}" -t security -A INPUT -j SECMARK -s "${dns}" -d "${ip}" -p udp -m udp --sport 53 --selctx system_u:object_r:dns_client_packet_t:s0
+
+			"${iptables_bin}" -t security -A OUTPUT -j SECMARK ! -d "${net_local}"/16 -s "${ip}" -p tcp -m tcp --dport 80 --selctx system_u:object_r:http_client_packet_t:s0
+			"${iptables_bin}" -t security -A OUTPUT -j SECMARK ! -d "${net_local}"/16 -s "${ip}" -p tcp -m tcp --dport 443 --selctx system_u:object_r:http_client_packet_t:s0
+			"${iptables_bin}" -t security -A OUTPUT -j SECMARK -d "${dns}" -s "${ip}" -p udp -m udp --dport 53 --selctx system_u:object_r:dns_client_packet_t:s0
+		};
+		fi;
+	};
+	fi
+
+
+
 	# General nastiness (taken from whonix_firewall)
 	#
-	"${iptables_bin}" -I INPUT -m conntrack ! --ctstate ESTABLISHED -j DROP
+	if [ "${net_type}" == 'secure' ]; then {
+
+		"${iptables_bin}" -I INPUT -m conntrack ! --ctstate ESTABLISHED,NEW -j DROP
+		"${iptables_bin}" -I INPUT ! -i lo -m conntrack ! --ctstate ESTABLISHED -j DROP
+	};
+	elif [ "${net_type}" == 'insecure' ]; then {
+
+		"${iptables_bin}" -I INPUT -m conntrack ! --ctstate ESTABLISHED -j DROP
+	};
+	fi
 	"${iptables_bin}" -A INPUT -f -j DROP
+	"${iptables_bin}" -A INPUT -i lo ! -s 127.0.0.1/32 -j DROP
+	"${iptables_bin}" -A INPUT -i lo ! -d 127.0.0.1/32 -j DROP
+	"${iptables_bin}" -A INPUT -s 127.0.0.1/32 ! -i lo -j DROP
+	"${iptables_bin}" -A INPUT -d 127.0.0.1/32 ! -i lo -j DROP
+
 	"${iptables_bin}" -A INPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG FIN,SYN,RST,ACK -j DROP
 	"${iptables_bin}" -A INPUT -p tcp -m tcp --tcp-flags FIN,SYN FIN,SYN -j DROP
 	"${iptables_bin}" -A INPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG FIN,SYN,RST,PSH,ACK,URG -j DROP
@@ -121,7 +170,10 @@ start() {
 	};
 	fi
 
-	if [ "${net_type}" = 'insecure' ]; then {
+	"${iptables_bin}" -A INPUT -p udp -m connbytes ! --connbytes 0:1024 --connbytes-dir original --connbytes-mode bytes -j DROP
+	"${iptables_bin}" -A INPUT -p udp -m connbytes ! --connbytes 0:1024 --connbytes-dir reply --connbytes-mode bytes -j DROP
+
+	if [ "${net_type}" == 'insecure' ]; then {
 
 		"${iptables_bin}" -A INPUT -p udp -m recent --set --name UDP_IN --mask 255.255.255.255 --rsource
 
@@ -152,6 +204,13 @@ start() {
 		"${iptables_bin}" -I FORWARD -j DROP
 	};
 	else {
+		"${iptables_bin}" -t nat -N PR-QBS
+		"${iptables_bin}" -t nat -N PR-QBS-SERVICES
+		"${iptables_bin}" -t nat -A PREROUTING -j PR-QBS
+		"${iptables_bin}" -t nat -A PREROUTING -j PR-QBS-SERVICES
+		"${iptables_bin}" -t nat -A POSTROUTING -o vif+ -j ACCEPT
+		"${iptables_bin}" -t nat -A POSTROUTING -o lo -j ACCEPT
+		"${iptables_bin}" -t nat -A POSTROUTING -j MASQUERADE
 
 		"${iptables_bin}" -I FORWARD -p udp -m udp ! --sport 53 ! --dport 53 -j DROP
 		"${iptables_bin}" -I FORWARD ! -d "${net_global}/16" -p udp -j DROP
@@ -171,6 +230,8 @@ start() {
 
 	"${iptables_bin}" -I OUTPUT -m conntrack ! --ctstate ESTABLISHED,NEW -j DROP
 	"${iptables_bin}" -A OUTPUT -f -j DROP
+	"${iptables_bin}" -A OUTPUT -o lo ! -s 127.0.0.1/32 -j DROP
+	"${iptables_bin}" -A OUTPUT -o lo ! -d 127.0.0.1/32 -j DROP
 	"${iptables_bin}" -A OUTPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG FIN,SYN,RST,ACK -j DROP
 	"${iptables_bin}" -A OUTPUT -p tcp -m tcp --tcp-flags FIN,SYN FIN,SYN -j DROP
 	"${iptables_bin}" -A OUTPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG FIN,SYN,RST,PSH,ACK,URG -j DROP
@@ -217,7 +278,10 @@ start() {
 	};
 	fi
 
-	if [ "${net_type}" = 'insecure' ]; then {
+	"${iptables_bin}" -A OUTPUT -p udp -m connbytes ! --connbytes 0:1024 --connbytes-dir original --connbytes-mode bytes -j DROP
+	"${iptables_bin}" -A OUTPUT -p udp -m connbytes ! --connbytes 0:1024 --connbytes-dir reply --connbytes-mode bytes -j DROP
+
+	if [ "${net_type}" == 'insecure' ]; then {
 
 		"${iptables_bin}" -A OUTPUT -p udp -m recent --set --name UDP_OUT --mask 255.255.255.255 --rsource
 
@@ -241,6 +305,51 @@ start() {
 	#
 	"${iptables_bin}" -A OUTPUT ! -p tcp -j DROP
 	"${iptables_bin}" -A OUTPUT -j DROP
+}
+
+
+flush_proxy() {
+
+        if [ -e '/var/run/qubes-service/qubes-netwatcher' ]; then {
+
+                readonly chains_sans_forward="$(/sbin/iptables-save -t filter | sed '/^# Generated.*/,/\*filter/d;/^-A\ /,//d;s/^://;s/\ .*$//')"
+                readonly chains_silly_names="$(echo ${chains_sans_forward} | tr '[:blank:]' 'A' | grep '[^A-Za-z0-9]')"
+
+                if [ -n "${chains_silly_names}" ]; then {
+
+                        "${iptables_bin}" -F
+                }
+               	else {
+
+                        for i in ${chains_sans_forward}; do {
+
+                                "${iptables_bin}" -F "${i}"
+                        }
+                       	done
+               	}
+                fi
+        }
+        else {
+
+                "${iptables_bin}" -F
+        }
+        fi
+
+	"${iptables_bin}" -X
+
+	apply_rules
+
+	eend $?
+}
+
+
+start() {
+
+	ebegin 'Configuring firewall'
+
+	flush_startstop
+
+	apply_rules
 
 	eend $?
 }
@@ -248,10 +357,9 @@ start() {
 
 stop() {
 
-	ebegin 'Clearing tables'
+	ebegin 'Clearing firewall'
 
-	"${iptables_bin}" -F
-	"${iptables_bin}" -X
+	flush_startstop
 
 	eend $?
 }

@@ -1,0 +1,13 @@
+#!/sbin/openrc-run
+# $Id$
+
+
+command='/usr/sbin/qubes-netwatcher'
+command_background='true'
+pidfile='/run/qubes/qubes-netwatcher.pid'
+rc_cgroup_cleanup='yes'
+required_files='/run/qubes-service/qubes-netwatcher'
+start_stop_daemon_args='-k 0177'
+
+
+rc_need='qubes-firewall'

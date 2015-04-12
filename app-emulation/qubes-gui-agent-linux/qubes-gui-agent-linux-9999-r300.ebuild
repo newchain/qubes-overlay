@@ -1,10 +1,10 @@
-# Copyright 1999-2015 Gentoo Foundation
+# Copyright 1999-2016 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Id$
 
 EAPI=5
 
-EGIT_REPO_URI='https://github.com/QubesOS/qubes-gui-agent-linux'
+EGIT_REPO_URI='https://github.com/QubesOS/qubes-gui-agent-linux.git'
 
 inherit eutils git-2 flag-o-matic qubes
 
@@ -20,7 +20,7 @@ qubes_slot
 CDEPEND="pulseaudio? ( media-sound/pulseaudio[xen] )
 	x11-base/xorg-server[xorg]"
 
-if [ ${SLOT} == 3 ]; then {
+if [[ "${SLOT}" > '0/20' ]]; then {
 
 	CDEPEND="${CDEPEND}
 		app-emulation/qubes-core-qubesdb"
@@ -46,18 +46,21 @@ src_prepare() {
 
 	epatch_user
 
-	if [ ${SLOT} == 3 ]; then {
+	if [[ "${SLOT}" > '0/20' ]]; then {
 
 		epatch "${FILESDIR}/Makefile-loud.patch"
 	};
 	fi
 
-	$(use pulseaudio) || sed -i -- '/pulse/d' 'Makefile'
+	sed -i '/securitylimits.*qubes-gui/d' -- 'Makefile'
+	sed -i 's/\(exec\ su\)\ -l/\1/g' -- 'appvm-scripts/usrbin/qubes-run-xorg.sh'
 
-	sed -i -- '1s/^/BACKEND_VMM ?= xen\n/' 'gui-agent/Makefile' 'pulse/Makefile'
-	sed -i -- 's/\ -Werror//g' 'gui-agent/Makefile'
+	$(use pulseaudio) || sed -i '/pulse/d' -- 'Makefile'
 
-	sed -i -- 's/LIBTOOLIZE=\"\"/LIBTOOLIZE="libtoolize"/g' 'xf86-input-mfndev/bootstrap'
+	sed -i '1s/^/BACKEND_VMM ?= xen\n/' -- 'gui-agent/Makefile' 'pulse/Makefile'
+	sed -i 's/\ -Werror//g' -- 'gui-agent/Makefile'
+
+	sed -i 's/LIBTOOLIZE=\"\"/LIBTOOLIZE="libtoolize"/g' -- 'xf86-input-mfndev/bootstrap'
 }
 
 src_compile() {
@@ -91,6 +94,14 @@ src_install() {
 	fi
 
 	emake DESTDIR="${D}" install
+
+
+	newconfd "${FILESDIR}/qubes-gui-agent_confd" 'qubes-gui-agent'
+
+	fperms 0600 '/etc/conf.d/qubes-gui-agent'
+	fperms 0700 '/etc/init.d/qubes-gui-agent'
+	fperms 0700 '/usr/bin/qubes-gui'
+	fperms 0600 '/usr/lib/tmpfiles.d/qubes-'{gui,session}'.conf'
 
 	if ! $(use template); then {
 

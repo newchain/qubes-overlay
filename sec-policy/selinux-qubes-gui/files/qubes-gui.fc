@@ -1,3 +1,13 @@
+define(`qubes_userspace_highlimit',
+
+	`s5:c0.c1023'
+)
+
+define(`qubes_userspace_range',
+
+	mls_systemlow`-'qubes_userspace_highlimit
+)
+
 # semodule trips up on:
 #
 #/etc/X11/xorg-qubes\.conf(\.template)?		--	gen_context(system_u:object_r:qubes-gui_etc_t,mls_systemlow)
@@ -6,20 +16,15 @@
 #
 #/etc/X11/xorg-qubes\.conf\.template	--	gen_context(system_u:object_r:qubes-gui_etc_t,mls_systemlow)
 
-/etc/X11/xorg-qubes\.conf.*		--	gen_context(system_u:object_r:qubes-gui_etc_t,s5:c0.c1023)
+/etc/X11/xorg-qubes\.conf.*		--	gen_context(system_u:object_r:qubes-gui_etc_t,mls_systemlow)
 
-/etc/rc\.d/init\.d/qubes-gui-agent	--	gen_context(system_u:object_r:qubes-gui_initrc_exec_t,mls_systemlow)
+/etc/rc\.d/init\.d/qubes-gui-agent	--	gen_context(system_u:object_r:qubes-gui_initrc_exec_t,mls_systemlow-mls_systemhigh)
 
-/usr/bin/qubes-gui			--	gen_context(system_u:object_r:qubes-gui_exec_t,mls_systemlow)
-#/usr/bin/qubes-run-xorg.sh		--	gen_context(system_u:object_r:qubes-run-xorg_exec_t,qubes_userspace_highlimit)
-/usr/bin/qubes-run-xorg.sh		--	gen_context(system_u:object_r:qubes-run-xorg_exec_t,s0)
-#/usr/bin/qubes-session			--	gen_context(system_u:object_r:qubes-session_exec_t,qubes_userspace_highlimit)
-/usr/bin/qubes-session			--	gen_context(system_u:object_r:qubes-session_exec_t,s0)
-#/usr/bin/qubes-set-monitor-layout	--	gen_context(system_u:object_r:qubes-set-monitor-layout_exec_t,qubes_userspace_highlimit)
-/usr/bin/qubes-set-monitor-layout	--	gen_context(system_u:object_r:qubes-set-monitor-layout_exec_t,s0)
+/usr/bin/qubes-gui			--	gen_context(system_u:object_r:qubes-gui_exec_t,qubes_userspace_range)
+/usr/bin/qubes-run-xorg\.sh		--	gen_context(system_u:object_r:qubes-run-xorg_exec_t,qubes_userspace_range)
+/usr/bin/qubes-session			--	gen_context(system_u:object_r:qubes-session_exec_t,qubes_userspace_range)
+/usr/bin/qubes-set-monitor-layout	--	gen_context(system_u:object_r:qubes-set-monitor-layout_exec_t,qubes_userspace_range)
 
-#/var/log/qubes/gui-agent.log		--	gen_context(system_u:object_r:qubes-gui_log_t,qubes_userspace_highlimit)
-/var/log/qubes/gui-agent.log		--	gen_context(system_u:object_r:qubes-gui_log_t,s0)
+/var/log/qubes/gui-agent\.log		--	gen_context(system_u:object_r:qubes-gui_log_t,qubes_userspace_range)
 
-#/var/run/xf86-qubes-socket		-s	gen_context(system_u:object_r:qubes-gui_var_run_t,qubes_userspace_highlimit)
-/var/run/xf86-qubes-socket		-s	gen_context(system_u:object_r:qubes-gui_var_run_t,s0)
+/var/run/xf86-qubes-socket		-s	gen_context(system_u:object_r:qubes-gui_var_run_t,qubes_userspace_range)

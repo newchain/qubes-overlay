@@ -1,8 +1,6 @@
-Adding dbus as a broker is 110% certain to reduce attack service, 110% certain to reduce
-information channels, 110% certain to improve policy, and 110% certain to be more simple.
+# $Id$
 
-But to those lacking the dispassionate and indisputable logic of Qubes devs, it just feels bad, y'know?
-
+It seems harder to restrict information flow with dbus as a broker.
 ---
 --- misc/xdg.py
 +++ misc/xdg.py

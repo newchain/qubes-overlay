@@ -1,4 +1,4 @@
-# Copyright 1999-2015 Gentoo Foundation
+# Copyright 1999-2016 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Id$
 
@@ -8,22 +8,27 @@ qubes_slot() {
 	if ( [ "${PV%%.*}" == 2 ] || [ "${PR}" == 'r200' ] ); then {
 
 		EGIT_BRANCH='release2'
-		SLOT=2
-		DEPEND="!${CATEGORY}/${PN}:3"
+		SLOT='0/20'
+#		DEPEND="!${CATEGORY}/${PN}:3"
 
 		};
 		elif ( [ "${PV%.*}" == '3.1' ] || [ "${PR}" == 'r310' ] ); then {
 
-		EGIT_BRANCH='master'
-		SLOT='3/1'
-		DEPEND="!${CATEGORY}/${PN}:2"
+		EGIT_BRANCH='release3.1'
+		SLOT='0/31'
+#		DEPEND="!${CATEGORY}/${PN}:2"
 
+		};
+		elif ( [ "${PV%%.*}" == '3' ] || [ "${PR}" == 'r300' ] ); then {
+
+		EGIT_BRANCH='release3.0'
+		SLOT='0/30'
+#		DEPEND="!${CATEGORY}/${PN}:2"
 		};
 		else {
 
-		EGIT_BRANCH='release3.0'
-		SLOT=3
-		DEPEND="!${CATEGORY}/${PN}:2"
+		EGIT_BRANCH='master'
+		SLOT='0/40'
 	};
 	fi
 }

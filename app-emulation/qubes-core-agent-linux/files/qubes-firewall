@@ -1,0 +1,13 @@
+#!/sbin/openrc-run
+# $Id$
+
+
+command='/usr/sbin/qubes-firewall'
+command_background='true'
+pidfile='/run/qubes/qubes-firewall.pid'
+rc_cgroup_cleanup='yes'
+required_files='/run/qubes-service/qubes-firewall'
+start_stop_daemon_args='-k 0177'
+
+
+rc_need='qubes-network'

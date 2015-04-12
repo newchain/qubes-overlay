@@ -2,15 +2,15 @@
 # $Id$
 
 
-depends() {
+rc_keyword='-shutdown'
 
-	need qubesdb-daemon
+rc_need='qubesdb-daemon'
 
-	after urandom
+rc_after='urandom'
 
-	before haveged
-	before net
-}
+rc_before='haveged'
+rc_before='net'
+
 
 start() {
 
@@ -29,4 +29,9 @@ start() {
 
 
 	eend $?
+}
+
+stop() {
+
+	return 0
 }

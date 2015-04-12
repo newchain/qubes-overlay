@@ -7,19 +7,5 @@ command_args='0'
 pidfile='/run/qubes/qubesdb.pid'
 
 
-depend() {
-
-	need selinux
-	need tmpfiles.setup
-}
-
-start() {
-
-	ebegin 'Starting qubesdb-daemon'
-
-	# start-stop-daemon hangs =(
-	#
-	# start-stop-daemon --env --start --exec /usr/sbin/qubesdb-daemon -- 0
-
-	/usr/sbin/qubesdb-daemon 0
-}
+rc_need='selinux'
+rc_need='tmpfiles.setup'

@@ -1,4 +1,4 @@
-# Copyright 1999-2015 Gentoo Foundation
+# Copyright 1999-2016 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Id$
 
@@ -11,7 +11,7 @@ inherit eutils git-2 qubes
 DESCRIPTION='Qubes I/O libraries'
 HOMEPAGE='https://github.com/QubesOS/qubes-core-vchan-xen'
 
-KEYWORDS="~amd64"
+KEYWORDS=""
 LICENSE='GPL-2'
 
 qubes_slot
@@ -29,8 +29,6 @@ src_prepare() {
 	qubes_prepare
 
 	epatch_user
-
-	sed -i -- '1s/^/BACKEND_VMM ?= xen\n/' 'qrexec-lib/Makefile'
 
 	sed -i -- 's/\ -Werror//g' 'vchan/Makefile.linux'
 }

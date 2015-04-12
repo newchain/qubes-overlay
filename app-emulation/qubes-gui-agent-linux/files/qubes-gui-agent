@@ -2,31 +2,30 @@
 # $Id$
 
 
+command='/usr/bin/qubes-gui'
+command_background='true'
 description='QubesOS GUI agent'
 pidfile='/run/qubes/qubes-gui.pid'
+rc_cgroup_cleanup='yes'
+start_stop_daemon_args='--env DISPLAY=:0 --stderr /var/log/qubes/gui-agent.log'
+
+rc_need='qubes-qrexec-agent'
+rc_need='qubesdb-daemon'
 
 
-depend() {
+start_pre() {
 
-	need qubes-qrexec-agent
-	need qubesdb-daemon
-}
+	if [ -e '/usr/bin/ck-list-sessions' ]; then {
 
-start() {
-
-	if [ -x '/usr/bin/ck-list-sessions' ]; then {
-
-		rm -f /tmp/qubes-session-env /tmp/qubes-session-waiter
+		rm -f -- '/tmp/qubes-session-env' '/tmp/qubes-session-waiter'
 
 		# start console-kit-daemon
 
 		/usr/bin/ck-list-sessions > /dev/null 2>&1
 
-		# pretend tha user is at local console
+		# pretend the user is at local console
 
-		touch /var/run/console/user
+		touch -- '/var/run/console/user'
 	};
 	fi
-
-	start-stop-daemon --start --env DISPLAY=:0 --exec /usr/bin/qubes-gui --background --make-pidfile --pidfile /run/qubes/qubes-gui.pid --stderr /var/log/qubes/gui-agent.log
 }

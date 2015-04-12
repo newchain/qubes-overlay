@@ -12,7 +12,7 @@ DESCRIPTION="Qubes configuration database"
 HOMEPAGE='https://github.com/QubesOS/qubes-core-agent-linux'
 
 IUSE="template"
-KEYWORDS="~amd64"
+KEYWORDS=""
 LICENSE='GPL-2'
 
 qubes_slot

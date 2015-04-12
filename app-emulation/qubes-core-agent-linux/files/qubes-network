@@ -1,0 +1,18 @@
+#!/sbin/openrc-run
+# $Id$
+
+
+command='/usr/lib/qubes/init/network-proxy-setup.sh'
+command_backgound='false'
+start_stop_daemon_args='-k 0177'
+required_files='/run/qubes-service/qubes-network'
+
+rc_keyword='-shutdown'
+
+rc_need='qubes-iptables'
+
+
+stop() {
+
+	return 0
+}

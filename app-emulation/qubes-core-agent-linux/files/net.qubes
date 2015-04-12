@@ -1,22 +1,29 @@
 #!/sbin/openrc-run
+# $Id$
 
 
-depend() {
+command='/usr/lib/qubes/setup-ip'
+command_background='false'
+description='Virtual network interface'
+start_stop_daemon_args="--env INTERFACE=\'eth0\' -k 0177"
 
-	need qubesdb-daemon
 
-	after haveged
-	after iptables
-	after qubes-iptables
-	after qubes-random-seed
-	after urandom
-}
+provide="net"
+
+rc_need="qubesdb-daemon"
+
+rc_after="haveged"
+rc_after="iptables"
+rc_after="qubes-iptables"
+rc_after="qubes-random-seed"
+rc_after="urandom"
+
 
 start() {
 
 	ebegin 'Bringing up virtual network interface'
 
-	INTERFACE='eth0' /usr/lib/qubes/setup-ip
+	INTERFACE="${RC_SVCNAME#.*}" /usr/lib/qubes/setup-ip
 
 	eend $?
 }
@@ -25,5 +32,5 @@ stop() {
 
 	ebegin 'Taking down virtual network interface'
 
-	/bin/ifconfig eth0 down
+	/bin/ifconfig "${RC_SVCNAME#net.}" down
 }

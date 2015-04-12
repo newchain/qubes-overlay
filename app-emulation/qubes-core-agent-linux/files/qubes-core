@@ -2,15 +2,15 @@
 # $Id$
 
 
-depends() {
+rc_keyword='-shutdown'
 
-	# Definitely don't want to use the same seed as
-	# the template (and therefore every other appvm!)
-	#
-	before urandom
+# Definitely don't want to use the same seed as
+# the template (and therefore every other appvm!)
+#
+rc_before='urandom'
 
-	need qubesdb-daemon
-}
+rc_need='qubesdb-daemon'
+
 
 start() {
 
@@ -92,6 +92,12 @@ start() {
 	};
 	else ewarn 'Persistent volume not found!'
 	fi
+
+	return 0
+}
+
+
+stop() {
 
 	return 0
 }
