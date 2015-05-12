@@ -46,12 +46,16 @@ src_prepare() {
 
 	if ( [ ${SLOT} == 2 ] && [ "${PV}" != '9999' ] ); then {
 
-		epatch "${FILESDIR}/${PN}-2.1.55_misc-Makefile-remove-Werror.patch"
-		epatch "${FILESDIR}/${PN}-2.1.55_qrexec-Makefile-remove-Werror.patch"
 		epatch "${FILESDIR}/${PN}-2.1.55_qrexec-agent-rc.d-to-openrc.patch"
-		epatch "${FILESDIR}/${PN}-2.1.55_qubes-rpc-Makefile-remove-Werror.patch"
+		epatch "${FILESDIR}/${PN}-2.1.55_qubes-core-rc.d-to-openrc-and-diet.patch"
 	};
 	fi
+
+	for i in misc qrexec qubes-rpc; do {
+
+		sed -i -- 's/\ -Werror//g' "${i}/Makefile"
+	};
+	done
 
 	if $(use net); then
 
