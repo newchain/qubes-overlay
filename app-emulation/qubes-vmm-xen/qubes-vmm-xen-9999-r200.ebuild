@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
-EAPI=4
+EAPI=5
 
 EGIT_REPO_URI='https://github.com/QubesOS/qubes-vmm-xen.git'
 EGIT_BRANCH='xen-4.1'
@@ -22,12 +22,8 @@ DEPEND="app-crypt/gnupg"
 
 src_prepare() {
 
-	readonly version="$(git tag --points-at HEAD | head -n 1)"
-
-	git checkout "${version}"
-
-	gpg --import "${FILESDIR}/qubes-developers-keys.asc"
-	git verify-tag "${version}" || die 'Signature verification failed!'
+	readonly version_prefix=''
+	qubes_prepare
 
 	epatch_user
 }
