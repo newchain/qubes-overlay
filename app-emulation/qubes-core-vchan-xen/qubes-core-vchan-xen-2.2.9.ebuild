@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
-EAPI=4
+EAPI=5
 
 EGIT_REPO_URI='https://github.com/QubesOS/qubes-core-vchan-xen.git'
 
@@ -27,7 +27,7 @@ src_prepare() {
 	readonly version_prefix='v'
 	qubes_prepare
 
-	( [ ${SLOT} == 2 ] && [ "${PV}" != '9999' ] ) && epatch "${FILESDIR}/${PN}-2.2.9_vchan-Makefile-remove-Werror.patch"
+	sed -i -- 's/\ -Werror//g' 'vchan/Makefile.linux'
 
 	epatch_user
 }
