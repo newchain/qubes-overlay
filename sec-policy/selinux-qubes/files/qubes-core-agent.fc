@@ -1,10 +1,17 @@
 /etc/qubes-rpc(/.*)?				gen_context(system_u:object_r:qubes_rpc_etc_t,s0)
 
+/etc/rc\.d/init\.d/qubes-core		--	gen_context(system_u:object_r:qubes-core_init_exec_t,s0)
 /etc/rc\.d/init\.d/qubes-qrexec-agent	--	gen_context(system_u:object_r:qrexec-agent_initrc_exec_t,s0)
 
 HOME_DIR/QubesIncoming(/.*)?			gen_context(system_u:object_r:qubes_shared_home_t,s0)
 
+/home\.orig(/.*)?				gen_context(system_u:object_r:qubes_origin_t,s0)
+
 /proc/u2mfn				--	gen_context(system_u:object_r:qubes_u2mfn_t,s0)
+
+/rw						gen_context(system_u:object_r:qubes_volatile_t,s0)
+/rw/home					gen_context(system_u:object_r:home_root_t,s0)
+/rw/home/user					gen_context(system_u:object_r:user_home_dir_t,s0)
 
 /usr/bin/qbkdr_run			--	gen_context(system_u:object_r:qbkdr_run_exec_t,s0)
 
@@ -17,7 +24,11 @@ HOME_DIR/QubesIncoming(/.*)?			gen_context(system_u:object_r:qubes_shared_home_t
 /usr/lib/qubes/qrexec-agent		--	gen_context(system_u:object_r:qrexec-agent_exec_t,s0)
 /usr/lib/qubes/qrexec-client-vm		--	gen_context(system_u:object_r:qrexec-client-vm_exec_t,s0)
 /usr/lib/qubes/qubes-rpc-multiplexer	--	gen_context(system_u:object_r:qubes-rpc-multiplexer_exec_t,s0)
-/usr/lib/qubes/tar2qfile			--	gen_context(system_u:object_r:tar2qfile_exec_t,s0)
+/usr/lib/qubes/tar2qfile		--	gen_context(system_u:object_r:tar2qfile_exec_t,s0)
+
+/usr/local\.orig(/.*)?				gen_context(system_u:object_r:qubes_origin_t,s0)
+
+/var/lib/qubes(/.*)?				gen_context(system_u:object_r:qubes_var_run_t,s0)
 
 /var/log/qubes(/.*)?				gen_context(system_u:object_r:qubes_log_t,s0)
 

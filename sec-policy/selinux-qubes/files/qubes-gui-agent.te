@@ -180,7 +180,7 @@ allow qubes-gui_dummy_t user_home_dir_t : file { write link read };
 allow qubes-gui_dummy_t usr_t : file { read open getattr };
 
 xserver_create_xdm_tmp_sockets(qubes-gui_dummy_t)
-allow qubes-gui_dummy_t xdm_tmp_t : dir remove_name;
+delete_sock_files_pattern(qubes-gui_dummy_t, xdm_tmp_t, xdm_tmp_t)
 xserver_stream_connect(qubes-gui_dummy_t)
 
 
@@ -340,6 +340,8 @@ qubes_gui_use_fds(qubes-run-xorg_worker_t)
 # HOME_DIR/.xsession_errors:
 #
 allow qubes-run-xorg_xinit_t qubes-run-xorg_sh_t : fd use;
+allow qubes-run-xorg_xinit_t user_home_dir_t : file write;
+auditallow qubes-run-xorg_xinit_t user_home_dir_t : file { open read getattr };
 
 allow qubes-run-xorg_xinit_t qubes-run-xorg_sh_t : process sigchld;
 
@@ -383,6 +385,7 @@ xserver_domtrans(qubes-run-xorg_xinit_t)
 # HOME_DIR/.xsession_errors:
 #
 allow xserver_t qubes-run-xorg_sh_t : fd use;
+allow xserver_t user_home_dir_t : file write;
 
 allow xserver_t qubes-run-xorg_xinit_t : process signal;
 
