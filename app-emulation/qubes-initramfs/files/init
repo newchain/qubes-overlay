@@ -1,0 +1,33 @@
+#!/bin/busybox sh
+
+mount -t devtmpfs dev /dev
+mount -t proc proc /proc
+mount -t sysfs sysfs /sys
+
+
+# Begin Qubes magic
+
+#  (This is from the official initramfs)
+
+if [ $( cat /sys/block/xvda/ro ) = 1 ] ; then
+        echo "Qubes: Doing COW setup for AppVM..."
+
+        while ! [ -e /dev/xvdc ]; do sleep 0.1; done
+        while ! [ -e /dev/xvdc2 ]; do sleep 0.1; done
+
+        echo "0 $(cat /sys/block/xvda/size) snapshot /dev/xvda /dev/xvdc2 N 16" | \
+                /sbin/dmsetup create dmroot || { echo "Qubes: FATAL: cannot create dmroot!"; }
+        echo Qubes: done.
+else
+        echo "Qubes: Doing R/W setup for TemplateVM..."
+        echo "0 $(cat /sys/block/xvda/size) linear /dev/xvda 0" | \
+                /sbin/dmsetup create dmroot || { echo "Qubes: FATAL: cannot create dmroot!"; exit 1; }
+        echo Qubes: done.
+fi
+
+# End Qubes magic
+
+
+mount /dev/mapper/dmroot /mnt/root
+
+exec switch_root /mnt/root /sbin/init

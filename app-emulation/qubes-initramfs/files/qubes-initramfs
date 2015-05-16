@@ -1,0 +1,80 @@
+#!/bin/sh
+
+set -eu
+
+
+fail() {
+
+	printf "${1}\n";
+	exit 1;
+}
+
+help() {
+
+	echo "This is a script for preparing a minimal initramfs for PV Gentoo domUs on Qubes."
+	printf "\n"
+	echo "If busybox[static] or lvm2[static] are not installed, you must supply them as \$busybox and \$dmsetup."
+	echo "You may find suitable bins in /var/cache/genkernel."
+
+	exit 0
+}
+
+
+[ "${1}" == '--help' ] && help
+
+
+readonly src='/usr/share/qubes-initramfs'
+readonly dest='/var/tmp/initramfs'
+readonly tmp="${TMP}/qubes-initramfs"
+
+
+readonly busybox="${busybox:-/bin/busybox}"
+readonly dmsetup="${dmsetup:-/bin/dmsetup.static}"
+
+
+test_static() {
+
+	(file -b -e apptype -e ascii -e cdf -e compress -e encoding -e tar --  "${1}" | grep "^ELF.*statically\ linked") >/dev/null || fail "${1} must be static."
+}
+
+umask 0700
+
+
+printf "Preparing initramfs...\n"
+
+
+mkdir -p "${tmp}/build" || fail 'Failed to mkdir build dir.'
+cd "${tmp}/build" || fail 'Failed to chdir to build dir.'
+
+mkdir -p -- bin dev etc mnt/root proc sbin sys || fail 'Failed to mkdir initramfs dirs.'
+
+cp -- "${busybox}" bin/ || fail 'Failed to copy busybox.'
+cp -- "${dmsetup}" sbin/ || fail 'Failed to copy dmsetup.'
+
+cp -- "${src}/init" . || fail 'Failed to copy init.'
+chmod u+x -- init || fail 'Failed to make init executable.'
+
+ln -s -- /bin/busybox bin/echo || fail 'Failed to link busybox to echo.'
+ln -s -- /bin/busybox bin/mount || fail 'Failed to link busybox to mount.'
+ln -s -- /bin/busybox bin/sleep || fail 'Failed to link busybox to sleep.'
+ln -s -- /proc/self/mounts etc/mtab || fail 'Failed to link mounts to mtab.'
+
+
+# Naive determinism...
+#
+find . name -exec touch -t  200001010000.00 {} + || fail 'Failed to sanitize timestamps.'
+
+
+printf "Building initramfs...\n"
+
+find . -print0 | cpio --create --format=newc --null | gzip -9 > "${tmp}/initramfs" || fail 'Failed to build initramfs.'
+
+touch -t 200001010000.00 "${tmp}/initramfs" || fail 'Failed to sanitize timestamp.'
+
+
+cp -a -- "${tmp}/initramfs" "${dest}" || fail 'Failed to copy initramfs.'
+
+
+echo "initramfs complete."
+printf "\n"
+echo "Copy /var/tmp/initramfs to dom0:/var/lib/qubes/vm-kernels/\${version}/initramfs."
