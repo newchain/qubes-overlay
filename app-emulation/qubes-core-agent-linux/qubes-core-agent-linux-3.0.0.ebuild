@@ -13,7 +13,7 @@ inherit eutils git-2 python-r1 qubes user
 DESCRIPTION='Qubes RPC agent for Linux VMs'
 HOMEPAGE='https://github.com/QubesOS/qubes-core-agent-linux'
 
-IUSE="net selinux template"
+IUSE="glib net selinux svg template"
 KEYWORDS=""
 LICENSE='GPL-2'
 
@@ -30,14 +30,27 @@ DEPEND="${CDEPEND}
 # util-linux for logger
 #
 RDEPEND="${CDEPEND}
-	net? ( sys-apps/ethtool
-		sys-apps/net-tools )
+	glib?	(
+		dev-python/pygobject
+		svg? (
+			dev-python/pygobject[cairo]
+			dev-python/pycairo[svg]
+		)
+	)
+	net? (
+		sys-apps/ethtool
+		sys-apps/net-tools
+	)
 	selinux? ( sec-policy/selinux-qubes )
 	sys-apps/haveged
 	sys-apps/util-linux"
 
 REQUIRED_USE="
-	template? ( net )"
+	svg? ( glib )
+	template? (
+			svg
+			net
+		)"
 
 src_prepare() {
 
@@ -107,12 +120,13 @@ src_install() {
 
 		diropts '-m0770'
 		dodir 'home.orig/user'
+		dodir 'home.orig/user/QubesIncoming'
 
 	}; else {
 
 		diropts '-m0770'
 		dodir 'home/user/QubesIncoming'
-		chgrp qubes-transfer -- "${D}/home/user" "${D}/home/user/QubesIncoming"
+		fowners user:qubes-transfer 'home/user' 'home/user/QubesIncoming'
 	};
 	fi
 
@@ -126,16 +140,22 @@ src_install() {
 
 	insinto '/etc/qubes-rpc'
 	doins qubes-rpc/qubes.{Filecopy,OpenInVM}
+	$(use glib) && doins 'qubes-rpc/qubes.GetAppmenus'
 
 	exeinto '/usr/bin'
 	exeopts '-m0755'
+	$(use glib) && doexe 'misc/qubes-desktop-run'
 	doexe qubes-rpc/qvm-{copy-to-vm,move-to-vm,mru-entry,open-in-dvm,open-in-vm,run}
 
 	$(use selinux) && doexe "${FILESDIR}/qbkdr_run"
 
 	exeinto '/usr/lib/qubes'
+	exeopts '-m0755'
+	$(use glib) && doexe 'misc/qubes-trigger-sync-appmenus.sh'
 	exeopts '-m0711'
-	doexe qubes-rpc/{qfile-agent,qfile-unpacker,tar2qfile}
+	doexe qubes-rpc/{qfile-agent,tar2qfile}
+	exeopts '-m4711'
+	doexe 'qubes-rpc/qfile-unpacker'
 
 	insinto '/usr/lib/tmpfiles.d'
 	doins "${FILESDIR}/qubes.conf"
@@ -144,12 +164,16 @@ src_install() {
 	if $(use net); then {
 
 		exeinto '/usr/lib/qubes'
+		exeopts '-m700'
 		doexe 'network/setup-ip'
 
 		insinto '/lib/udev/rules.d'
 		doins 'network/udev-qubes-network.rules'
 	};
 	fi
+
+	docinto '/usr/share/doc/qubes'
+	dodoc 'misc/fstab'
 }
 
 pkg_postinst() {

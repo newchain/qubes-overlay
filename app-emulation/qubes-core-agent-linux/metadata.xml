@@ -6,6 +6,8 @@
 		<name>MB</name>
 	</maintainer>
 	<use>
+		<flag name="svg">Pull in pycairo[svg], which is required to transfer icons for dom0 menus.</flag>
+		<flag name="glib">Pull in pygobject, which is required for app menu generation.</flag>
 		<flag name="net">Install script and udev rule to setup a virtual network interface as configured in dom0 and exported via xenstore.</flag>
 		<flag name="template">Install files which are necessary for a templateVM, but interfere with regular use.</flag>
 	</use>
