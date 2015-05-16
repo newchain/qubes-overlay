@@ -32,11 +32,15 @@ src_prepare() {
 
 	if ( [ ${SLOT} == 2 ] && [ "${PV}" != '9999' ] ); then {
 
-		epatch "${FILESDIR}/${PN}-2.0.20_qmemman-Makefile-remove-Werror.patch"
-		epatch "${FILESDIR}/${PN}-2.0.20_qrexec-lib-Makefile-remove-Werror.patch"
 		epatch "${FILESDIR}/${PN}-2.0.20_udev-Makefile-paths.patch"
 	};
 	fi
+
+	for i in qmemman qrexec-lib; do {
+
+		sed -i -- 's/\ -Werror//g' "${i}/Makefile"
+	};
+	done
 
 	epatch_user
 }
