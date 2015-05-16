@@ -11,7 +11,7 @@ inherit eutils git-2 flag-o-matic qubes
 DESCRIPTION='Qubes GUI agent'
 HOMEPAGE='https://github.com/QubesOS/qubes-gui-agent-linux'
 
-IUSE="pulseaudio selinux template"
+IUSE="candy pulseaudio selinux template"
 KEYWORDS="~amd64"
 LICENSE='GPL-2'
 
@@ -23,8 +23,12 @@ DEPEND="${CDEPEND}
 	${DEPEND}
 	app-crypt/gnupg"
 RDEPEND="${CDEPEND}
+	candy? ( x11-themes/gnome-themes-standard[gtk] )
 	selinux? ( sec-policy/selinux-qubes )
-	x11-apps/xsm"
+	#
+	# Attack surface--
+	#
+	template? ( x11-base/xorg-server[minimal] )"
 
 src_prepare() {
 
@@ -53,6 +57,8 @@ src_compile() {
 }
 
 src_install() {
+
+	$(use candy) && dodir 'home.orig/user' && echo 'gtk-theme-name = "Adwaita"' > "${D}/home.orig/user/.gtkrc-2.0"
 
 	if $(use pulseaudio); then {
 
@@ -85,7 +91,7 @@ src_install() {
 		insinto '/etc/qubes-rpc'
 		doins 'appvm-scripts/etc/qubes-rpc/qubes.SetMonitorLayout'
 
-		into '/usr/lib/tmpfiles.d'
+		insinto '/usr/lib/tmpfiles.d'
 		doins "${FILESDIR}/qubes-gui.conf"
 
 		into '/usr/lib/xorg/modules/drivers'

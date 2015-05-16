@@ -6,5 +6,7 @@
 		<name>MB</name>
 	</maintainer>
 	<use>
-		<flag name="template">Install files which are necessary for a templateVM, but interfere with regular use.</flag>	</use>
+		<flag name="candy">Install (numerous) dependencies for standard GNOME themes.</flag>
+		<flag name="template">Install files which are necessary for a templateVM, but interfere with regular use.</flag>
+	</use>
 </pkgmetadata>
