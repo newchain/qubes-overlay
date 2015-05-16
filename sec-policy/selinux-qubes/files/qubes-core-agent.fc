@@ -15,6 +15,8 @@ HOME_DIR/QubesIncoming(/.*)?			gen_context(system_u:object_r:qubes_shared_home_t
 
 /usr/bin/qbkdr_run			--	gen_context(system_u:object_r:qbkdr_run_exec_t,s0)
 
+/usr/bin/qubes-desktop-run		--	gen_context(system_u:object_r:qubes-desktop-run_exec_t,s0)
+/usr/bin/qubes-set-monitor-layout	--	gen_context(system_u:object_r:qubes-set-monitor-layout_exec_t,s)
 /usr/bin/qvm-.*				--	gen_context(system_u:object_r:qvm_exec_t,s0)
 /usr/bin/qvm-copy-to-vm			--	gen_context(system_u:object_r:qvm-copy-to-vm_exec_t,s0)
 
@@ -24,6 +26,7 @@ HOME_DIR/QubesIncoming(/.*)?			gen_context(system_u:object_r:qubes_shared_home_t
 /usr/lib/qubes/qrexec-agent		--	gen_context(system_u:object_r:qrexec-agent_exec_t,s0)
 /usr/lib/qubes/qrexec-client-vm		--	gen_context(system_u:object_r:qrexec-client-vm_exec_t,s0)
 /usr/lib/qubes/qubes-rpc-multiplexer	--	gen_context(system_u:object_r:qubes-rpc-multiplexer_exec_t,s0)
+/usr/lib/qubes/qubes-trigger-sync-appmenus\.sh	gen_context(system_u:object_r:qubes-trigger-sync-appmenus_exec_t,s0)
 /usr/lib/qubes/tar2qfile		--	gen_context(system_u:object_r:tar2qfile_exec_t,s0)
 
 /usr/local\.orig(/.*)?				gen_context(system_u:object_r:qubes_origin_t,s0)

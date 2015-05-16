@@ -4,8 +4,6 @@ policy_module(qubes-gui-agent, 1)
 gen_require(`
 
 	type etc_t;
-	type iceauth_t;
-	type iceauth_exec_t;
 	type proc_t;
 	type qrexec-agent_su_t;
 	type qubes_u2mfn_t;
@@ -50,21 +48,6 @@ init_daemon_domain(qubes-gui_t, qubes-gui_exec_t)
           corecmd_bin_entry_type(qubes-run-xorg_xinit_t)
           role system_r types qubes-run-xorg_xinit_t;
 
-            # Minimal session. Getting this to run
-            # under another role is ...tricky
-            # since new_role doesn't accept origin
-            # domain.
-            #
-            # Just put it all under qubes-gui_dummy_t.
-
-            type qubes-gui_dummy_t;
-            application_type(qubes-gui_dummy_t)
-            corecmd_shell_entry_type(qubes-gui_dummy_t)
-            domain_entry_file(qubes-gui_dummy_t, etc_t)
-            role system_r types qubes-gui_dummy_t;
-
-              role system_r types iceauth_t;
-
       #
       # ( sed | chown | chmod )
       #
@@ -89,15 +72,6 @@ files_type(qubes-gui_var_run_t)
 
 ########################################
 #
-# iceauth_t local policy
-#
-
-# /dev/null:
-#
-qubes_gui_use_fds(iceauth_t)
-
-########################################
-#
 # qrexec-agent_su_t local policy
 #
 
@@ -109,6 +83,8 @@ xserver_domtrans_xauth(qubes-run-xorg_su_t)
 # qubes-gui_t local policy
 #
 
+# Note: qubes_u2mfn_t requires patch to base policy, hence proc_t.
+#
 allow qubes-gui_t { proc_t qubes_u2mfn_t } : file { read write open ioctl };
 
 allow qubes-gui_t qubes-gui_log_t : file append;
@@ -126,66 +102,13 @@ dev_rw_xen(qubes-gui_t)
 fs_search_xenfs(qubes-gui_t)
 allow qubes-gui_t xenfs_t : file { getattr read write open };
 
+qubes_bluepill_locale(qubes-gui_t)
+
 xserver_read_user_xauth(qubes-gui_t)
 xserver_stream_connect(qubes-gui_t)
 
 
 corecmd_shell_domtrans(qubes-gui_t, qubes-gui_sh_t)
-
-
-########################################
-#
-# qubes-gui-dummy_t local policy
-#
-
-corecmd_exec_bin(qubes-gui_dummy_t)
-
-# Only meminfo:
-#
-kernel_dontaudit_read_system_state(qubes-gui_dummy_t)
-
-# /dev/null:
-#
-qubes_gui_use_fds(qubes-gui_dummy_t)
-
-#
-# Xsession
-#
-
-# HOME_DIR/.xsession_errors:
-#
-allow qubes-gui_dummy_t qubes-run-xorg_sh_t : fd use;
-
-#
-# chmod
-#
-
-allow qubes-gui_dummy_t user_home_dir_t : file setattr;
-
-#
-# xsm
-#
-
-allow qubes-gui_dummy_t self : tcp_socket create;
-
-# For lock and config:
-#
-userdom_list_user_home_dirs(qubes-gui_dummy_t)
-create_files_pattern(qubes-gui_dummy_t, user_home_dir_t, user_home_dir_t)
-delete_files_pattern(qubes-gui_dummy_t, user_home_dir_t, user_home_dir_t)
-allow qubes-gui_dummy_t user_home_dir_t : file { write link read };
-
-# For share/.../XSm:
-#
-allow qubes-gui_dummy_t usr_t : file { read open getattr };
-
-xserver_create_xdm_tmp_sockets(qubes-gui_dummy_t)
-delete_sock_files_pattern(qubes-gui_dummy_t, xdm_tmp_t, xdm_tmp_t)
-xserver_stream_connect(qubes-gui_dummy_t)
-
-
-corecmd_exec_shell(qubes-gui_dummy_t)
-domtrans_pattern(qubes-gui_dummy_t, iceauth_exec_t, iceauth_t)
 
 
 ########################################
@@ -268,6 +191,8 @@ allow qubes-run-xorg_su_t self : capability { setgid setuid };
 allow qubes-run-xorg_su_t self : fifo_file read;
 allow qubes-run-xorg_su_t self : process setsched;
 
+# Note: execute alone permits checking +x permission only.
+#
 allow qubes-run-xorg_su_t xauth_exec_t : file execute;
 
 
@@ -281,6 +206,8 @@ kernel_read_kernel_sysctls(qubes-run-xorg_su_t)
 #
 kernel_dontaudit_read_system_state(qubes-run-xorg_su_t)
 
+qubes_bluepill_locale(qubes-run-xorg_su_t)
+
 # /dev/null:
 #
 qubes_gui_use_fds(qubes-run-xorg_su_t)
@@ -290,6 +217,7 @@ selinux_compute_access_vector(qubes-run-xorg_su_t)
 # Preserve cwd:
 #
 # TEST W/O THIS LATER
+#
 userdom_search_user_home_dirs(qubes-run-xorg_su_t)
 
 
@@ -362,14 +290,8 @@ xserver_read_user_xauth(qubes-run-xorg_xinit_t)
 xserver_stream_connect(qubes-run-xorg_xinit_t)
 
 
-corecmd_bin_domtrans(qubes-run-xorg_xinit_t, qubes-gui_dummy_t)
-corecmd_shell_domtrans(qubes-run-xorg_xinit_t, qubes-gui_dummy_t)
-
-domtrans_pattern(qubes-run-xorg_xinit_t, etc_t, qubes-gui_dummy_t)
-
 # Since there's no xserver domain template, without reimplementing
-# xserver_t (ew), qubes-gui must be able to connect to xserver_t,
-# as must the session manager.
+# xserver_t (ew), qubes-gui must be able to connect to xserver_t.
 #
 # MLS could solve this problem, but Gentoo doesn't play nicely with
 # MLS policy. This needs work.
@@ -397,3 +319,4 @@ qubes_gui_stream_write(xserver_t)
 # /dev/null:
 #
 qubes_gui_use_fds(xserver_t)
+

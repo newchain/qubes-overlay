@@ -1,8 +1,7 @@
-## <summary>qubes-core-agent policy</summary>
+## <summary>qubes-gui-agent policy</summary>
 ## <desc>
 ##	<p>
-##		Policy for qubes-core-agent (RPC backdoor) and related
-##		utilities.
+##		Policy for qubes-gui-agent, the Qubes seemless gui frontend.
 ##	</p>
 ## </desc>
 
@@ -53,11 +52,11 @@ interface(`qubes_gui_stream_write',`
 
 ###############################
 ## <summary>
-##	Use gui-agent fds
+##	Inherit gui-agent fds
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##		Domain to permit use.
+##		Domain to permit inheritance.
 ##	</summary>
 ## </param>
 
@@ -74,7 +73,7 @@ interface(`qubes_gui_use_fds',`
 
 ###############################
 ## <summary>
-##	Read qubes xserver config.
+##	Read and open Qubes xserver config.
 ## </summary>
 ## <param name="domain">
 ##	<summary>
