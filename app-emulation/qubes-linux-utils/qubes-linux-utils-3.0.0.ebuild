@@ -13,7 +13,7 @@ inherit eutils git-2 python-r1 qubes
 DESCRIPTION='Qubes utilities for Linux VMs'
 HOMEPAGE='https://github.com/QubesOS/qubes-linux-utils'
 
-KEYWORDS=""
+KEYWORDS="~amd64"
 LICENSE='GPL-2'
 
 qubes_slot
@@ -30,11 +30,7 @@ src_prepare() {
 	version_prefix='v'
 	qubes_prepare
 
-	if ( [ ${SLOT} == 2 ] && [ "${PV}" != '9999' ] ); then {
-
-		epatch "${FILESDIR}/${PN}-2.0.20_udev-Makefile-paths.patch"
-	};
-	fi
+	sed -i -- 's|/etc/udev/rules\.d|/lib/udev/rules.d|g' 'udev/Makefile'
 
 	for i in qmemman qrexec-lib; do {
 
