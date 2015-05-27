@@ -34,48 +34,32 @@ src_prepare() {
 
 src_compile() {
 
-	if [ ${SLOT} == 2 ]; then {
-
-		emake all;
-
-	}; else {
-
-		cd "${S}/u2mfn"
-
-		emake DESTDIR="${D}" all
-
-		cd "${S}/vchan"
-
-		emake DESTDIR="${D}" -f 'Makefile.linux' all
-	};
-	fi
+	emake all;
 }
 
 src_install() {
 
-	if [ ${SLOT} == 2 ]; then {
+	if ! [ ${SLOT} == 2 ]; then {
+
+		# qubes-linux-utils for R3 expects vchan-, not vchan-xen
+		#
+		ln -s -- '/usr/lib/pkgconfig/vchan-xen.pc' 'vchan-.pc'
+
+		insinto '/usr/lib/pkgconfig'
+		doins  'vchan-.pc'
+	};
+	fi
 
 		emake DESTDIR="${D}" install
 
-	}; else {
+		insinto '/usr/share/qubes'
+		doins "${FILESDIR}/xenstore-do-not-use-broken-kernel-interface.patch"
+}
 
-		cd "${S}/u2mfn"
+pkg_postinst() {
 
-		dolib 'libu2mfn.so'
-
-		insinto '/usr/include'
-		doins 'u2mfn-kernel.h'
-		doins 'u2mfnlib.h'
-
-		cd "${S}/vchan"
-
-		dolib 'libvchan-xen.so'
-
-		insinto '/usr/include'
-		doins 'libvchan.h'
-
-		insinto '/usr/lib/pkgconfig'
-		newins 'vchan-xen.pc' 'vchan-.pc'
-	};
-	fi
+	echo
+	ewarn "You must apply xenstore-do-not-use-broken-kernel-interface.patch
+	ewarn "to app-emulation/xen-tools.
+	echo
 }
