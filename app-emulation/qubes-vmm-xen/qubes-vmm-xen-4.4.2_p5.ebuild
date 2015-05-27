@@ -13,7 +13,7 @@ DESCRIPTION='Qubes version of Xen'
 HOMEPAGE='https://github.com/QubesOS/qubes-vmm-xen'
 SRC_URI=''
 
-KEYWORDS=""
+KEYWORDS="~amd64"
 LICENSE='GPL-2'
 
 if ( [ "${PV:0:3}" == '4.2' ] || [ "${PR}" == 'r200' ] ); then {

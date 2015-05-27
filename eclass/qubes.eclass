@@ -25,7 +25,7 @@ qubes_prepare() {
 
 	if [[ "${PV}" < '9999' ]]; then {
 
-		readonly version="${version_prefix}${PV}"
+		readonly version="${version_prefix}${MY_PV:=${PV}}"
 		git checkout "${version}" 2>/dev/null
 
 	}; else {
@@ -34,6 +34,20 @@ qubes_prepare() {
 	};
 	fi
 
-	gpg --import "${FILESDIR}/qubes-developers-keys.asc" 2>/dev/null
+	gpg --import "${FILESDIR}/qubes-developers-keys.asc"  2>/dev/null
 	git verify-tag "${version}" || die 'Signature verification failed!'
+}
+
+
+# This is lifted from the openrc ebuilds
+#
+qubes_to_runlevel() {
+
+	if ! [[ -e "${EROOT}etc/runlevels/default/${1}" ]]; then {
+
+		elog "Auto-adding ${1} to default runlevel..."
+
+		ln -snf -- "/etc/init.d/${1}" "${EROOT}etc/runlevels/default/${1}"
+	};
+	fi
 }
