@@ -12,8 +12,8 @@ mount -t sysfs sysfs /sys
 if [ $( cat /sys/block/xvda/ro ) = 1 ] ; then
         echo "Qubes: Doing COW setup for AppVM..."
 
-        while ! [ -e /dev/xvdc ]; do sleep 0.1; done
-        while ! [ -e /dev/xvdc2 ]; do sleep 0.1; done
+        while ! [ -e /dev/xvdc ]; do sleep 1; done
+        while ! [ -e /dev/xvdc2 ]; do sleep 1; done
 
         echo "0 $(cat /sys/block/xvda/size) snapshot /dev/xvda /dev/xvdc2 N 16" | \
                 /sbin/dmsetup create dmroot || { echo "Qubes: FATAL: cannot create dmroot!"; }

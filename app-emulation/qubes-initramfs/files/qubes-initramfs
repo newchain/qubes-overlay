@@ -20,7 +20,7 @@ help() {
 }
 
 
-[ "${1}" == '--help' ] && help
+[ "${1-}" == '--help' ] && help
 
 
 readonly src='/usr/share/qubes-initramfs'
@@ -37,44 +37,54 @@ test_static() {
 	(file -b -e apptype -e ascii -e cdf -e compress -e encoding -e tar --  "${1}" | grep "^ELF.*statically\ linked") >/dev/null || fail "${1} must be static."
 }
 
-umask 0700
+test_static "${busybox}"
+test_static "${dmsetup}"
+
+
+umask 0077
 
 
 printf "Preparing initramfs...\n"
 
 
-mkdir -p "${tmp}/build" || fail 'Failed to mkdir build dir.'
+mkdir -p -- "${tmp}/build" || fail 'Failed to mkdir build dir.'
 cd "${tmp}/build" || fail 'Failed to chdir to build dir.'
 
 mkdir -p -- bin dev etc mnt/root proc sbin sys || fail 'Failed to mkdir initramfs dirs.'
 
-cp -- "${busybox}" bin/ || fail 'Failed to copy busybox.'
-cp -- "${dmsetup}" sbin/ || fail 'Failed to copy dmsetup.'
+cp -- "${busybox}" 'bin/busybox' || fail 'Failed to copy busybox.'
+cp -- "${dmsetup}" 'sbin/dmsetup' || fail 'Failed to copy dmsetup.'
 
 cp -- "${src}/init" . || fail 'Failed to copy init.'
-chmod u+x -- init || fail 'Failed to make init executable.'
+chmod u+x -- 'init' || fail 'Failed to make init executable.'
 
-ln -s -- /bin/busybox bin/echo || fail 'Failed to link busybox to echo.'
-ln -s -- /bin/busybox bin/mount || fail 'Failed to link busybox to mount.'
-ln -s -- /bin/busybox bin/sleep || fail 'Failed to link busybox to sleep.'
-ln -s -- /proc/self/mounts etc/mtab || fail 'Failed to link mounts to mtab.'
+ln -s -- '/bin/busybox' 'bin/cat' || fail 'Failed to link busybox to cat.'
+ln -s -- '/bin/busybox' 'bin/echo' || fail 'Failed to link busybox to echo.'
+ln -s -- '/bin/busybox' 'bin/ls' || fail 'Failed to link busybox to echo.'
+ln -s -- '/bin/busybox' 'bin/mount' || fail 'Failed to link busybox to mount.'
+ln -s -- '/bin/busybox' 'bin/sleep' || fail 'Failed to link busybox to sleep.'
+ln -s -- '/bin/busybox' 'bin/switch_root' || fail 'Failed to link busybox to switch_root.'
+ln -s -- '/proc/self/mounts' 'etc/mtab' || fail 'Failed to link mounts to mtab.'
 
 
 # Naive determinism...
 #
-find . name -exec touch -t  200001010000.00 {} + || fail 'Failed to sanitize timestamps.'
+find -exec touch -ht 200001010000.00 {} + || fail 'Failed to sanitize timestamps.'
 
 
 printf "Building initramfs...\n"
 
 find . -print0 | cpio --create --format=newc --null | gzip -9 > "${tmp}/initramfs" || fail 'Failed to build initramfs.'
 
-touch -t 200001010000.00 "${tmp}/initramfs" || fail 'Failed to sanitize timestamp.'
+touch -t 200001010000.00 -- "${tmp}/initramfs" || fail 'Failed to sanitize timestamp.'
 
 
-cp -a -- "${tmp}/initramfs" "${dest}" || fail 'Failed to copy initramfs.'
+mv -- "${tmp}/initramfs" "${dest}" || fail 'Failed to move initramfs.'
+
+#rm -rf -- "${tmp}" || echo 'Failed to clean up.'
 
 
-echo "initramfs complete."
+echo 'initramfs complete.'
 printf "\n"
 echo "Copy /var/tmp/initramfs to dom0:/var/lib/qubes/vm-kernels/\${version}/initramfs."
+exit 0
