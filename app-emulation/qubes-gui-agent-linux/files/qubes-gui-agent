@@ -1,0 +1,32 @@
+#!/sbin/runscript
+
+
+depend() {
+
+	need qubes-qrexec-agent
+	need qubesdb-daemon
+}
+
+start() {
+
+	if [ -x '/usr/bin/ck-list-sessions' ]; then {
+
+		rm -f /tmp/qubes-session-env /tmp/qubes-session-waiter
+
+		# start console-kit-daemon
+
+		/usr/bin/ck-list-sessions > /dev/null 2>&1
+
+		# pretend tha user is at local console
+
+		touch /var/run/console/user
+	};
+	fi
+
+	start-stop-daemon --start --env DISPLAY=:0 --exec /usr/bin/qubes-gui --background --make-pidfile --pidfile /run/qubes/qubes-gui.pid --stderr /var/log/qubes/gui-agent.log
+}
+
+stop() {
+
+	start-stop-daemon --stop --pidfile /run/qubes/qubes-gui.pid
+}

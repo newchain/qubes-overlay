@@ -1,0 +1,15 @@
+--- Makefile
++++ Makefile
+@@ -48,10 +48,10 @@
+ 	(cd gui-agent; $(MAKE))
+ 
+ xf86-input-mfndev/src/.libs/qubes_drv.so:
+-	(cd xf86-input-mfndev && ./bootstrap && ./configure && make LDFLAGS=-lu2mfn)
++	(cd xf86-input-mfndev && ./bootstrap && ./configure --disable-silent-rules && make LDFLAGS=-lu2mfn)
+ 
+ xf86-video-dummy/src/.libs/dummyqbs_drv.so:
+-	(cd xf86-video-dummy && ./autogen.sh && make)
++	(cd xf86-video-dummy && ./autogen.sh --disable-silent-rules && make)
+ 
+ pulse/module-vchan-sink.so:
+ 	rm -f pulse/pulsecore
