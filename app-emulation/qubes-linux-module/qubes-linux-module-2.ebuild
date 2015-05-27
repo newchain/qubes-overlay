@@ -34,9 +34,8 @@ DEPEND="app-crypt/gnupg
 
 pkg_setup() {
 
-	git checkout "R${PV}" 2>/dev/null
-	git --import "${FILESDIR}/qubes-developers-keys.asc" 2>/dev/null
-	git verify-tag "R${PV}" || die 'Signature verification failed!'
+	readonly version_prefix='R'
+	qubes_prepare
 
 	linux-mod_pkg_setup
 }
