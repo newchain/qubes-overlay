@@ -1,7 +1,9 @@
 /etc/qubes-rpc(/.*)?				gen_context(system_u:object_r:qubes_rpc_etc_t,s0)
 
-/etc/rc\.d/init\.d/qubes-core		--	gen_context(system_u:object_r:qubes-core_init_exec_t,s0)
+/etc/rc\.d/init\.d/net\.qubes		--	gen_context(system_u:object_r:qubes-net_initrc_exec_t,s0)
+/etc/rc\.d/init\.d/qubes-core		--	gen_context(system_u:object_r:qubes-core_initrc_exec_t,s0)
 /etc/rc\.d/init\.d/qubes-qrexec-agent	--	gen_context(system_u:object_r:qrexec-agent_initrc_exec_t,s0)
+/etc/rc\.d/init\.d/qubesdb-daemon	--	gen_context(system_u:object_r:qubesdb_initrc_exec_t,s0)
 
 HOME_DIR/QubesIncoming(/.*)?			gen_context(system_u:object_r:qubes_shared_home_t,s0)
 
@@ -15,8 +17,10 @@ HOME_DIR/QubesIncoming(/.*)?			gen_context(system_u:object_r:qubes_shared_home_t
 
 /usr/bin/qbkdr_run			--	gen_context(system_u:object_r:qbkdr_run_exec_t,s0)
 
+/usr/bin/qrexec-client-vm		--	gen_context(system_u:object_r:qrexec-client-vm_exec_t,s0)
 /usr/bin/qubes-desktop-run		--	gen_context(system_u:object_r:qubes-desktop-run_exec_t,s0)
-/usr/bin/qubes-set-monitor-layout	--	gen_context(system_u:object_r:qubes-set-monitor-layout_exec_t,s)
+/usr/bin/qubesdb-cmd			--	gen_context(system_u:object_r:qubesdb-cmd_exec_t,s0)
+/usr/bin/qubesdb-read			-l	gen_context(system_u:object_r:qubesdb-cmd_exec_t,s0)
 /usr/bin/qvm-.*				--	gen_context(system_u:object_r:qvm_exec_t,s0)
 /usr/bin/qvm-copy-to-vm			--	gen_context(system_u:object_r:qvm-copy-to-vm_exec_t,s0)
 
@@ -25,17 +29,24 @@ HOME_DIR/QubesIncoming(/.*)?			gen_context(system_u:object_r:qubes_shared_home_t
 /usr/lib/qubes/qfile-unpacker		--	gen_context(system_u:object_r:qfile-unpacker_exec_t,s0)
 /usr/lib/qubes/qrexec-agent		--	gen_context(system_u:object_r:qrexec-agent_exec_t,s0)
 /usr/lib/qubes/qrexec-client-vm		--	gen_context(system_u:object_r:qrexec-client-vm_exec_t,s0)
+/usr/lib/qubes/qrexec-client-vm		-l	gen_context(system_u:object_r:qrexec-client-vm_exec_t,s0)
 /usr/lib/qubes/qubes-rpc-multiplexer	--	gen_context(system_u:object_r:qubes-rpc-multiplexer_exec_t,s0)
 /usr/lib/qubes/qubes-trigger-sync-appmenus\.sh	gen_context(system_u:object_r:qubes-trigger-sync-appmenus_exec_t,s0)
+/usr/lib/qubes/setup-ip			--	gen_context(system_u:object_r:setup-ip_exec_t,s0)
 /usr/lib/qubes/tar2qfile		--	gen_context(system_u:object_r:tar2qfile_exec_t,s0)
 
 /usr/local\.orig(/.*)?				gen_context(system_u:object_r:qubes_origin_t,s0)
 
+/usr/sbin/qubesdb-daemon		--	gen_context(system_u:object_r:qubesdb_exec_t,s0)
+
 /var/lib/qubes(/.*)?				gen_context(system_u:object_r:qubes_var_run_t,s0)
 
 /var/log/qubes(/.*)?				gen_context(system_u:object_r:qubes_log_t,s0)
+/var/log/qubes/qrexec-agent\.log	--	gen_context(system_u:object_r:qrexec-agent_log_t,s0)
+/var/log/qubes/qubesdb\.log		--	gen_context(system_u:object_r:qubesdb_log_t,s0)
 
 /var/run/qubes(/.*)?				gen_context(system_u:object_r:qubes_var_run_t,s0)
+/var/run/qubes/qubesdb\.sock		-s	gen_context(system_u:object_r:qubesdb_var_run_t,s0)
 
 #
 # In case restorecon -R

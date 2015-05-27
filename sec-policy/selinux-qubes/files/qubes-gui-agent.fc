@@ -8,10 +8,12 @@
 
 /etc/X11/xorg-qubes\.conf.*		--	gen_context(system_u:object_r:qubes-gui_etc_t,s0)
 
-/etc/init.d/qubes-gui-agent		--	gen_context(system_u:object_r:qubes-gui_initrc_exec_t,s0)
+/etc/rc\.d/init\.d/qubes-gui-agent	--	gen_context(system_u:object_r:qubes-gui_initrc_exec_t,s0)
 
 /usr/bin/qubes-gui			--	gen_context(system_u:object_r:qubes-gui_exec_t,s0)
 /usr/bin/qubes-run-xorg.sh		--	gen_context(system_u:object_r:qubes-run-xorg_exec_t,s0)
+/usr/bin/qubes-session			--	gen_context(system_u:object_r:qubes-session_exec_t,s0)
+/usr/bin/qubes-set-monitor-layout	--	gen_context(system_u:object_r:qubes-set-monitor-layout_exec_t,s)
 
 /var/log/qubes/gui-agent.log		--	gen_context(system_u:object_r:qubes-gui_log_t,s0)
 
