@@ -8,13 +8,20 @@ A [Portage] (https://wiki.gentoo.org/wiki/Portage) overlay for
 Status
 ------
 
-Inter-VM file copying works, even with grsecurity and pax fully
-enabled.
+Inter-VM file copying, qubes-gui, qvm-run, qubes-desktop-run, and
+init scripts work, even with grsecurity, pax, and selinux mcs/strict
+fully enabled.
+
+Note however that some of PaX's features don't currently work in
+PVHVMs, and cannot ever work in fully PV domains.
 
 All other functions are currently untested.
 
 The kernel module ('u2mfn') ebuild requires USE=-sandbox. A static
 kernel can be used by adding u2mfn/ to the kernel build manually.
+
+To use Gentoo as a PV template, you must run
+qubes-prepare-volatile-img.sh on root.img.
 
 
 Progress
