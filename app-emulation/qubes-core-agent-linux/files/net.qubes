@@ -1,0 +1,17 @@
+#!/sbin/runscript
+
+
+depend() {
+
+	need qubesdb-daemon
+}
+
+start() {
+
+	INTERFACE='eth0' /usr/lib/qubes/setup-ip
+}
+
+stop() {
+
+	/bin/ifconfig eth0 down
+}

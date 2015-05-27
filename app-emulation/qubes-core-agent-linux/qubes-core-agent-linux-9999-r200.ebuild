@@ -10,7 +10,7 @@ PYTHON_COMPAT=( python2_7 )
 
 inherit eutils git-2 python-r1 qubes user
 
-DESCRIPTION='Qubes RPC agent for Linux VMs'
+DESCRIPTION='Qubes RPC agent and utilities for Linux VMs'
 HOMEPAGE='https://github.com/QubesOS/qubes-core-agent-linux'
 
 IUSE="glib net selinux svg template"
@@ -33,8 +33,8 @@ RDEPEND="${CDEPEND}
 	glib?	(
 		dev-python/pygobject
 		svg? (
-			dev-python/pygobject[cairo]
 			dev-python/pycairo[svg]
+			dev-python/pygobject[cairo]
 		)
 	)
 	net? (
@@ -52,17 +52,12 @@ REQUIRED_USE="
 			net
 		)"
 
+
 src_prepare() {
 
 	readonly version_prefix='v'
 	qubes_prepare
 
-	if ( [ ${SLOT} == 2 ] && [ "${PV}" != '9999' ] ); then {
-
-		epatch "${FILESDIR}/${PN}-2.1.55_qrexec-agent-rc.d-to-openrc.patch"
-		epatch "${FILESDIR}/${PN}-2.1.55_qubes-core-rc.d-to-openrc-and-diet.patch"
-	};
-	fi
 
 	for i in misc qrexec qubes-rpc; do {
 
@@ -70,11 +65,12 @@ src_prepare() {
 	};
 	done
 
-	if $(use net); then
+	if $(use net); then {
 
 		sed -i -- 's|/sbin/ethtool|/usr/sbin/ethtool|g' 'network/setup-ip'
 		sed -i -- 's|/sbin/ifconfig|/bin/ifconfig|g' 'network/setup-ip'
 		sed -i -- 's|/sbin/route|/bin/route|g' 'network/setup-ip'
+	};
 	fi
 
 	epatch_user
@@ -98,7 +94,7 @@ src_install() {
 
 	if $(use template); then {
 
-	# rw is a mountpoint for a volatile partition. That partition
+	# rw is a mountpoint for a persistent partition. That partition
 	# is what is preserved after shutdown for non-template VMs.
 
 	# home is a bind mountpoint for rw/home.
@@ -121,14 +117,19 @@ src_install() {
 		diropts '-m0770'
 		dodir 'home.orig/user'
 		dodir 'home.orig/user/QubesIncoming'
+		fowners user:qubes-transfer '/home.orig/user' '/home.orig/user/QubesIncoming'
 
 	}; else {
 
 		diropts '-m0770'
 		dodir 'home/user/QubesIncoming'
-		fowners user:qubes-transfer 'home/user' 'home/user/QubesIncoming'
+		fowners user:qubes-transfer '/home/user' '/home/user/QubesIncoming'
 	};
 	fi
+
+	rm -- 'vm-init.d/qubes-core'
+	doinitd "${FILESDIR}/qubes-core"
+	doinitd "${FILESDIR}/qubes-qrexec-agent"
 
 	cd "${S}/qrexec"
 
@@ -136,16 +137,15 @@ src_install() {
 
 	cd "${S}"
 
-	emake DESTDIR="${D}" install-sysvinit
 
 	insinto '/etc/qubes-rpc'
-	doins qubes-rpc/qubes.{Filecopy,OpenInVM}
+	doins 'qubes-rpc/qubes.'{Backup,Filecopy,OpenInVM,Restore,WaitForSession}
 	$(use glib) && doins 'qubes-rpc/qubes.GetAppmenus'
 
 	exeinto '/usr/bin'
 	exeopts '-m0755'
 	$(use glib) && doexe 'misc/qubes-desktop-run'
-	doexe qubes-rpc/qvm-{copy-to-vm,move-to-vm,mru-entry,open-in-dvm,open-in-vm,run}
+	doexe 'qubes-rpc/qvm-'{copy-to-vm,move-to-vm,mru-entry,open-in-dvm,open-in-vm,run}
 
 	$(use selinux) && doexe "${FILESDIR}/qbkdr_run"
 
@@ -153,7 +153,7 @@ src_install() {
 	exeopts '-m0755'
 	$(use glib) && doexe 'misc/qubes-trigger-sync-appmenus.sh'
 	exeopts '-m0711'
-	doexe qubes-rpc/{qfile-agent,tar2qfile}
+	doexe 'qubes-rpc/'{qfile-agent,tar2qfile}
 	exeopts '-m4711'
 	doexe 'qubes-rpc/qfile-unpacker'
 
@@ -163,12 +163,16 @@ src_install() {
 
 	if $(use net); then {
 
+		doinitd "${FILESDIR}/net.qubes"
+
 		exeinto '/usr/lib/qubes'
 		exeopts '-m700'
 		doexe 'network/setup-ip'
 
-		insinto '/lib/udev/rules.d'
-		doins 'network/udev-qubes-network.rules'
+		# grsec kernels trigger nil dereference when the
+		# vif is detached, so just rely on init script.
+		#insinto '/lib/udev/rules.d'
+		#doins 'network/udev-qubes-network.rules'
 	};
 	fi
 
@@ -176,7 +180,28 @@ src_install() {
 	dodoc 'misc/fstab'
 }
 
+pkg_preinst() {
+
+	if $(use template); then {
+
+		qubes_to_runlevel 'net.qubes'
+		qubes_to_runlevel 'qubes-core'
+		qubes_to_runlevel 'qubes-qrexec-agent'
+	};
+	fi
+
+}
+
 pkg_postinst() {
+
+	if $(use net); then {
+
+		echo
+		ewarn 'grsec kernels will crash if the vif is detached'
+		ewarn 'while configured. Be sure to stop net.qubes first.'
+		ewarn
+	};
+	fi
 
 	echo
 	ewarn "qrexec-agent must be running before qrexec_timeout"

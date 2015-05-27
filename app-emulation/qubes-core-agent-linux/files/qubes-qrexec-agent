@@ -1,0 +1,20 @@
+#!/sbin/runscript
+
+
+depend() {
+
+	after qubes-core
+	need selinux_gentoo
+	after tmpfiles.setup
+}
+
+start() {
+
+	start-stop-daemon --start --background --exec /usr/lib/qubes/qrexec-agent --make-pidfile --pidfile /run/qubes/qrexec-agent.pid --stderr /var/log/qubes/qrexec-agent.log
+}
+
+
+stop() {
+
+	start-stop-daemon --stop --pidfile /run/qubes/qrexec-agent.pid
+}

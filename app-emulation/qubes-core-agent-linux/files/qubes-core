@@ -1,0 +1,42 @@
+#!/sbin/runscript
+
+
+depends() {
+
+	need qubesdb-daemon
+}
+
+start() {
+
+	if [ -e '/dev/xvdb' ] ; then {
+
+		# check if private.img (xvdb) is empty - all zeros
+		private_size_512=`blockdev --getsz /dev/xvdb`
+
+		if dd if=/dev/zero bs=512 count=$private_size_512 | diff /dev/xvdb - >/dev/null; then {
+
+			# the device is empty, create filesystem
+			echo "--> Virgin boot of the VM: creating filesystem on private.img"
+			mkfs.ext4 -m 0 -q /dev/xvdb || exit 1
+		};
+		fi
+
+		mount /rw
+		resize2fs /dev/xvdb 2> /dev/null || echo "'resize2fs /dev/xvdb' failed"
+
+	        if ! [ -e '/rw/home/user' ] ; then {
+
+	        	echo
+	        	echo "--> Virgin boot of the VM: Linking /home to /rw/home"
+
+	            cp -aZ -- '/home.orig/user' '/rw/home'
+
+	            touch -t 200001010000 -- '/var/lib/qubes/first-boot-completed'
+	            touch -t 200001010000 -- '/var/lib/qubes'
+	        };
+		fi
+
+		mount /home
+	};
+	fi
+}
