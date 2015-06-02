@@ -1,4 +1,4 @@
-policy_module(qubes-core-agent, 1)
+policy_module(qubes-core, 1)
 
 
 gen_require(`
@@ -9,14 +9,12 @@ gen_require(`
 	role user_r;
 
 	type configfs_t;
-	type net_conf_t;
 	type shell_exec_t;
 	type su_exec_t;
 	type sysadm_t;
 	type tmpfiles_t;
 	type user_t;
 	type xauth_exec_t;
-	type xen_device_t;
 ')
 
 
@@ -96,18 +94,25 @@ init_daemon_domain(qrexec-agent_t, qrexec-agent_exec_t)
         corecmd_bin_entry_type(qubes-rpc-multiplexer_worker_t)
         role system_r types qubes-rpc-multiplexer_worker_t;
 
-type qrexec-client-vm_t;
+attribute qrexec-client-vm_domain;
+
+  attribute qrexec-client-vm_sh_domain;
+
+    attribute qrexec-client-vm_sh_worker_domain;
+
+  attribute qrexec-client-vm_worker_domain;
+
+type qrexec-client-vm_t, qrexec-client-vm_domain;
 type qrexec-client-vm_exec_t;
 application_domain(qrexec-client-vm_t, qrexec-client-vm_exec_t)
-
-  type qrexec-client-vm_sh_t;
-  application_type(qrexec-client-vm_sh_t)
-  corecmd_bin_entry_type(qrexec-client-vm_sh_t)
-  role system_r types qrexec-agent_worker_t;
 
   type qfile-agent_t;
   type qfile-agent_exec_t;
   application_domain(qfile-agent_t, qfile-agent_exec_t)
+
+  type qrexec-client-vm_sh_t, qrexec-client-vm_sh_domain;
+  application_type(qrexec-client-vm_sh_t)
+  corecmd_shell_entry_type(qrexec-client-vm_sh_t)
 
 type qrexec-agent_initrc_t, qubes_init_domain;
 type qrexec-agent_initrc_exec_t;
@@ -159,6 +164,12 @@ logging_log_file(qubes_log_t)
 type qubes_origin_t;
 files_type(qubes_origin_t)
 
+type qubes_persistent_t;
+files_type(qubes_persistent_t)
+
+type qubes_persistent_config_t;
+files_type(qubes_persistent_config_t)
+
 type qubes_rpc_etc_t;
 files_config_file(qubes_rpc_etc_t)
 
@@ -185,19 +196,17 @@ application_domain(qubes-trigger-sync-appmenus_t, qubes-trigger-sync-appmenus_ex
   corecmd_bin_entry_type(qubes-trigger-sync-appmenus_worker_t)
 
 type qubes_u2mfn_t, proc_type;
+files_type(qubes_u2mfn_t)
 #
 # Must be added to base policy :(
 #
-#genfscon proc /u2mfn
+#genfscon proc /u2mfn gen_context(system_u:object_r:qubes_u2mfn_t,s0)
 
 type qubes_var_lib_t;
 files_type(qubes_var_lib_t)
 
 type qubes_var_run_t;
 files_pid_file(qubes_var_run_t)
-
-type qubes_volatile_t;
-files_type(qubes_volatile_t)
 
 # Utils invoked by user, but with no domain written yet
 #
@@ -237,7 +246,7 @@ init_system_domain(tar2qfile_t, tar2qfile_exec_t)
 # mount_t local policy
 #
 
-allow mount_t qubes_volatile_t : dir { mounton write setattr };
+allow mount_t qubes_persistent_t : dir { mounton write setattr };
 
 
 #########################################
@@ -245,20 +254,19 @@ allow mount_t qubes_volatile_t : dir { mounton write setattr };
 # qfile-agent_t local policy
 #
 
-allow qfile-agent_t qrexec-client-vm_t : unix_stream_socket { read write };
-
 corecmd_search_bin(qfile-agent_t)
 
-# For /dev/tty\d:
-#
 getty_use_fds(qfile-agent_t)
 userdom_use_user_ttys(qfile-agent_t)
 
-qubes_list_shared_home(qfile-agent_t)
-qubes_read_shared_home(qfile-agent_t)
+qubes_core_list_qubes_shared_home(qfile-agent_t)
+qubes_core_read_qubes_shared_home_files(qfile-agent_t)
 
 userdom_use_unpriv_users_fds(qfile-agent_t)
 userdom_use_user_ptys(qfile-agent_t)
+
+
+allow qfile-agent_t qrexec-client-vm_t : unix_stream_socket { read write };
 
 # /dev/null
 #
@@ -270,7 +278,23 @@ allow qfile-agent_t qvm-copy-to-vm_t : fd use;
 # qrexec-agent_t local policy
 #
 
+corecmd_search_bin(qrexec-agent_t)
+domtrans_pattern(qrexec-agent_t, su_exec_t, qrexec-agent_su_t)
+
+create_sock_files_pattern(qrexec-agent_t, qubes_var_run_t, qubes_var_run_t)
+
+dev_rw_xen(qrexec-agent_t)
+
+fs_search_xenfs(qrexec-agent_t)
+
+qubes_core_rw_qrexec_agent_pipes(qrexec-agent_t)
+
+
 allow qrexec-agent_t self : process signal;
+
+# /dev/xen/xenbus
+#
+allow qrexec-agent_t device_t : chr_file { getattr read write open };
 
 # proc_t perms for u2mfn:
 #
@@ -281,23 +305,6 @@ allow qrexec-agent_t { proc_t qubes_u2mfn_t } : file { read write open ioctl };
 allow qrexec-agent_t qrexec-agent_log_t : file { append ioctl };
 
 allow qrexec-agent_t xenfs_t : file { getattr read write open ioctl };
-
-create_sock_files_pattern(qrexec-agent_t, qubes_var_run_t, qubes_var_run_t)
-
-
-corecmd_search_bin(qrexec-agent_t)
-domtrans_pattern(qrexec-agent_t, su_exec_t, qrexec-agent_su_t)
-
-dev_rw_xen(qrexec-agent_t)
-
-fs_search_xenfs(qrexec-agent_t)
-
-qubes_rw_qrexec_agent_pipes(qrexec-agent_t)
-
-
-# /dev/xen/xenbus
-#
-allow qrexec-agent_t device_t : chr_file { getattr read write open };
 
 
 #########################################
@@ -312,15 +319,15 @@ init_dontaudit_read_all_script_files(qrexec-agent_initrc_t)
 #
 kernel_dontaudit_read_system_state(qrexec-agent_initrc_t)
 
-qubes_search_qubes_log(qrexec-agent_initrc_t)
+qubes_core_search_qubes_log(qrexec-agent_initrc_t)
 allow qrexec-agent_initrc_t qrexec-agent_log_t : file { append open };
 
-qubes_search_rpc_worker_exec(qrexec-agent_initrc_t)
+qubes_core_search_qubes_rpc_worker_exec(qrexec-agent_initrc_t)
 domtrans_pattern(qrexec-agent_initrc_t, qrexec-agent_exec_t, qrexec-agent_t)
 
-qubes_create_var_run_files(qrexec-agent_initrc_t)
-qubes_write_var_run_files(qrexec-agent_initrc_t)
-qubes_delete_var_run_files(qrexec-agent_initrc_t)
+qubes_core_create_qubes_var_run_files(qrexec-agent_initrc_t)
+qubes_core_write_qubes_var_run_files(qrexec-agent_initrc_t)
+qubes_core_delete_qubes_var_run_files(qrexec-agent_initrc_t)
 
 userdom_dontaudit_search_user_home_dirs(qrexec-agent_initrc_t)
 
@@ -339,9 +346,9 @@ allow qrexec-agent_sh_t self : fifo_file read;
 corecmd_bin_domtrans(qrexec-agent_sh_t, qrexec-agent_worker_t)
 corecmd_list_bin(qrexec-agent_sh_t)
 
-qubes_rwi_inherited_qrexec_agent_pipes(qrexec-agent_sh_t)
+qubes_core_rwi_inherited_qrexec_agent_pipes(qrexec-agent_sh_t)
 
-qubes_search_rpc_worker_exec(qrexec-agent_sh_t)
+qubes_core_search_qubes_rpc_worker_exec(qrexec-agent_sh_t)
 domtrans_pattern(qrexec-agent_sh_t, qubes-rpc-multiplexer_exec_t, qubes-rpc-multiplexer_t)
 
 # .bash_profile:
@@ -356,9 +363,9 @@ allow qrexec-agent_sh_t etc_t : file read_file_perms;
 #
 kernel_dontaudit_read_system_state(qrexec-agent_sh_t)
 
-qubes_bluepill_locale(qrexec-agent_sh_t)
+qubes_core_bluepill_locale(qrexec-agent_sh_t)
 
-qubes_rw_qrexec_agent_stream_sockets(qrexec-agent_sh_t)
+qubes_core_rw_qrexec_agent_stream_sockets(qrexec-agent_sh_t)
 
 
 #########################################
@@ -396,10 +403,9 @@ kernel_read_kernel_sysctls(qrexec-agent_su_t)
 
 logging_send_syslog_msg(qrexec-agent_su_t)
 
-qubes_bluepill_locale(qrexec-agent_su_t)
+qubes_core_bluepill_locale(qrexec-agent_su_t)
 
-qubes_rw_qrexec_agent_stream_sockets(qrexec-agent_su_t)
-
+qubes_core_rw_qrexec_agent_stream_sockets(qrexec-agent_su_t)
 
 selinux_compute_access_vector(qrexec-agent_su_t)
 
@@ -409,13 +415,13 @@ selinux_compute_access_vector(qrexec-agent_su_t)
 # qrexec-agent_worker_t local policy
 #
 
-qubes_bluepill_locale(qrexec-agent_worker_t)
+qubes_core_bluepill_locale(qrexec-agent_worker_t)
 
-qubes_rwi_inherited_qrexec_agent_pipes(qrexec-agent_worker_t)
+qubes_core_rwi_inherited_qrexec_agent_pipes(qrexec-agent_worker_t)
 
-qubes_sigchld_qrexec_agent_su(qrexec-agent_worker_t)
+qubes_core_sigchld_qrexec_agent_su(qrexec-agent_worker_t)
 
-qubes_use_qrexec_agent_sh_fds(qrexec-agent_worker_t)
+qubes_core_use_qrexec_agent_sh_fds(qrexec-agent_worker_t)
 allow qrexec-agent_worker_t qrexec-agent_sh_t : fifo_file { write getattr };
 
 
@@ -426,40 +432,74 @@ allow qrexec-agent_worker_t qrexec-agent_sh_t : process sigchld;
 
 #########################################
 #
+# qrexec-client-vm_domain local policy
+#
+
+fs_search_xenfs(qrexec-client-vm_domain)
+
+getty_use_fds(qrexec-client-vm_domain)
+userdom_use_user_ttys(qrexec-client-vm_domain)
+
+qubes_core_write_var_run_sock_file(qrexec-client-vm_domain)
+qubes_core_stream_connect_qrexec_agent(qrexec-client-vm_domain)
+
+qubes_core_search_qubes_rpc_worker_exec(qrexec-client-vm_domain)
+
+userdom_use_unpriv_users_fds(qrexec-client-vm_domain)
+userdom_use_user_ptys(qrexec-client-vm_domain)
+
+
+# /dev/xen/xenbus
+#
+allow qrexec-client-vm_domain device_t : chr_file { getattr read write open };
+
+# gntalloc
+#
+allow qrexec-client-vm_domain xen_device_t : chr_file { read write open ioctl };
+
+# /proc/xen/privcmd
+#
+allow qrexec-client-vm_domain xenfs_t : file { read write open ioctl };
+
+
+#########################################
+#
 # qrexec-client-vm_t local policy
 #
 
 domtrans_pattern(qrexec-client-vm_t, qfile-agent_exec_t, qfile-agent_t)
 
-fs_search_xenfs(qrexec-client-vm_t)
+
+#########################################
 #
-# /proc/xen/privcmd
+# qrexec-client-vm_sh_domain local policy
 #
-allow qrexec-client-vm_t xenfs_t : file { read write ioctl };
 
-# For /dev/tty\d:
+# meminfo
 #
-getty_use_fds(qrexec-client-vm_t)
-userdom_use_user_ttys(qrexec-client-vm_t)
+kernel_dontaudit_read_system_state(qrexec-client-vm_sh_domain)
 
-qubes_search_rpc_worker_exec(qrexec-client-vm_t)
+getty_use_fds(qrexec-client-vm_sh_domain)
+userdom_use_user_ttys(qrexec-client-vm_sh_domain)
 
-qubes_search_var_run(qrexec-client-vm_t)
-qubes_stream_connect_qrexec_agent(qrexec-client-vm_t)
-allow qrexec-client-vm_t qubes_var_run_t : sock_file write;
+qubes_core_bluepill_locale(qrexec-client-vm_sh_domain)
 
-userdom_use_unpriv_users_fds(qrexec-client-vm_t)
-userdom_use_user_ptys(qrexec-client-vm_t)
+userdom_use_unpriv_users_fds(qrexec-client-vm_sh_domain)
+userdom_use_user_ptys(qrexec-client-vm_sh_domain)
 
 
-# gntalloc
+#########################################
 #
-allow qrexec-client-vm_t xen_device_t : chr_file { read write open ioctl };
-
-# /dev/xen/xenbus
+# qrexec-client-vm_sh_worker_domain local policy
 #
-allow qrexec-client-vm_t device_t : chr_file { getattr read write open ioctl };
-allow qrexec-client-vm_t device_t : chr_file { read write open ioctl };
+
+getty_use_fds(qrexec-client-vm_sh_worker_domain)
+userdom_use_user_ttys(qrexec-client-vm_sh_worker_domain)
+
+qubes_core_bluepill_locale(qrexec-client-vm_sh_worker_domain)
+
+userdom_use_unpriv_users_fds(qrexec-client-vm_sh_worker_domain)
+userdom_use_user_ptys(qrexec-client-vm_sh_worker_domain)
 
 
 #########################################
@@ -482,8 +522,7 @@ storage_getattr_fixed_disk_dev(qubes-core_initrc_t)
 userdom_create_user_home_dirs(qubes-core_initrc_t)
 userdom_search_user_home_dirs(qubes-core_initrc_t)
 
-
-allow qubes-core_initrc_t qubes_volatile_t : dir search_dir_perms;
+qubes_core_search_qubes_persistent(qubes-core_initrc_t)
 
 #
 # cp
@@ -537,7 +576,7 @@ init_use_script_ptys(qubes_init_domain)
 
 logging_send_syslog_msg(qubes_init_domain)
 
-qubes_bluepill_locale(qubes_init_domain)
+qubes_core_bluepill_locale(qubes_init_domain)
 
 
 allow qubes_init_domain initrc_state_t : dir list_dir_perms;
@@ -561,7 +600,7 @@ kernel_dontaudit_read_system_state(qubes-net_initrc_t)
 
 # start:
 #
-setup_ip_domtrans(qubes-net_initrc_t)
+qubes_core_setup_ip_domtrans(qubes-net_initrc_t)
 
 # stop:
 #
@@ -578,11 +617,11 @@ allow qubes-net_initrc_t qubesdb_initrc_exec_t : file getattr;
 # qubes-rpc-multiplexer_t local policy
 #
 
-qubes_rwi_inherited_qrexec_agent_pipes(qubes-rpc-multiplexer_t)
+qubes_core_rwi_inherited_qrexec_agent_pipes(qubes-rpc-multiplexer_t)
 
-qubes_sigchld_qrexec_agent_su(qubes-rpc-multiplexer_t)
+qubes_core_sigchld_qrexec_agent_su(qubes-rpc-multiplexer_t)
 
-qubes_search_rpc_etc(qubes-rpc-multiplexer_t)
+qubes_core_search_qubes_rpc_etc(qubes-rpc-multiplexer_t)
 
 allow qubes-rpc-multiplexer_t qubes_rpc_stderror_t : fifo_file { write open getattr };
 
@@ -599,13 +638,13 @@ kernel_dontaudit_read_system_state(qubes-rpc-multiplexer_t)
 
 # Presumably required for log locale:
 #
-qubes_bluepill_locale(qubes-rpc-multiplexer_t)
+qubes_core_bluepill_locale(qubes-rpc-multiplexer_t)
 
-qubes_getattr_rpc_etc(qubes-rpc-multiplexer_t)
+qubes_core_getattr_qubes_rpc_etc(qubes-rpc-multiplexer_t)
 
-qubes_search_rpc_worker_exec(qubes-rpc-multiplexer_t)
+qubes_core_search_qubes_rpc_worker_exec(qubes-rpc-multiplexer_t)
 
-qubes_rw_qrexec_agent_stream_sockets(qubes-rpc-multiplexer_t)
+qubes_core_rw_qrexec_agent_stream_sockets(qubes-rpc-multiplexer_t)
 
 # For what? (seems to fail without this)
 #
@@ -622,11 +661,11 @@ allow qubes-rpc-multiplexer_t qrexec-agent_su_t : fd use;
 # qubes-rpc-multiplexer_worker_t local policy
 #
 
-qubes_rwi_inherited_qrexec_agent_pipes(qubes-rpc-multiplexer_worker_t)
+qubes_core_rwi_inherited_qrexec_agent_pipes(qubes-rpc-multiplexer_worker_t)
 
-qubes_use_rpc_multiplexer_fds(qubes-rpc-multiplexer_worker_t)
+qubes_core_use_qubes_rpc_multiplexer_fds(qubes-rpc-multiplexer_worker_t)
 
-qubes_rw_qrexec_agent_stream_sockets(qubes-rpc-multiplexer_worker_t)
+qubes_core_rw_qrexec_agent_stream_sockets(qubes-rpc-multiplexer_worker_t)
 
 allow qubes-rpc-multiplexer_worker_t qubes-rpc-multiplexer_t : process sigchld;
 
@@ -636,7 +675,7 @@ allow qubes-rpc-multiplexer_worker_t qubes_rpc_stderror_t : fifo_file { create r
 
 # /dev/null
 #
-qubes_use_qrexec_agent_sh_fds(qubes-rpc-multiplexer_worker_t)
+qubes_core_use_qrexec_agent_sh_fds(qubes-rpc-multiplexer_worker_t)
 
 
 #
@@ -645,7 +684,7 @@ qubes_use_qrexec_agent_sh_fds(qubes-rpc-multiplexer_worker_t)
 
 logging_send_syslog_msg(qubes-rpc-multiplexer_worker_t)
 
-qubes_bluepill_locale(qubes-rpc-multiplexer_worker_t)
+qubes_core_bluepill_locale(qubes-rpc-multiplexer_worker_t)
 
 allow qubes-rpc-multiplexer_worker_t qubes-rpc-multiplexer_sh_t : process sigchld;
 
@@ -655,8 +694,6 @@ allow qubes-rpc-multiplexer_worker_t qubes-rpc-multiplexer_sh_t : process sigchl
 # qubesdb_t local policy
 #
 
-# pipefs:
-#
 allow qubesdb_t self : fifo_file { read write };
 
 # Forks and kills parent:
@@ -671,14 +708,14 @@ allow qubesdb_t qubesdb_initrc_t : fd use;
 filetrans_pattern(qubesdb_t, qubes_var_run_t, qubesdb_var_run_t, sock_file)
 allow qubesdb_t qubesdb_var_run_t : sock_file { create_sock_file_perms delete_sock_file_perms };
 
-qubes_search_qubes_log(qubesdb_t)
+qubes_core_search_qubes_log(qubesdb_t)
 allow qubesdb_t qubesdb_log_t: file { write open ioctl };
 
 # pid
 #
-qubes_create_var_run_files(qubesdb_t)
-qubes_write_var_run_files(qubesdb_t)
-qubes_delete_var_run_files(qubesdb_t)
+qubes_core_create_qubes_var_run_files(qubesdb_t)
+qubes_core_write_qubes_var_run_files(qubesdb_t)
+qubes_core_delete_qubes_var_run_files(qubesdb_t)
 
 # /dev/xen/xenbus
 #
@@ -704,8 +741,7 @@ allow qubesdb_t xenfs_t : file { read open write ioctl };
 # qubesdb-cmd_t local policy
 #
 
-qubes_search_var_run(qubesdb-cmd_t)
-
+qubes_core_search_qubes_var_run(qubesdb-cmd_t)
 allow qubesdb-cmd_t qubesdb_t : unix_stream_socket connectto;
 allow qubesdb-cmd_t qubesdb_var_run_t : sock_file write;
 
@@ -722,7 +758,7 @@ init_dontaudit_read_all_script_files(qubesdb_initrc_t)
 #
 kernel_dontaudit_read_system_state(qubesdb_initrc_t)
 
-qubes_qubesdb_transition_pattern(qubesdb_initrc_t)
+qubes_core_qubesdb_domtrans(qubesdb_initrc_t)
 
 
 allow qubesdb_initrc_t initrc_state_t : dir { create_dir_perms delete_dir_perms };
@@ -737,11 +773,8 @@ allow qubesdb_initrc_t qubesdb_t : process { signal sigkill };
 
 allow qvm-copy-to-vm_t self : fifo_file read;
 
-corecmd_search_bin(qvm-copy-to-vm_t)
 corecmd_bin_domtrans(qvm-copy-to-vm_t, qvm-copy-to-vm_worker_t)
 
-# For /dev/tty\d:
-#
 getty_use_fds(qvm-copy-to-vm_t)
 userdom_use_user_ttys(qvm-copy-to-vm_t)
 
@@ -751,10 +784,10 @@ kernel_dontaudit_read_system_state(qvm-copy-to-vm_t)
 
 miscfiles_read_localization(qvm-copy-to-vm_t)
 
-qubes_search_rpc_worker_exec(qvm-copy-to-vm_t)
+qubes_core_search_qubes_rpc_worker_exec(qvm-copy-to-vm_t)
 domtrans_pattern(qvm-copy-to-vm_t, qrexec-client-vm_exec_t, qrexec-client-vm_t)
 
-qubes_search_shared_home(qvm-copy-to-vm_t)
+qubes_core_search_qubes_shared_home(qvm-copy-to-vm_t)
 
 userdom_use_user_ptys(qvm-copy-to-vm_t)
 
@@ -771,12 +804,10 @@ allow qvm-copy-to-vm_t shell_exec_t : file read;
 
 corecmd_bin_domtrans(qubes-trigger-sync-appmenus_t, qubes-trigger-sync-appmenus_worker_t)
 
-# For /dev/tty\d:
-#
 getty_use_fds(qubes-trigger-sync-appmenus_t)
 userdom_use_user_ttys(qubes-trigger-sync-appmenus_t)
 
-qubes_search_rpc_worker_exec(qubes-trigger-sync-appmenus_t)
+qubes_core_search_qubes_rpc_worker_exec(qubes-trigger-sync-appmenus_t)
 qrexec_client_vm_domtrans(qubes-trigger-sync-appmenus_t)
 
 
@@ -788,8 +819,6 @@ allow qubes-trigger-sync-appmenus_t self : fifo_file read;
 # qubes-trigger-sync-appmenus_worker_t local policy
 #
 
-# For /dev/tty\d:
-#
 getty_use_fds(qubes-trigger-sync-appmenus_worker_t)
 userdom_use_user_ttys(qubes-trigger-sync-appmenus_worker_t)
 
@@ -814,9 +843,16 @@ allow qvm-copy-to-vm_worker_t qvm-copy-to-vm_t : fifo_file { write read getattr 
 
 allow qvm-copy-to-vm_worker_t qvm-copy-to-vm_t : process sigchld;
 
+
+getty_use_fds(qvm-copy-to-vm_worker_t)
+userdom_use_user_ttys(qvm-copy-to-vm_worker_t)
+
 # Presumably stderr of ( cut | tail ) is redirected to qrexec-agent.log
 #
-qubes_bluepill_locale(qvm-copy-to-vm_worker_t)
+qubes_core_bluepill_locale(qvm-copy-to-vm_worker_t)
+
+userdom_use_unpriv_users_fds(qvm-copy-to-vm_worker_t)
+userdom_use_user_ptys(qvm-copy-to-vm_worker_t)
 
 #
 # du
@@ -840,20 +876,8 @@ files_read_etc_runtime_files(qvm-copy-to-vm_worker_t)
 #
 fs_getattr_tmpfs_dirs(qvm-copy-to-vm_worker_t)
 
-# du for /dev/tty\d:
-#
-getty_use_fds(qvm-copy-to-vm_worker_t)
-
-qubes_getattr_shared_home_files(qvm-copy-to-vm_worker_t)
-qubes_list_shared_home(qvm-copy-to-vm_worker_t)
-
-#
-# tail
-#
-
-userdom_use_unpriv_users_fds(qvm-copy-to-vm_worker_t)
-userdom_use_user_ptys(qvm-copy-to-vm_worker_t)
-userdom_use_user_ttys(qvm-copy-to-vm_worker_t)
+qubes_core_getattr_qubes_shared_home_files(qvm-copy-to-vm_worker_t)
+qubes_core_list_qubes_shared_home(qvm-copy-to-vm_worker_t)
 
 
 #########################################
@@ -874,13 +898,13 @@ init_use_script_ptys(setup-ip_t)
 #
 kernel_dontaudit_read_system_state(setup-ip_t)
 
-qubes_bluepill_locale(setup-ip_t)
-
-qubes_qubesdb_cmd_transition_pattern(setup-ip_t)
+qubes_core_bluepill_locale(setup-ip_t)
 
 # cwd
 #
-qubes_search_rpc_worker_exec(setup-ip_t)
+qubes_core_search_qubes_rpc_worker_exec(setup-ip_t)
+
+qubes_core_qubesdb_cmd_domtrans(setup-ip_t)
 
 sysnet_domtrans_ifconfig(setup-ip_t)
 
@@ -890,8 +914,6 @@ sysnet_read_config(setup-ip_t)
 
 
 allow setup-ip_t self : fifo_file read;
-
-allow setup-ip_t qubesdb-cmd_exec_t : lnk_file read;
 
 allow setup-ip_t shell_exec_t : file read;
 
@@ -904,7 +926,7 @@ allow setup-ip_t shell_exec_t : file read;
 init_use_script_fds(setup-ip_worker_t)
 init_use_script_ptys(setup-ip_worker_t)
 
-qubes_bluepill_locale(setup-ip_worker_t)
+qubes_core_bluepill_locale(setup-ip_worker_t)
 
 
 allow setup-ip_worker_t setup-ip_t : process sigchld;
@@ -936,8 +958,18 @@ allow setup-ip_worker_t xenfs_t : file { getattr read write open };
 # sysadm_r local policy
 #
 
-qubes_trigger_sync_appmenus_role(sysadm_t, sysadm_r)
-qvm_role(sysadm_t, sysadm_r)
+qubes_core_qubes_trigger_sync_appmenus_role(sysadm_r, sysadm_t)
+qubes_core_qvm_role(sysadm_r, sysadm_t)
+
+
+#########################################
+#
+# system_r local policy
+#
+
+allow system_r user_r;
+
+role system_r types user_t;
 
 
 #########################################
@@ -945,7 +977,7 @@ qvm_role(sysadm_t, sysadm_r)
 # user_r local policy
 #
 
-qvm_role(user_t, user_r)
+qubes_core_qvm_role(user_r, user_t)
 
 
 #########################################
@@ -956,8 +988,8 @@ qvm_role(user_t, user_r)
 files_pid_filetrans(tmpfiles_t, qubes_var_run_t, dir, "qubes")
 
 logging_log_filetrans(tmpfiles_t, qubes_log_t, dir, "qubes")
-qubes_log_filetrans(tmpfiles_t, qrexec-agent_log_t, file, "qrexec-agent.log")
-qubes_log_filetrans(tmpfiles_t, qubesdb_log_t, file, "qubesdb.log")
+qubes_core_qubes_log_filetrans(tmpfiles_t, qrexec-agent_log_t, file, "qrexec-agent.log")
+qubes_core_qubes_log_filetrans(tmpfiles_t, qubesdb_log_t, file, "qubesdb.log")
 
 
 #########################################
@@ -977,9 +1009,6 @@ qubes_log_filetrans(tmpfiles_t, qubesdb_log_t, file, "qubesdb.log")
 	#
 	# Declarations
 	#
-
-	allow system_r user_r;
-	role system_r types user_t;
 
 	# Called for incoming copy:
 	#
@@ -1024,13 +1053,13 @@ qubes_log_filetrans(tmpfiles_t, qubesdb_log_t, file, "qubesdb.log")
 	#allow qfile-unpacker_t self : capability sys_admin;
 
 
-	qubes_bind_shared_home_files(qfile-unpacker_t)
+	qubes_core_bind_shared_home_files(qfile-unpacker_t)
 
-	qubes_create_shared_home_files(qfile-unpacker_t)
+	qubes_core_create_qubes_shared_home_files(qfile-unpacker_t)
 
-	qubes_rw_inherited_qrexec_agent_pipes(qfile-unpacker_t)
+	qubes_core_rw_inherited_qrexec_agent_pipes(qfile-unpacker_t)
 
-	qubes_write_inherited_rpc_stderror(qfile-unpacker_t)
+	qubes_core_write_inherited_qubes_rpc_stderror(qfile-unpacker_t)
 
 
 	# must be able to read /etc/passwd:
@@ -1051,6 +1080,7 @@ qubes_log_filetrans(tmpfiles_t, qubesdb_log_t, file, "qubesdb.log")
 	#
 
 	domain_role_change_exemption(qrexec-agent_sh_t)
+	#domain_subj_id_change_exemption(qrexec-agent_sh_t)
 
 	domtrans_pattern(qrexec-agent_sh_t, qbkdr_run_exec_t, user_t)
 	domtrans_pattern(qrexec-agent_sh_t, qubes-desktop-run_exec_t, user_t)
@@ -1090,26 +1120,27 @@ qubes_log_filetrans(tmpfiles_t, qubesdb_log_t, file, "qubesdb.log")
 	# qubes-rpc-multiplexer_sh_t local policy
 	#
 
-	qubes_bluepill_locale(qubes-rpc-multiplexer_sh_t)
-
-	qubes_rw_inherited_qrexec_agent_pipes(qubes-rpc-multiplexer_sh_t)
-
-	qubes_write_inherited_rpc_stderror(qubes-rpc-multiplexer_sh_t)
-
-	qubes_getattr_rpc_etc(qubes-rpc-multiplexer_sh_t)
-	qubes_read_rpc_etc(qubes-rpc-multiplexer_sh_t)
-
-	qubes_search_rpc_worker_exec(qubes-rpc-multiplexer_sh_t)
 	corecmd_bin_domtrans(qubes-rpc-multiplexer_sh_t, qubes-rpc-multiplexer_sh_worker_t)
+
+	qubes_core_bluepill_locale(qubes-rpc-multiplexer_sh_t)
+
+	qubes_core_rw_inherited_qrexec_agent_pipes(qubes-rpc-multiplexer_sh_t)
+
+	qubes_core_write_inherited_qubes_rpc_stderror(qubes-rpc-multiplexer_sh_t)
+
+	qubes_core_getattr_qubes_rpc_etc(qubes-rpc-multiplexer_sh_t)
+	qubes_core_read_qubes_rpc_etc(qubes-rpc-multiplexer_sh_t)
+
+	qubes_core_search_qubes_rpc_worker_exec(qubes-rpc-multiplexer_sh_t)
 	domtrans_pattern(qubes-rpc-multiplexer_sh_t, qfile-unpacker_exec_t, qfile-unpacker_t)
 
-	qubes_rw_qrexec_agent_stream_sockets(qubes-rpc-multiplexer_sh_t)
+	qubes_core_rw_qrexec_agent_stream_sockets(qubes-rpc-multiplexer_sh_t)
 
-	qubes_sigchld_qrexec_agent_su(qubes-rpc-multiplexer_sh_t)
+	qubes_core_sigchld_qrexec_agent_su(qubes-rpc-multiplexer_sh_t)
 
 	# /dev/null
 	#
-	qubes_use_qrexec_agent_sh_fds(qubes-rpc-multiplexer_sh_t)
+	qubes_core_use_qrexec_agent_sh_fds(qubes-rpc-multiplexer_sh_t)
 
 
 	#########################################
@@ -1123,7 +1154,7 @@ qubes_log_filetrans(tmpfiles_t, qubesdb_log_t, file, "qubesdb.log")
 
 	# pipefs
 	#
-	qubes_rw_inherited_qrexec_agent_pipes(qubes-rpc-multiplexer_sh_worker_t)
+	qubes_core_rw_inherited_qrexec_agent_pipes(qubes-rpc-multiplexer_sh_worker_t)
 	allow qubes-rpc-multiplexer_sh_worker_t self : fifo_file read;
 	allow qubes-rpc-multiplexer_sh_worker_t qubes-rpc-multiplexer_sh_t : fd use;
 	allow qubes-rpc-multiplexer_sh_worker_t qubes-rpc-multiplexer_sh_t : fifo_file { write read };
@@ -1132,7 +1163,7 @@ qubes_log_filetrans(tmpfiles_t, qubesdb_log_t, file, "qubesdb.log")
 	# find
 	#
 
-	qubes_write_inherited_rpc_stderror(qubes-rpc-multiplexer_sh_worker_t)
+	qubes_core_write_inherited_qubes_rpc_stderror(qubes-rpc-multiplexer_sh_worker_t)
 
 	# find list applications
 	#
@@ -1142,9 +1173,7 @@ qubes_log_filetrans(tmpfiles_t, qubesdb_log_t, file, "qubesdb.log")
 	# xargs
 	#
 
-	corecmd_search_bin(qubes-rpc-multiplexer_sh_worker_t)
-
-	# xargs read awk
+	# xargs <- awk
 	#
 	allow qubes-rpc-multiplexer_sh_worker_t bin_t : lnk_file read;
 
@@ -1156,7 +1185,7 @@ qubes_log_filetrans(tmpfiles_t, qubesdb_log_t, file, "qubesdb.log")
 
 	files_read_usr_files(qubes-rpc-multiplexer_sh_awk_t)
 
-	qubes_bluepill_locale(qubes-rpc-multiplexer_sh_awk_t)
+	qubes_core_bluepill_locale(qubes-rpc-multiplexer_sh_awk_t)
 
 	allow qubes-rpc-multiplexer_sh_awk_t qubes-rpc-multiplexer_sh_worker_t : process sigchld;
 
@@ -1168,9 +1197,9 @@ qubes_log_filetrans(tmpfiles_t, qubesdb_log_t, file, "qubesdb.log")
 	# sleep
 	#
 
-	qubes_write_inherited_rpc_stderror(qubes-rpc-multiplexer_sh_awk_t)
+	qubes_core_write_inherited_qubes_rpc_stderror(qubes-rpc-multiplexer_sh_awk_t)
 
-	qubes_rw_inherited_qrexec_agent_pipes(qubes-rpc-multiplexer_sh_awk_t)
+	qubes_core_rw_inherited_qrexec_agent_pipes(qubes-rpc-multiplexer_sh_awk_t)
 
 
 	#########################################
@@ -1178,12 +1207,9 @@ qubes_log_filetrans(tmpfiles_t, qubesdb_log_t, file, "qubesdb.log")
 	# user_t
 	#
 
-	qubes_sigchld_qrexec_agent_su(user_t)
+	qubes_core_sigchld_qrexec_agent_su(user_t)
 
-	# pipefs:
-	#
-	qubes_use_qrexec_agent_fds(user_t)
-	qubes_write_qrexec_agent_pipes(user_t)
+	qubes_core_write_inherited_qrexec_agent_pipes(user_t)
 
 	# Unfortunately, this means user_t can determine that
 	# this is a Qubes domain. More unfortunately, there are

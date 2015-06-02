@@ -39,27 +39,16 @@ src_compile() {
 
 src_install() {
 
-	if ! [ ${SLOT} == 2 ]; then {
+	emake DESTDIR="${D}" install
 
-		# qubes-linux-utils for R3 expects vchan-, not vchan-xen
-		#
-		ln -s -- '/usr/lib/pkgconfig/vchan-xen.pc' 'vchan-.pc'
-
-		insinto '/usr/lib/pkgconfig'
-		doins  'vchan-.pc'
-	};
-	fi
-
-		emake DESTDIR="${D}" install
-
-		insinto '/usr/share/qubes'
-		doins "${FILESDIR}/xenstore-do-not-use-broken-kernel-interface.patch"
+	insinto '/usr/share/qubes'
+	doins "${FILESDIR}/xenstore-do-not-use-broken-kernel-interface.patch"
 }
 
 pkg_postinst() {
 
 	echo
-	ewarn "You must apply xenstore-do-not-use-broken-kernel-interface.patch
-	ewarn "to app-emulation/xen-tools.
+	ewarn "You must apply xenstore-do-not-use-broken-kernel-interface.patch"
+	ewarn "to app-emulation/xen-tools."
 	echo
 }

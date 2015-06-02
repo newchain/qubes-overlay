@@ -41,7 +41,7 @@ RDEPEND="${CDEPEND}
 		sys-apps/ethtool
 		sys-apps/net-tools
 	)
-	selinux? ( sec-policy/selinux-qubes )
+	selinux? ( sec-policy/selinux-qubes-core )
 	sys-apps/haveged
 	sys-apps/util-linux"
 

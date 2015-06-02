@@ -1,4 +1,4 @@
-policy_module(qubes-gui-agent, 1)
+policy_module(qubes-gui, 1)
 
 
 gen_require(`
@@ -131,12 +131,11 @@ corecmd_shell_domtrans(qubes-gui_t, qubes-gui_sh_t)
 dev_rw_xen(qubes-gui_t)
 
 fs_search_xenfs(qubes-gui_t)
-allow qubes-gui_t xenfs_t : file { getattr read write open };
-allow qubes-gui_t xenfs_t : file ioctl;
+allow qubes-gui_t xenfs_t : file { getattr read write open ioctl };
 
-qubes_bluepill_locale(qubes-gui_t)
+qubes_core_bluepill_locale(qubes-gui_t)
 
-qubes_search_qubes_log(qubes-gui_log_t)
+qubes_core_search_qubes_log(qubes-gui_log_t)
 allow qubes-gui_t qubes-gui_log_t : file { append ioctl };
 
 xserver_read_user_xauth(qubes-gui_t)
@@ -162,12 +161,12 @@ init_dontaudit_read_all_script_files(qubes-gui_initrc_t)
 #
 kernel_dontaudit_read_system_state(qubes-gui_initrc_t)
 
-qubes_search_qubes_log(qubes-gui_initrc_t)
+qubes_core_search_qubes_log(qubes-gui_initrc_t)
 allow qubes-gui_initrc_t qubes-gui_log_t : file { append open };
 
-qubes_create_var_run_files(qubes-gui_initrc_t)
-qubes_write_var_run_files(qubes-gui_initrc_t)
-qubes_delete_var_run_files(qubes-gui_initrc_t)
+qubes_core_create_qubes_var_run_files(qubes-gui_initrc_t)
+qubes_core_write_qubes_var_run_files(qubes-gui_initrc_t)
+qubes_core_delete_qubes_var_run_files(qubes-gui_initrc_t)
 
 
 allow qubes-gui_initrc_t initrc_state_t : dir { create_dir_perms delete_dir_perms };
@@ -189,7 +188,7 @@ corecmd_read_bin_symlinks(qubes-gui_sh_t)
 #
 kernel_dontaudit_read_system_state(qubes-gui_sh_t)
 
-qubes_bluepill_locale(qubes-gui_sh_t)
+qubes_core_bluepill_locale(qubes-gui_sh_t)
 
 # /dev/null:
 #
@@ -216,7 +215,7 @@ allow qubes-run-xorg_t shell_exec_t : file read;
 #
 #kernel_dontaudit_read_system_state(qubes-run-xorg_t)
 
-#qubes_bluepill_locale(qubes-run-xorg_t)
+#qubes_core_bluepill_locale(qubes-run-xorg_t)
 
 # /dev/null:
 #
@@ -248,7 +247,7 @@ allow qubes-run-xorg_sh_t qubes-run-xorg_su_t : process sigchld;
 #
 kernel_dontaudit_read_system_state(qubes-run-xorg_sh_t)
 
-qubes_bluepill_locale(qubes-run-xorg_sh_t)
+qubes_core_bluepill_locale(qubes-run-xorg_sh_t)
 
 # /dev/null:
 #
@@ -291,7 +290,7 @@ kernel_dontaudit_read_system_state(qubes-run-xorg_su_t)
 
 logging_send_syslog_msg(qubes-run-xorg_su_t)
 
-qubes_bluepill_locale(qubes-run-xorg_su_t)
+qubes_core_bluepill_locale(qubes-run-xorg_su_t)
 
 # /dev/null:
 #
@@ -341,7 +340,7 @@ auth_use_nsswitch(qubes-run-xorg_worker_t)
 allow qubes-run-xorg_worker_t qubes-run-xorg_t : fd use;
 allow qubes-run-xorg_worker_t qubes-gui_etc_t : file { read write getattr };
 
-qubes_bluepill_locale(qubes-run-xorg_worker_t)
+qubes_core_bluepill_locale(qubes-run-xorg_worker_t)
 
 # /dev/null:
 #
@@ -405,7 +404,7 @@ corecmd_bin_domtrans(qubes-run-xorg_xinitrc_t, qubes-run-xorg_xinitrc_worker_t)
 #
 #kernel_dontaudit_read_system_state(qubes-run-xorg_xinitrc_t)
 
-qubes_bluepill_locale(qubes-run-xorg_xinitrc_t)
+qubes_core_bluepill_locale(qubes-run-xorg_xinitrc_t)
 
 
 allow qubes-run-xorg_xinitrc_t qubes-run-xorg_xinit_t : process sigchld;
@@ -428,7 +427,7 @@ allow qubes-run-xorg_xinitrc_t qubes-run-xorg_xinit_t : fd use;
 
 # This can be limited to just sleep (really).
 
-qubes_bluepill_locale(qubes-run-xorg_xinitrc_worker_t)
+qubes_core_bluepill_locale(qubes-run-xorg_xinitrc_worker_t)
 
 
 allow qubes-run-xorg_xinitrc_worker_t qubes-run-xorg_xinitrc_t : process sigchld;
@@ -467,20 +466,20 @@ corecmd_bin_domtrans(qubes-set-monitor-layout_t, qubes-set-monitor-layout_worker
 userdom_search_user_home_dirs(qubes-set-monitor-layout_t)
 
 
-qubes_rw_inherited_qrexec_agent_pipes(qubes-set-monitor-layout_t)
+qubes_core_rw_inherited_qrexec_agent_pipes(qubes-set-monitor-layout_t)
 
-qubes_write_inherited_rpc_stderror(qubes-set-monitor-layout_t)
+qubes_core_write_inherited_qubes_rpc_stderror(qubes-set-monitor-layout_t)
 
-qubes_bluepill_locale(qubes-set-monitor-layout_t)
+qubes_core_bluepill_locale(qubes-set-monitor-layout_t)
 
-qubes_rw_qrexec_agent_stream_sockets(qubes-set-monitor-layout_t)
+qubes_core_rw_qrexec_agent_stream_sockets(qubes-set-monitor-layout_t)
 
 
 allow qubes-set-monitor-layout_t self : fifo_file read;
 
 # /dev/null
 #
-qubes_use_qrexec_agent_sh_fds(qubes-set-monitor-layout_t)
+qubes_core_use_qrexec_agent_sh_fds(qubes-set-monitor-layout_t)
 
 allow qubes-set-monitor-layout_t shell_exec_t : file read;
 
@@ -490,9 +489,9 @@ allow qubes-set-monitor-layout_t shell_exec_t : file read;
 # qubes-set-monitor-layout_worker_t local policy
 #
 
-qubes_bluepill_locale(qubes-set-monitor-layout_worker_t)
+qubes_core_bluepill_locale(qubes-set-monitor-layout_worker_t)
 
-qubes_rw_inherited_qrexec_agent_pipes(qubes-set-monitor-layout_worker_t)
+qubes_core_rw_inherited_qrexec_agent_pipes(qubes-set-monitor-layout_worker_t)
 
 allow qubes-set-monitor-layout_worker_t qubes-set-monitor-layout_t : process sigchld;
 
@@ -506,7 +505,7 @@ allow qubes-set-monitor-layout_worker_t qubes-set-monitor-layout_t : fifo_file r
 # sleep
 #
 
-qubes_write_inherited_rpc_stderror(qubes-set-monitor-layout_worker_t)
+qubes_core_write_inherited_qubes_rpc_stderror(qubes-set-monitor-layout_worker_t)
 
 # /dev/null
 #
@@ -523,9 +522,9 @@ allow qubes-set-monitor-layout_worker_t qubes-set-monitor-layout_t : fifo_file w
 
 # /dev/null
 #
-qubes_use_qrexec_agent_sh_fds(qubes-set-monitor-layout_worker_t)
+qubes_core_use_qrexec_agent_sh_fds(qubes-set-monitor-layout_worker_t)
 
-qubes_rw_qrexec_agent_stream_sockets(qubes-set-monitor-layout_worker_t)
+qubes_core_rw_qrexec_agent_stream_sockets(qubes-set-monitor-layout_worker_t)
 
 files_search_tmp(qubes-set-monitor-layout_worker_t)
 
@@ -554,7 +553,7 @@ allow xserver_t user_home_dir_t : file write;
 allow xserver_t qubes-run-xorg_xinit_t : process signal;
 
 
-qubes_gui_read_etc(xserver_t)
+qubes_gui_read_qubes_gui_etc(xserver_t)
 
 qubes_gui_stream_write(xserver_t)
 

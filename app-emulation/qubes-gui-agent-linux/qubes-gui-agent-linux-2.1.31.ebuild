@@ -32,7 +32,7 @@ DEPEND="${CDEPEND}
 	app-crypt/gnupg"
 RDEPEND="${CDEPEND}
 	candy? ( x11-themes/gnome-themes-standard[gtk] )
-	selinux? ( sec-policy/selinux-qubes )
+	selinux? ( sec-policy/selinux-qubes-gui )
 	template? ( x11-base/xorg-server[minimal] )"
 	#
 	# ^^ template <= attack surface--

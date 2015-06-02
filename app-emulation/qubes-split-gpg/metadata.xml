@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer>
+		<email>kunjurcca@gmail.org</email>
+		<name>MB</name>
+	</maintainer>
+	<use>
+		<flag name="backend">Pull in notification-daemon required to accept requests from other domains.</flag>
+	</use>
+</pkgmetadata>

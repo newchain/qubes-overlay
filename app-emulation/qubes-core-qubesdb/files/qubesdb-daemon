@@ -1,0 +1,25 @@
+#!/sbin/runscript
+
+
+depend() {
+
+	need selinux_gentoo
+	after tmpfiles.setup
+}
+
+start() {
+
+	# start-stop-daemon hangs =(
+	#
+	# start-stop-daemon --env DISPLAY=:0 --start --exec /usr/sbin/qubesdb-daemon -- 0
+
+	/usr/sbin/qubesdb-daemon 0
+}
+
+
+stop() {
+
+#	start-stop-daemon --stop --pidfile /run/qubes/qubesdb.pid
+
+	pkill -9 qubesdb-daemon
+}

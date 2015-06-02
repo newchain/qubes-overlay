@@ -9,27 +9,6 @@
 
 ###############################
 ## <summary>
-##	Send sigchld to qrexec-agent_su_t.
-## </summary>
-## <param name="domain">
-##	<summary>
-##		Domain to permit sigchld.
-##	</summary>
-## </param>
-
-interface(`qubes_sigchld_qrexec_agent_su',`
-
-	gen_require(`
-
-		type qrexec-agent_su_t;
-	')
-
-	allow $1 qrexec-agent_su_t : process sigchld;
-')
-
-
-###############################
-## <summary>
 ##	Run qrexec-client-vm in qrexec-client-vm_t
 ## </summary>
 ## <param name="domain">
@@ -46,7 +25,216 @@ interface(`qrexec_client_vm_domtrans',`
 		type qrexec-client-vm_exec_t;
 	')
 
+	qubes_core_search_qubes_rpc_worker_exec($1)
+	allow $1 qrexec-client-vm_exec_t : lnk_file read;
 	domtrans_pattern($1, qrexec-client-vm_exec_t, qrexec-client-vm_t)
+')
+
+
+###############################
+## <summary>
+##	Write to qrexec-agent socket.
+## </summary>
+## <param name="domain">
+##	<summary>
+##		Domain to permit write.
+##	</summary>
+## </param>
+
+interface(`qubes_core_write_var_run_sock_file',`
+
+	gen_require(`
+	
+		type qubes_var_run_t;
+	')
+
+	qubes_core_search_qubes_var_run($1)
+
+	allow $1 qubes_var_run_t : sock_file write;
+')
+
+
+###############################
+## <summary>
+##	Send sigchld to qrexec-client-vm_t.
+## </summary>
+## <param name="domain">
+##	<summary>
+##		Domain to permit send.
+##	</summary>
+## </param>
+
+interface(`qubes_core_sigchld_qrexec_client_vm',`
+
+	gen_require(`
+
+		type qrexec-client-vm_t;
+	')
+
+	allow $1 qrexec-client-vm_t : process sigchld;
+')
+
+
+###############################
+## <summary>
+##	Run qrexec-client-vm in a specified domain.
+## </summary>
+## <param name="domain">
+##	<summary>
+##		Domain to permit transition.
+##	</summary>
+## </param>
+## <param name="target_domain">
+##	<summary>
+##		Domain to transition to.
+##	</summary>
+## </param>
+
+interface(`qubes_core_qrexec_client_vm_domtrans',`
+
+	gen_require(`
+
+		type qrexec-client-vm_exec_t;
+	')
+
+	qubes_core_search_qubes_rpc_worker_exec($1)
+	allow $1 qrexec-client-vm_exec_t : lnk_file read;
+	domtrans_pattern($1, qrexec-client-vm_exec_t, $2)
+')
+
+
+###############################
+## <summary>
+##	<p>
+##		Use qrexec-client-vm as an entry point.
+##	</p>
+##	<p>
+##		qrexec-client-vm is used for userland to RPC calls.
+##		Use this interace to separate permissions for different
+##		applications.
+##	</p>	
+## </summary>
+## <param name="domain">
+##	<summary>
+##		Domain to permit entry to.
+##	</summary>
+## </param>
+
+interface(`qubes_core_qrexec_client_vm_entry_type',`
+
+	gen_require(`
+
+		type qrexec-client-vm_exec_t;
+	')
+
+	domain_entry_file($1, qrexec-client-vm_exec_t)
+')
+
+
+###############################
+## <summary>
+##	Inherit qrexec-client-vm_t fds
+## </summary>
+## <param name="domain">
+##	<summary>
+##		Domain to permit inheritance.
+##	</summary>
+## </param>
+
+interface(`qubes_core_use_qrexec_client_vm_fds',`
+
+	gen_require(`
+
+		type qrexec-client-vm_t;
+	')
+
+	allow $1 qrexec-client-vm_t : fd use;
+')
+
+
+###############################
+## <summary>
+##	Transition to qrexec-client-vm_worker_t
+## </summary>
+## <param name="domain">
+##	<summary>
+##		Domain to permit transition.
+##	</summary>
+## </param>
+
+interface(`qubes_core_qrexec_client_vm_worker_transition',`
+
+	gen_require(`
+
+		type qrexec-client-vm_worker_t;
+	')
+
+	corecmd_bin_domtrans($1, qrexec-client-vm_worker_t)
+')
+
+
+###############################
+## <summary>
+##	Search /rw
+## </summary>
+## <param name="domain">
+##	<summary>
+##		Domain to permit search.
+##	</summary>
+## </param>
+
+interface(`qubes_core_search_qubes_persistent',`
+
+	gen_require(`
+
+		type qubes_persistent_t;
+	')
+
+	allow $1 qubes_persistent_t : dir search;
+')
+
+
+###############################
+## <summary>
+##	Search /rw/config
+## </summary>
+## <param name="domain">
+##	<summary>
+##		Domain to permit search.
+##	</summary>
+## </param>
+
+interface(`qubes_core_search_qubes_persistent_config',`
+
+	gen_require(`
+
+		type qubes_persistent_config_t;
+	')
+
+	qubes_core_search_qubes_persistent($1)
+
+	allow $1 qubes_persistent_config_t : dir search;
+')
+
+
+###############################
+## <summary>
+##	Send sigchld to qrexec-agent_su_t.
+## </summary>
+## <param name="domain">
+##	<summary>
+##		Domain to permit sigchld.
+##	</summary>
+## </param>
+
+interface(`qubes_core_sigchld_qrexec_agent_su',`
+
+	gen_require(`
+
+		type qrexec-agent_su_t;
+	')
+
+	allow $1 qrexec-agent_su_t : process sigchld;
 ')
 
 
@@ -60,7 +248,7 @@ interface(`qrexec_client_vm_domtrans',`
 ##	</summary>
 ## </param>
 
-interface(`qubes_bluepill_locale',`
+interface(`qubes_core_bluepill_locale',`
 
 	gen_require(`
 
@@ -93,7 +281,7 @@ interface(`qubes_bluepill_locale',`
 ##	</summary>
 ## </param>
 
-interface(`setup_ip_domtrans',`
+interface(`qubes_core_setup_ip_domtrans',`
 
 	gen_require(`
 
@@ -101,7 +289,7 @@ interface(`setup_ip_domtrans',`
 		type setup-ip_exec_t;
 	')
 
-	qubes_search_rpc_worker_exec($1)
+	qubes_core_search_qubes_rpc_worker_exec($1)
 	domtrans_pattern($1, setup-ip_exec_t, setup-ip_t)
 ')
 
@@ -116,7 +304,7 @@ interface(`setup_ip_domtrans',`
 ##	</summary>
 ## </param>
 
-interface(`qubes_search_qubes_log',`
+interface(`qubes_core_search_qubes_log',`
 
 	gen_require(`
 
@@ -124,6 +312,7 @@ interface(`qubes_search_qubes_log',`
 	')
 
 	logging_search_logs($1)
+
 	allow $1 qubes_log_t : dir search;
 ')
 
@@ -153,9 +342,9 @@ interface(`qubes_search_qubes_log',`
 ##	</summary>
 ## </param>
 
-interface(`qubes_log_filetrans',`
+interface(`qubes_core_qubes_log_filetrans',`
 
-	qubes_search_qubes_log($1)
+	qubes_core_search_qubes_log($1)
 	filetrans_add_pattern($1, qubes_log_t, $2, $3, $4)
 ')
 
@@ -170,7 +359,7 @@ interface(`qubes_log_filetrans',`
 ##	</summary>
 ## </param>
 
-interface(`qubes_stream_connect_qrexec_agent',`
+interface(`qubes_core_stream_connect_qrexec_agent',`
 
 	gen_require(`
 
@@ -191,7 +380,7 @@ interface(`qubes_stream_connect_qrexec_agent',`
 ##	</summary>
 ## </param>
 
-interface(`qubes_rw_qrexec_agent_stream_sockets',`
+interface(`qubes_core_rw_qrexec_agent_stream_sockets',`
 
 	gen_require(`
 
@@ -199,6 +388,27 @@ interface(`qubes_rw_qrexec_agent_stream_sockets',`
 	')
 
 	allow $1 qrexec-agent_t : unix_stream_socket { read write };
+')
+
+
+###############################
+## <summary>
+##	Read and write qrexec-agent-client-vm unix sockets.
+## </summary>
+## <param name="domain">
+##	<summary>
+##		Domain to permit read and write.
+##	</summary>
+## </param>
+
+interface(`qubes_core_rw_qrexec_client_vm_stream_sockets',`
+
+	gen_require(`
+
+		type qrexec-client-vm_t;
+	')
+
+	allow $1 qrexec-client-vm_t : unix_stream_socket { read write };
 ')
 
 
@@ -212,12 +422,14 @@ interface(`qubes_rw_qrexec_agent_stream_sockets',`
 ##	</summary>
 ## </param>
 
-interface(`qubes_search_rpc_etc',`
+interface(`qubes_core_search_qubes_rpc_etc',`
 
 	gen_require(`
 
 		type qubes_rpc_etc_t;
 	')
+
+	files_search_etc($1)
 
 	allow $1 qubes_rpc_etc_t : dir search;
 ')
@@ -233,9 +445,9 @@ interface(`qubes_search_rpc_etc',`
 ##	</summary>
 ## </param>
 
-interface(`qubes_getattr_rpc_etc',`
+interface(`qubes_core_getattr_qubes_rpc_etc',`
 
-	qubes_search_rpc_etc($1)
+	qubes_core_search_qubes_rpc_etc($1)
 
 	allow $1 qubes_rpc_etc_t : file getattr;
 ')
@@ -251,9 +463,9 @@ interface(`qubes_getattr_rpc_etc',`
 ##	</summary>
 ## </param>
 
-interface(`qubes_read_rpc_etc',`
+interface(`qubes_core_read_qubes_rpc_etc',`
 
-	qubes_search_rpc_etc($1)
+	qubes_core_search_qubes_rpc_etc($1)
 
 	allow $1 qubes_rpc_etc_t : file { read open };
 ')
@@ -269,13 +481,14 @@ interface(`qubes_read_rpc_etc',`
 ##	</summary>
 ## </param>
 
-interface(`qubes_search_rpc_worker_exec',`
+interface(`qubes_core_search_qubes_rpc_worker_exec',`
 
 	gen_require(`
 
 		type qubes_rpc_worker_exec_t;
 	')
 
+	corecmd_search_bin($1)
 	allow $1 qubes_rpc_worker_exec_t : dir search_dir_perms;
 ')
 
@@ -290,7 +503,7 @@ interface(`qubes_search_rpc_worker_exec',`
 ##	</summary>
 ## </param>
 
-interface(`qubes_search_shared_home',`
+interface(`qubes_core_search_qubes_shared_home',`
 
 	gen_require(`
 
@@ -313,9 +526,9 @@ interface(`qubes_search_shared_home',`
 ##	</summary>
 ## </param>
 
-interface(`qubes_list_shared_home',`
+interface(`qubes_core_list_qubes_shared_home',`
 
-	qubes_search_shared_home($1)
+	qubes_core_search_qubes_shared_home($1)
 
 	allow $1 qubes_shared_home_t : dir read;
 ')
@@ -331,11 +544,11 @@ interface(`qubes_list_shared_home',`
 ##	</summary>
 ## </param>
 
-interface(`qubes_bind_shared_home_files',`
+interface(`qubes_core_bind_shared_home_files',`
 
 	fs_unmount_xattr_fs($1)
 
-	qubes_search_shared_home($1)
+	qubes_core_search_qubes_shared_home($1)
 
 	allow $1 qubes_shared_home_t : dir mounton;
 ')
@@ -351,9 +564,9 @@ interface(`qubes_bind_shared_home_files',`
 ##	</summary>
 ## </param>
 
-interface(`qubes_create_shared_home_files',`
+interface(`qubes_core_create_qubes_shared_home_files',`
 
-	qubes_search_shared_home($1)
+	qubes_core_search_qubes_shared_home($1)
 
 	allow $1 qubes_shared_home_t : dir create_dir_perms;
 	create_files_pattern($1, qubes_shared_home_t, qubes_shared_home_t)
@@ -370,9 +583,9 @@ interface(`qubes_create_shared_home_files',`
 ##	</summary>
 ## </param>
 
-interface(`qubes_getattr_shared_home_files',`
+interface(`qubes_core_getattr_qubes_shared_home_files',`
 
-	qubes_search_shared_home($1)
+	qubes_core_search_qubes_shared_home($1)
 
 	allow $1 qubes_shared_home_t : file getattr_file_perms;
 ')
@@ -388,9 +601,9 @@ interface(`qubes_getattr_shared_home_files',`
 ##	</summary>
 ## </param>
 
-interface(`qubes_read_shared_home',`
+interface(`qubes_core_read_qubes_shared_home_files',`
 
-	qubes_search_shared_home($1)
+	qubes_core_search_qubes_shared_home($1)
 
 	allow $1 qubes_shared_home_t : file read_file_perms;
 ')
@@ -406,7 +619,7 @@ interface(`qubes_read_shared_home',`
 ##	</summary>
 ## </param>
 
-interface(`qubes_write_rpc_stderror',`
+interface(`qubes_core_write_qubes_rpc_stderror',`
 
 	gen_require(`
 
@@ -427,10 +640,10 @@ interface(`qubes_write_rpc_stderror',`
 ##	</summary>
 ## </param>
 
-interface(`qubes_write_inherited_rpc_stderror',`
+interface(`qubes_core_write_inherited_qubes_rpc_stderror',`
 
-	qubes_use_rpc_multiplexer_fds($1)
-	qubes_write_rpc_stderror($1)
+	qubes_core_use_qubes_rpc_multiplexer_fds($1)
+	qubes_core_write_qubes_rpc_stderror($1)
 ')
 
 
@@ -444,7 +657,7 @@ interface(`qubes_write_inherited_rpc_stderror',`
 ##	</summary>
 ## </param>
 
-interface(`qubes_use_qrexec_agent_fds',`
+interface(`qubes_core_use_qrexec_agent_fds',`
 
 	gen_require(`
 
@@ -465,7 +678,7 @@ interface(`qubes_use_qrexec_agent_fds',`
 ##	</summary>
 ## </param>
 
-interface(`qubes_write_qrexec_agent_pipes',`
+interface(`qubes_core_write_qrexec_agent_pipes',`
 
 	gen_require(`
 
@@ -486,10 +699,10 @@ interface(`qubes_write_qrexec_agent_pipes',`
 ##	</summary>
 ## </param>
 
-interface(`qubes_write_inherited_qrexec_agent_pipes',`
+interface(`qubes_core_write_inherited_qrexec_agent_pipes',`
 
-	qubes_use_qrexec_agent_fds($1)
-	qubes_write_qrexec_agent_pipes($1)
+	qubes_core_use_qrexec_agent_fds($1)
+	qubes_core_write_qrexec_agent_pipes($1)
 ')
 
 
@@ -503,9 +716,9 @@ interface(`qubes_write_inherited_qrexec_agent_pipes',`
 ##	</summary>
 ## </param>
 
-interface(`qubes_rw_qrexec_agent_pipes',`
+interface(`qubes_core_rw_qrexec_agent_pipes',`
 
-	qubes_write_qrexec_agent_pipes($1)
+	qubes_core_write_qrexec_agent_pipes($1)
 
 	allow $1 qrexec-agent_t : fifo_file read;
 ')
@@ -521,10 +734,10 @@ interface(`qubes_rw_qrexec_agent_pipes',`
 ##	</summary>
 ## </param>
 
-interface(`qubes_rw_inherited_qrexec_agent_pipes',`
+interface(`qubes_core_rw_inherited_qrexec_agent_pipes',`
 
-	qubes_use_qrexec_agent_fds($1)
-	qubes_rw_qrexec_agent_pipes($1)
+	qubes_core_use_qrexec_agent_fds($1)
+	qubes_core_rw_qrexec_agent_pipes($1)
 ')
 
 
@@ -538,7 +751,7 @@ interface(`qubes_rw_inherited_qrexec_agent_pipes',`
 ##	</summary>
 ## </param>
 
-interface(`qubes_ioctl_qrexec_agent_pipes',`
+interface(`qubes_core_ioctl_qrexec_agent_pipes',`
 
 	gen_require(`
 
@@ -559,11 +772,11 @@ interface(`qubes_ioctl_qrexec_agent_pipes',`
 ##	</summary>
 ## </param>
 
-interface(`qubes_rwi_inherited_qrexec_agent_pipes',`
+interface(`qubes_core_rwi_inherited_qrexec_agent_pipes',`
 
-	qubes_use_qrexec_agent_fds($1)
-	qubes_rw_qrexec_agent_pipes($1)
-	qubes_ioctl_qrexec_agent_pipes($1)
+	qubes_core_use_qrexec_agent_fds($1)
+	qubes_core_rw_qrexec_agent_pipes($1)
+	qubes_core_ioctl_qrexec_agent_pipes($1)
 ')
 
 
@@ -577,7 +790,7 @@ interface(`qubes_rwi_inherited_qrexec_agent_pipes',`
 ##	</summary>
 ## </param>
 
-interface(`qubes_use_qrexec_agent_fds',`
+interface(`qubes_core_use_qrexec_agent_fds',`
 
 	gen_require(`
 
@@ -598,7 +811,7 @@ interface(`qubes_use_qrexec_agent_fds',`
 ##	</summary>
 ## </param>
 
-interface(`qubes_use_qrexec_agent_sh_fds',`
+interface(`qubes_core_use_qrexec_agent_sh_fds',`
 
 	gen_require(`
 
@@ -619,13 +832,17 @@ interface(`qubes_use_qrexec_agent_sh_fds',`
 ##	</summary>
 ## </param>
 
-interface(`qubes_search_var_run',`
+interface(`qubes_core_search_qubes_var_run',`
 
 	gen_require(`
 
-		type qubes_log_t;
+		type qubes_var_run_t;
+		type var_run_t;
 	')
 
+	files_search_var($1)
+
+	allow $1 var_run_t : dir search;
 	allow $1 qubes_var_run_t : dir search;
 ')
 
@@ -640,12 +857,9 @@ interface(`qubes_search_var_run',`
 ##	</summary>
 ## </param>
 
-interface(`qubes_create_var_run_files',`
+interface(`qubes_core_create_qubes_var_run_files',`
 
-	gen_require(`
-
-		type qubes_var_run_t;
-	')
+	qubes_core_search_qubes_var_run($1)
 
 	create_files_pattern($1, qubes_var_run_t, qubes_var_run_t)
 ')
@@ -653,29 +867,8 @@ interface(`qubes_create_var_run_files',`
 
 ###############################
 ## <summary>
-##	Permit write of regular files in /run/qubes.
-## </summary>
-## <param name="domain">
-##	<summary>
-##		Domain to permit write.
-##	</summary>
-## </param>
-
-interface(`qubes_write_var_run_files',`
-
-	gen_require(`
-
-		type qubes_var_run_t;
-	')
-
-	allow $1 qubes_var_run_t : file write;
-')
-
-
-###############################
-## <summary>
 ##	<p>
-##		Permit deletion of regular files in /run/qubes.
+##		Permit write of regular files in /run/qubes.
 ##	</p>
 ##	<p>
 ##		Note that regular files appear to be limited
@@ -685,16 +878,31 @@ interface(`qubes_write_var_run_files',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
+##		Domain to permit write.
+##	</summary>
+## </param>
+
+interface(`qubes_core_write_qubes_var_run_files',`
+
+	qubes_core_search_qubes_var_run($1)
+
+	allow $1 qubes_var_run_t : file write;
+')
+
+
+###############################
+## <summary>
+##	Permit deletion of regular files in /run/qubes.
+## </summary>
+## <param name="domain">
+##	<summary>
 ##		Domain to permit deletion.
 ##	</summary>
 ## </param>
 
-interface(`qubes_delete_var_run_files',`
+interface(`qubes_core_delete_qubes_var_run_files',`
 
-	gen_require(`
-
-		type qubes_var_run_t;
-	')
+	qubes_core_search_qubes_var_run($1)
 
 	delete_files_pattern($1, qubes_var_run_t, qubes_var_run_t)
 ')
@@ -710,7 +918,7 @@ interface(`qubes_delete_var_run_files',`
 ##	</summary>
 ## </param>
 
-interface(`qubes_use_rpc_multiplexer_fds',`
+interface(`qubes_core_use_qubes_rpc_multiplexer_fds',`
 
 	gen_require(`
 
@@ -731,7 +939,7 @@ interface(`qubes_use_rpc_multiplexer_fds',`
 ##	</summary>
 ## </param>
 
-interface(`qubes_trigger_sync_appmenus_transition_pattern',`
+interface(`qubes_core_qubes_trigger_sync_appmenus_domtrans',`
 
 	gen_require(`
 
@@ -739,6 +947,7 @@ interface(`qubes_trigger_sync_appmenus_transition_pattern',`
 		type qubes-trigger-sync-appmenus_exec_t;
 	')
 
+	qubes_core_search_qubes_rpc_worker_exec($1)
 	domtrans_pattern($1, qubes-trigger-sync-appmenus_exec_t, qubes-trigger-sync-appmenus_t)
 ')
 
@@ -747,27 +956,27 @@ interface(`qubes_trigger_sync_appmenus_transition_pattern',`
 ## <summary>
 ##	Permit role to sync app menus.
 ## </summary>
-## <param name="domain">
-##	<summary>
-##		Domain to permit transition from.
-##	</summary>
-## </param>
 ## <param name="role">
 ##	<summary>
 ##		Role to assign types.
 ##	</summary>
 ## </param>
+## <param name="domain">
+##	<summary>
+##		Domain to permit transition from.
+##	</summary>
+## </param>
 
-interface(`qubes_trigger_sync_appmenus_role',`
+interface(`qubes_core_qubes_trigger_sync_appmenus_role',`
 
 	gen_require(`
 
 		type qubes-trigger-sync-appmenus_worker_t;
 	')
 
-	qubes_trigger_sync_appmenus_transition_pattern($1)
+	role $1 types { qubes-trigger-sync-appmenus_t qubes-trigger-sync-appmenus_worker_t };
 
-	role $2 types { qubes-trigger-sync-appmenus_t qubes-trigger-sync-appmenus_worker_t };
+	qubes_core_qubes_trigger_sync_appmenus_domtrans($2)
 
 ')
 
@@ -782,7 +991,7 @@ interface(`qubes_trigger_sync_appmenus_role',`
 ##	</summary>
 ## </param>
 
-interface(`qubes_qubesdb_transition_pattern',`
+interface(`qubes_core_qubesdb_domtrans',`
 
 	gen_require(`
 
@@ -804,13 +1013,17 @@ interface(`qubes_qubesdb_transition_pattern',`
 ##	</summary>
 ## </param>
 
-interface(`qubes_qubesdb_cmd_transition_pattern',`
+interface(`qubes_core_qubesdb_cmd_domtrans',`
 
 	gen_require(`
 
 		type qubesdb-cmd_t;
 		type qubesdb-cmd_exec_t;
 	')
+
+	corecmd_search_bin($1)
+
+	allow $1 qubesdb-cmd_exec_t : lnk_file read;
 
 	domtrans_pattern($1, qubesdb-cmd_exec_t, qubesdb-cmd_t)
 ')
@@ -826,7 +1039,7 @@ interface(`qubes_qubesdb_cmd_transition_pattern',`
 ##	</summary>
 ## </param>
 
-interface(`qvm_domain_transition_pattern',`
+interface(`qubes_core_qvm_domtrans',`
 
 	gen_require(`
 
@@ -839,7 +1052,7 @@ interface(`qvm_domain_transition_pattern',`
 	domtrans_pattern($1, qvm_exec_t, qvm_t)
 	domtrans_pattern($1, qvm-copy-to-vm_exec_t, qvm-copy-to-vm_t)
 
-	qubes_list_shared_home($1)
+	qubes_core_list_qubes_shared_home($1)
 ')
 
 
@@ -847,18 +1060,18 @@ interface(`qvm_domain_transition_pattern',`
 ## <summary>
 ##	Permit role to use qvm utilities.
 ## </summary>
-## <param name="domain">
-##	<summary>
-##		Domain to permit transition from.
-##	</summary>
-## </param>
 ## <param name="role">
 ##	<summary>
 ##		Role to assign types.
 ##	</summary>
 ## </param>
+## <param name="domain">
+##	<summary>
+##		Domain to permit transition from.
+##	</summary>
+## </param>
 
-interface(`qvm_role',`
+interface(`qubes_core_qvm_role',`
 
 	gen_require(`
 
@@ -867,10 +1080,10 @@ interface(`qvm_role',`
 		type qvm-copy-to-vm_worker_t;
 	')
 
-	qvm_domain_transition_pattern($1)
+	qubes_core_qvm_domtrans($2)
 
-	role $2 types { qfile-agent_t qrexec-client-vm_t qvm_t qvm-copy-to-vm_t qvm-copy-to-vm_worker_t };
+	role $1 types { qfile-agent_t qrexec-client-vm_t qvm_t qvm-copy-to-vm_t qvm-copy-to-vm_worker_t };
 
-	allow qfile-agent_t $1 : process sigchld;
-	allow qrexec-client-vm_t $1 : process sigchld;
+	allow qfile-agent_t $2 : process sigchld;
+	allow qrexec-client-vm_t $2 : process sigchld;
 ')

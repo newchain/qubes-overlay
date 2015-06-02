@@ -30,6 +30,8 @@ src_prepare() {
 	version_prefix='v'
 	qubes_prepare
 
+	sed -i -- '1s/^/BACKEND_VMM ?= xen\n/' 'qrexec-lib/Makefile'
+
 	sed -i -- 's|/etc/udev/rules\.d|/lib/udev/rules.d|g' 'udev/Makefile'
 
 	for i in qmemman qrexec-lib; do {

@@ -11,7 +11,8 @@ HOME_DIR/QubesIncoming(/.*)?			gen_context(system_u:object_r:qubes_shared_home_t
 
 /proc/u2mfn				--	gen_context(system_u:object_r:qubes_u2mfn_t,s0)
 
-/rw						gen_context(system_u:object_r:qubes_volatile_t,s0)
+/rw						gen_context(system_u:object_r:qubes_persistent_t,s0)
+/rw/config					gen_context(system_u:object_r:qubes_persistent_config_t,s0)
 /rw/home					gen_context(system_u:object_r:home_root_t,s0)
 /rw/home/user					gen_context(system_u:object_r:user_home_dir_t,s0)
 

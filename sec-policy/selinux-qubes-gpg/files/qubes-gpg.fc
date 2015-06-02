@@ -1,0 +1,11 @@
+/etc/profile\.d/qubes-gpg\.sh		--	gen_context(system_u:object_r:qubes-gpg_etc_t,s0)
+
+/etc/qubes-rpc/qubes\.Gpg		--	gen_context(system_u:object_r:qubes-gpg_rpc_exec_t,s0)
+
+/usr/bin/qubes-gpg-client		--	gen_context(system_u:object_r:qubes-gpg-client_exec_t,s0)
+/usr/bin/qubes-gpg-client-wrapper	--	gen_context(system_u:object_r:qubes-gpg-client-wrapper_exec_t,s0)
+/usr/bin/qubes-gpg-import-key		--	gen_context(system_u:object_r:qubes-gpg-import-key_exec_t,s0)
+
+/usr/lib/qubes-gpg-split		-d	gen_context(system_u:object_r:qubes-gpg-split_lib_t,s0)
+/usr/lib/qubes-gpg-split/gpg-server	--	gen_context(system_u:object_r:qubes-gpg-split-server_exec_t,s0)
+/usr/lib/qubes-gpg-split/pipe-cat	--	gen_context(system_u:object_r:qubes-gpg-pipe-cat_exec_t,s0)

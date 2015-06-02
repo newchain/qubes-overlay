@@ -1,0 +1,339 @@
+policy_module(qubes-gpg, 1)
+
+
+gen_require(`
+
+	attribute qrexec-client-vm_domain;
+	attribute qrexec-client-vm_sh_domain;
+	attribute qrexec-client-vm_sh_worker_domain;
+	attribute qrexec-client-vm_worker_domain;
+
+	role system_r;
+	role user_r;
+
+	type user_t;
+')
+
+
+#########################################
+#
+# Declarations
+#
+
+# <desc>
+#	<p>
+#		Allow use as a backend for split gpg.
+#	</p>
+# </desc>
+
+gen_tunable(qubes_gpg_backend, false)
+
+type qubes-gpg-client_tmp_t;
+files_tmp_file(qubes-gpg-client_tmp_t)
+
+type qubes-gpg-client-wrapper_t;
+type qubes-gpg-client-wrapper_exec_t;
+application_domain(qubes-gpg-client-wrapper_t, qubes-gpg-client-wrapper_exec_t)
+
+  type qubes-gpg-client_t;
+  type qubes-gpg-client_exec_t;
+  application_domain(qubes-gpg-client_t, qubes-gpg-client_exec_t)
+
+type qubes-gpg_etc_t;
+files_config_file(qubes-gpg_etc_t)
+
+type qubes-gpg-import-key_t;
+type qubes-gpg-import-key_exec_t;
+application_domain(qubes-gpg-import-key_t, qubes-gpg-import-key_exec_t)
+
+type qubes-gpg-pipe-cat_t;
+type qubes-gpg-pipe-cat_exec_t;
+application_domain(qubes-gpg-pipe-cat_t, qubes-gpg-pipe-cat_exec_t)
+
+type qubes-gpg_profile_t;
+type qubes-gpg_profile_exec_t;
+application_domain(qubes-gpg_profile_t, qubes-gpg_profile_exec_t)
+
+type qubes-gpg_qrexec-client-vm_t, qrexec-client-vm_domain;
+application_type(qubes-gpg_qrexec-client-vm_t)
+qubes_core_qrexec_client_vm_entry_type(qubes-gpg_qrexec-client-vm_t)
+
+  type qubes-gpg_qrexec-client-vm_sh_t, qrexec-client-vm_sh_domain;
+  application_type(qubes-gpg_qrexec-client-vm_sh_t)
+  corecmd_shell_entry_type(qubes-gpg_qrexec-client-vm_sh_t)
+
+    type qubes-gpg_qrexec-client-vm_sh_worker_t, qrexec-client-vm_sh_worker_domain;;
+    application_type(qubes-gpg_qrexec-client-vm_sh_worker_t)
+    corecmd_bin_entry_type(qubes-gpg_qrexec-client-vm_sh_worker_t)
+
+  type qubes-gpg_qrexec-client-vm_worker_t, qrexec-client-vm_worker_domain;
+  application_type(qubes-gpg_qrexec-client-vm_worker_t)
+  corecmd_bin_entry_type(qubes-gpg_qrexec-client-vm_worker_t)
+
+type qubes-gpg_rpc_t;
+type qubes-gpg_rpc_exec_t;
+application_domain(qubes-gpg_rpc_t, qubes-gpg_rpc_exec_t)
+role system_r types qubes-gpg_rpc_t;
+
+type qubes-gpg-split_lib_t;
+files_type(qubes-gpg-split_lib_t)
+
+type qubes-gpg-split-server_t;
+type qubes-gpg-split-server_exec_t;
+application_domain(qubes-gpg-split-server_t, qubes-gpg-split-server_exec_t)
+role system_r types qubes-gpg-split-server_t;
+
+  type qubes-gpg-split-server_sh_t;
+  application_type(qubes-gpg-split-server_sh_t)
+  corecmd_shell_entry_type(qubes-gpg-split-server_sh_t)
+  role system_r types qubes-gpg-split-server_sh_t;
+
+
+#########################################
+#
+# qubes-gpg_qrexec-client-vm_t local policy
+#
+
+corecmd_bin_domtrans(qubes-gpg_qrexec-client-vm_t, qubes-gpg_qrexec-client-vm_worker_t)
+corecmd_shell_domtrans(qubes-gpg_qrexec-client-vm_t, qubes-gpg_qrexec-client-vm_sh_t)
+
+qubes_gpg_qubes_gpg_pipe_cat_domtrans(qubes-gpg_qrexec-client-vm_t)
+
+
+#########################################
+#
+# qubes-gpg_qrexec-client-vm_sh_t local policy
+#
+
+corecmd_search_bin(qubes-gpg_qrexec-client-vm_sh_t)
+corecmd_bin_domtrans(qubes-gpg_qrexec-client-vm_sh_t, qubes-gpg_qrexec-client-vm_sh_worker_t)
+
+files_dontaudit_search_home(qubes-gpg_qrexec-client-vm_sh_t)
+userdom_dontaudit_search_user_home_dirs(qubes-gpg_qrexec-client-vm_sh_t)
+
+
+# ( null | shell | socket )
+#
+allow qubes-gpg_qrexec-client-vm_sh_t qubes-gpg_qrexec-client-vm_t : fd use;
+
+allow qubes-gpg_qrexec-client-vm_sh_t qubes-gpg_qrexec-client-vm_t : unix_stream_socket { read write };
+
+allow qubes-gpg_qrexec-client-vm_sh_t qubes-gpg_qrexec-client-vm_t : process sigchld;
+
+
+#########################################
+#
+# qubes-gpg_qrexec-client-vm_sh_worker_t local policy
+#
+
+allow qubes-gpg_qrexec-client-vm_sh_worker_t qubes-gpg_qrexec-client-vm_t : fd use;
+allow qubes-gpg_qrexec-client-vm_sh_worker_t qubes-gpg_qrexec-client-vm_t : unix_stream_socket { read write getattr };
+
+allow qubes-gpg_qrexec-client-vm_sh_worker_t qubes-gpg_qrexec-client-vm_t : process sigchld;
+
+# cat <- /bin/cat
+#
+allow qubes-gpg_qrexec-client-vm_sh_worker_t qubes-gpg_qrexec-client-vm_sh_t : fd use;
+
+
+#########################################
+#
+# qubes-gpg_qrexec-client-vm_worker_t local policy
+#
+
+# cat <- /bin/cat
+#
+allow qubes-gpg_qrexec-client-vm_worker_t qubes-gpg_qrexec-client-vm_t : fd use;
+
+allow qubes-gpg_qrexec-client-vm_worker_t qubes-gpg_qrexec-client-vm_t : process sigchld;
+
+allow qubes-gpg_qrexec-client-vm_worker_t qubes-gpg_qrexec-client-vm_t : unix_stream_socket { read write };
+
+
+#########################################
+#
+# qubes-gpg-client_t local policy
+#
+
+files_tmp_filetrans(qubes-gpg-client_t, qubes-gpg-client_tmp_t, dir)
+allow qubes-gpg-client_t qubes-gpg-client_tmp_t : dir { create rmdir };
+create_fifo_files_pattern(qubes-gpg-client_t, qubes-gpg-client_tmp_t, qubes-gpg-client_tmp_t)
+allow qubes-gpg-client_t qubes-gpg-client_tmp_t : fifo_file { read write };
+delete_fifo_files_pattern(qubes-gpg-client_t, qubes-gpg-client_tmp_t, qubes-gpg-client_tmp_t)
+
+getty_use_fds(qubes-gpg-client_t)
+userdom_use_user_ttys(qubes-gpg-client_t)
+
+qubes_core_qrexec_client_vm_domtrans(qubes-gpg-client_t, qubes-gpg_qrexec-client-vm_t)
+
+userdom_use_unpriv_users_fds(qubes-gpg-client_t)
+userdom_use_user_ptys(qubes-gpg-client_t)
+
+
+#########################################
+#
+# qubes-gpg-client-wrapper_t local policy
+#
+
+# meminfo
+#
+kernel_dontaudit_read_system_state(qubes-gpg-client-wrapper_t)
+
+qubes_core_bluepill_locale(qubes-gpg-client-wrapper_t)
+
+qubes_gpg_qubes_gpg_client_domtrans(qubes-gpg-client-wrapper_t)
+
+qubes_gpg_read_qubes_gpg_etc_files(qubes-gpg-client-wrapper_t)
+
+userdom_use_user_ptys(qubes-gpg-client-wrapper_t)
+
+userdom_use_user_ttys(qubes-gpg-client-wrapper_t)
+
+
+allow qubes-gpg-client-wrapper_t shell_exec_t : file read;
+
+
+#########################################
+#
+# qubes-gpg-import-key_t local policy
+#
+
+files_dontaudit_search_home(qubes-gpg-import-key_t)
+userdom_dontaudit_search_user_home_dirs(qubes-gpg-import-key_t)
+
+# meminfo
+#
+kernel_dontaudit_read_system_state(qubes-gpg-import-key_t)
+
+qubes_core_bluepill_locale(qubes-gpg-import-key_t)
+
+qubes_core_qrexec_client_vm_domtrans(qubes-gpg-import-key_t, qubes-gpg_qrexec-client-vm_t)
+
+userdom_use_user_ptys(qubes-gpg-import-key_t)
+
+userdom_use_user_ttys(qubes-gpg-import-key_t)
+
+
+allow qubes-gpg-import-key_t shell_exec_t : file read;
+
+
+#########################################
+#
+# qubes-gpg-pipe-cat_t local policy
+#
+
+files_search_tmp(qubes-gpg-pipe-cat_t)
+
+getty_use_fds(qubes-gpg-pipe-cat_t)
+userdom_use_user_ttys(qubes-gpg-pipe-cat_t)
+
+userdom_use_unpriv_users_fds(qubes-gpg-pipe-cat_t)
+userdom_use_user_ptys(qubes-gpg-pipe-cat_t)
+
+
+allow qubes-gpg-pipe-cat_t qubes-gpg-client_tmp_t : dir search;
+allow qubes-gpg-pipe-cat_t qubes-gpg-client_tmp_t : fifo_file { write open read };
+
+
+#########################################
+#
+# qubes-gpg-split-server_sh_t local policy
+#
+
+qubes_core_bluepill_locale(qubes-gpg-split-server_sh_t)
+
+
+#########################################
+#
+# user_r local policy
+#
+
+qubes_gpg_import_key_role(user_r, user, user_t)
+qubes_gpg_qubes_gpg_client_role(user_r, user_t)
+
+
+#########################################
+#
+# Tunable policy
+#
+
+
+tunable_policy(`qubes_gpg_backend',`
+
+	gen_require(`
+
+		type qrexec-agent_sh_t;
+		type qubes_rpc_etc_t;
+		type qubes-rpc-multiplexer_t;
+	')
+
+
+	#########################################
+	#
+	# qrexec-agent_sh_t local policy
+	#
+
+	qubes_gpg_read_qubes_gpg_etc_files(qrexec-agent_sh_t)
+
+
+	#########################################
+	#
+	# qubes-rpc-multiplexer_t local policy
+	#
+
+	domtrans_pattern(qubes-rpc-multiplexer_t, qubes-gpg_rpc_exec_t, qubes-gpg_rpc_t)
+
+	allow qubes-rpc-multiplexer_t qubes-gpg-split_lib_t : dir search;
+	domtrans_pattern(qubes-rpc-multiplexer_t, qubes-gpg-split-server_exec_t, qubes-gpg-split-server_t)
+
+
+	#########################################
+	#
+	# qubes-gpg-split-server_t local policy
+	#
+
+	corecmd_shell_domtrans(qubes-gpg-split-server_t, qubes-gpg-split-server_sh_t)
+
+	qubes_core_use_qrexec_agent_fds(qubes-gpg-split-server_t)
+	qubes_core_rw_qrexec_agent_stream_sockets(qubes-gpg-split-server_t)
+
+	qubes_core_write_inherited_qubes_rpc_stderror(qubes-gpg-split-server_t)
+
+
+	#########################################
+	#
+	# qubes-gpg-split-server_sh_t local policy
+	#
+
+	corecmd_search_bin(qubes-gpg-split-server_sh_t)
+
+	gpg_domtrans(qubes-gpg-split-server_sh_t)
+
+	qubes_core_use_qrexec_agent_fds(qubes-gpg-split-server_sh_t)
+	qubes_core_rw_qrexec_agent_stream_sockets(qubes-gpg-split-server_sh_t)
+
+	qubes_core_write_inherited_qubes_rpc_stderror(qubes-gpg-split-server_sh_t)
+
+	userdom_search_user_home_dirs(qubes-gpg-split-server_sh_t)
+
+
+	allow qubes-gpg-split-server_sh_t qubes-gpg-split-server_t : process sigchld;
+
+	# shell bin
+	#
+	allow qubes-gpg-split-server_sh_t qubes-gpg-split-server_t : fd use;
+	allow qubes-gpg-split-server_sh_t bin_t : lnk_file read;
+')
+
+
+#########################################
+#
+# Optional policy
+#
+
+
+# testing
+
+qubes_core_search_qubes_persistent_config(qrexec-agent_sh_t)
+
+allow qubes-rpc-multiplexer_t qubes-gpg_rpc_exec_t : file ioctl;

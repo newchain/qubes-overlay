@@ -81,7 +81,7 @@ interface(`qubes_gui_use_fds',`
 ##	</summary>
 ## </param>
 
-interface(`qubes_gui_read_etc',`
+interface(`qubes_gui_read_qubes_gui_etc',`
 
 	gen_require(`
 

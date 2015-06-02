@@ -1,0 +1,219 @@
+## <summary>qubes-gpg policy</summary>
+## <desc>
+##	<p>
+##		Policy for qubes split gpg.
+##	</p>
+## </desc>
+
+
+###############################
+## <summary>
+##	Allow role to use split gpg-import-key.
+## </summary>
+## <param name="role">
+##	<summary>
+##		Role to assign types.
+##	</summary>
+## </param>
+## <param name="role_prefix">
+##	<summary>
+##		Prefix associated with the role.
+##	</summary>
+## </param>
+## <param name="domain">
+##	<summary>
+##		Domain to permit transition.
+##	</summary>
+## </param>
+
+interface(`qubes_gpg_import_key_role',`
+
+	gen_require(`
+
+		type qubes-gpg_qrexec-client-vm_t;
+		type qubes-gpg_qrexec-client-vm_sh_t;
+		type qubes-gpg_qrexec-client-vm_sh_worker_t;
+		type qubes-gpg_qrexec-client-vm_worker_t;
+	')
+
+	qubes_gpg_import_key_transition($3)
+
+	role $1 types { qubes-gpg-import-key_t qubes-gpg_qrexec-client-vm_t qubes-gpg_qrexec-client-vm_sh_t qubes-gpg_qrexec-client-vm_sh_worker_t qubes-gpg_qrexec-client-vm_worker_t };
+
+	allow qubes-gpg_qrexec-client-vm_t $2_t : fifo_file read;
+	allow qubes-gpg_qrexec-client-vm_sh_t $2_t : fifo_file read;  
+
+	# Pipe keys to gpg-import-key
+	#
+	allow qubes-gpg_qrexec-client-vm_sh_worker_t $2_t : fifo_file { read open getattr };
+
+
+	optional_policy(`
+
+		gen_require(`
+
+			type $2_screen_t;
+		')
+
+		allow qubes-gpg-import-key_t $2_screen_t : fd use;
+		allow qubes-gpg_qrexec-client-vm_t $2_screen_t : fd use;
+	')
+')
+
+
+###############################
+## <summary>
+##	Allow transition to qubes-gpg-import-key_t.
+role to use split gpg-client
+## </summary>
+## <param name="domain">
+##	<summary>
+##		Domain to permit transition.
+##	</summary>
+## </param>
+
+interface(`qubes_gpg_import_key_transition',`
+
+	gen_require(`
+
+		type qubes-gpg-import-key_t;
+		type qubes-gpg-import-key_exec_t;
+	')
+
+	corecmd_search_bin($1)
+
+	domtrans_pattern($1, qubes-gpg-import-key_exec_t, qubes-gpg-import-key_t)
+')
+
+
+###############################
+## <summary>
+##	Allow role to use split gpg-client
+## </summary>
+## <param name="role">
+##	<summary>
+##		Role to assign types.
+##	</summary>
+## </param>
+## <param name="domain">
+##	<summary>
+##		Domain to permit transition.
+##	</summary>
+## </param>
+
+interface(`qubes_gpg_qubes_gpg_client_role',`
+
+	gen_require(`
+
+		type qubes-gpg_qrexec-client-vm_t;
+		type qubes-gpg-client_t;
+		type qubes-gpg-pipe-cat_t;
+		type qubes-gpg_qrexec-client-vm_sh_t;
+		type qubes-gpg_qrexec-client-vm_sh_worker_t;
+	')
+
+	qubes_gpg_qubes_gpg_client_wrapper_domtrans($2)
+
+	role $1 types { qubes-gpg-client_t qubes-gpg-client-wrapper_t qubes-gpg-pipe-cat_t qubes-gpg_qrexec-client-vm_t  qubes-gpg_qrexec-client-vm_sh_t qubes-gpg_qrexec-client-vm_sh_worker_t };
+
+	allow qubes-gpg-client_t $2 : process sigchld;
+	allow qubes-gpg_qrexec-client-vm_t $2 : process sigchld;
+')
+
+
+###############################
+## <summary>
+##	Transition to qubes-gpg-client_t
+## </summary>
+## <param name="domain">
+##	<summary>
+##		Domain to permit transition.
+##	</summary>
+## </param>
+
+interface(`qubes_gpg_qubes_gpg_client_domtrans',`
+
+	gen_require(`
+
+		type qubes-gpg-client_t;
+		type qubes-gpg-client_exec_t;
+	')
+
+	corecmd_search_bin($1)
+
+	domtrans_pattern($1, qubes-gpg-client_exec_t, qubes-gpg-client_t)
+')
+
+
+###############################
+## <summary>
+##	Transition to qubes-gpg-client-wrapper_t
+## </summary>
+## <param name="domain">
+##	<summary>
+##		Domain to permit transition.
+##	</summary>
+## </param>
+
+interface(`qubes_gpg_qubes_gpg_client_wrapper_domtrans',`
+
+	gen_require(`
+
+		type qubes-gpg-client-wrapper_t;
+		type qubes-gpg-client-wrapper_exec_t;
+	')
+
+	corecmd_search_bin($1)
+
+	domtrans_pattern($1, qubes-gpg-client-wrapper_exec_t, qubes-gpg-client-wrapper_t)
+')
+
+
+###############################
+## <summary>
+##	Transition to qubes-gpg-pipe-cat_t
+## </summary>
+## <param name="domain">
+##	<summary>
+##		Domain to permit transition.
+##	</summary>
+## </param>
+
+interface(`qubes_gpg_qubes_gpg_pipe_cat_domtrans',`
+
+	gen_require(`
+
+		type qubes-gpg-pipe-cat_t;
+		type qubes-gpg-pipe-cat_exec_t;
+	')
+
+	corecmd_search_bin($1)
+
+	allow $1 qubes-gpg-split_lib_t : dir search;
+
+	domtrans_pattern($1, qubes-gpg-pipe-cat_exec_t, qubes-gpg-pipe-cat_t)
+')
+
+
+
+###############################
+## <summary>
+##	Read profile.d/qubes-gpg.sh
+## </summary>
+## <param name="domain">
+##	<summary>
+##		Domain to permit read.
+##	</summary>
+## </param>
+
+interface(`qubes_gpg_read_qubes_gpg_etc_files',`
+
+	gen_require(`
+
+		type qubes-gpg_etc_t;
+	')
+
+	qubes_core_search_qubes_rpc_etc($1)
+
+	allow $1 qubes-gpg_etc_t : file { read open getattr };
+')

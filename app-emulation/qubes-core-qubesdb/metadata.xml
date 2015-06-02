@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer>
+		<email>kunjurcca@gmail.org</email>
+		<name>MB</name>
+	</maintainer>
+	<use>
+		<flag name="template">Install files which are necessary for a templateVM, but interfere with regular use.</flag>
+	</use>
+</pkgmetadata>
