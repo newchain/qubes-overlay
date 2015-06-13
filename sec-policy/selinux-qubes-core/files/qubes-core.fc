@@ -40,7 +40,7 @@ HOME_DIR/QubesIncoming(/.*)?			gen_context(system_u:object_r:qubes_shared_home_t
 
 /usr/sbin/qubesdb-daemon		--	gen_context(system_u:object_r:qubesdb_exec_t,s0)
 
-/var/lib/qubes(/.*)?				gen_context(system_u:object_r:qubes_var_run_t,s0)
+/var/lib/qubes(/.*)?				gen_context(system_u:object_r:qubes_var_lib_t,s0)
 
 /var/log/qubes(/.*)?				gen_context(system_u:object_r:qubes_log_t,s0)
 /var/log/qubes/qrexec-agent\.log	--	gen_context(system_u:object_r:qrexec-agent_log_t,s0)

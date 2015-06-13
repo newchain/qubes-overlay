@@ -19,7 +19,8 @@ SLOT='0'
 CDEPEND="app-crypt/gnupg
 	app-emulation/qubes-core-agent-linux"
 
-DEPEND="${CDEPEND}"
+DEPEND="${CDEPEND}
+	>=app-emulation/qubes-secpack-20150603"
 
 RDEPEND="${CDEPEND}
 	backend? ( virtual/notification-daemon )
@@ -31,14 +32,14 @@ src_prepare() {
 	readonly version_prefix='v'
 	qubes_prepare
 
+	epatch_user
+
 	sed -i -- 's|/usr/lib/|/usr/$(LIBDIR)/|g' 'Makefile'
 	sed -i -- 's|/etc/tmpfiles\.d/|/usr/lib/tmpfiles.d/|g' 'Makefile'
 	sed -i -- '/^.*\/var\/run\/.*$/d' 'Makefile'
 	sed -i -- 's/777/700/g' 'qubes-gpg-split.tmpfiles' 'Makefile'
 
 	sed -i -- 's/\ -Werror//g;s/^CFLAGS=-/CFLAGS+=-/g' 'src/Makefile'
-
-	epatch_user
 }
 
 src_compile() {

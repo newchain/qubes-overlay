@@ -18,6 +18,7 @@ qubes_slot
 
 RDEPEND="app-emulation/xen-tools"
 DEPEND="app-crypt/gnupg
+	>=app-emulation/qubes-secpack-20150603
 	${DEPEND}
 	${RDEPEND}"
 
@@ -27,9 +28,9 @@ src_prepare() {
 	readonly version_prefix='v'
 	qubes_prepare
 
-	sed -i -- 's/\ -Werror//g' 'vchan/Makefile.linux'
-
 	epatch_user
+
+	sed -i -- 's/\ -Werror//g' 'vchan/Makefile.linux'
 }
 
 src_compile() {

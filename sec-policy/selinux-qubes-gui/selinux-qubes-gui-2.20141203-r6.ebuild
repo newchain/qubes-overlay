@@ -13,6 +13,7 @@ POLICY_FILES="qubes-gui.te qubes-gui.if qubes-gui.fc"
 DESCRIPTION='SELinux policy for Qubes GUI'
 HOMEPAGE='https://github.com/2d1/qubes-policy'
 
+IUSE="pulseaudio"
 KEYWORDS="~amd64"
 LICENSE='GPL-3'
 SLOT='0'

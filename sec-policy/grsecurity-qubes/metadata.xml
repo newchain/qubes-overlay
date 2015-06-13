@@ -5,7 +5,4 @@
 		<email>kunjurcca@gmail.org</email>
 		<name>MB</name>
 	</maintainer>
-	<use>
-		<flag name="template">Automatically add qubesdb-daemon to default runlevel.</flag>
-	</use>
 </pkgmetadata>

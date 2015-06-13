@@ -1,0 +1,184 @@
+define qrexec_agent {
+
+	/
+
+	/bin/su					xp
+
+	/bin
+	/bin/*					h
+
+
+	/dev/null				rw
+	/dev/tty				rw
+	/dev/urandom				r
+	/dev/xen/evtchn				rw
+	/dev/xen/gntalloc			rw
+	/dev/xen/gntdev				rw
+	/dev/xen/xenbus				rw
+
+	/dev
+	/dev/xen
+	/dev/xen/*				h
+	/dev/*					h
+
+
+	/etc/ld.so.cache			r
+
+	/etc
+	/etc/*					h
+
+
+	/lib64/ld-2.??.so			x
+	/lib64/libc-2.??.so			rx
+	/usr/lib64/gcc/x86_64-pc-linux-gnu/?.?.?/libgcc_s.so.1	rx
+	/usr/lib64/libxenvchan.so.*		rx
+	  /usr/lib64/libxenctrl.so.*		rx
+	    /lib64/libdl-2.??.so		rx
+	    /usr/lib64/libxenstore.so.*		rx
+	      /lib64/libpthread-2.??.so		rx
+
+	/lib64
+	/lib64/*				h
+	/usr/lib64
+	/usr/lib64/gcc
+	/usr/lib64/gcc/x86_64-pc-linux-gnu
+	/usr/lib64/gcc/x86_64-pc-linux-gnu/*	h
+	/usr/lib64/gcc/*			h
+	/usr/lib64/*				h
+
+
+	/proc/u2mfn				rwFRW
+	/proc/xen/privcmd			rw
+
+	/proc
+	/proc/xen
+	/proc/xen/*				h
+	/proc/*					h
+
+
+	# Note: dir/* must be visible if RBAC is enabled
+	# before the object (/qrexec-agent) is created.
+
+	/run/qubes/qrexec-agent			cwr
+	/run/qubes/qubesdb.pid			h
+	/run/qubes/qubesdb.sock			h
+	/run/qubes/qubes-gui.pid		h
+
+	/run
+	/run/qubes
+	/run/*					h
+	
+
+	/var/log/qubes/qrexec-agent.log		a
+
+	/var
+	/var/log
+	/var/log/qubes
+	/var/log/qubes/*			h
+	/var/log/*				h
+	/var/*					h
+
+
+	/*					h
+
+	-CAP_ALL
+
+	bind	disabled
+	connect	disabled
+}
+
+
+define qrexec_agent_nested_su {
+
+	/
+
+
+	/dev/log			rw
+
+	/dev
+	/dev/*				h
+
+
+	/etc/group			r
+	/etc/ld.so.cache		r
+	/etc/localtime			hs
+	/etc/login.defs			r
+	/etc/nsswitch.conf		r
+	  /lib64/libnss_files-2.??.so	rx
+	/etc/pam.d/su			r
+	/etc/passwd			r
+	/etc/shadow			hs
+
+	/etc
+	/etc/pam.d
+	/etc/pam.d/*			h
+	/etc/*				h
+
+	/lib64/ld-2.??.so		x
+	/lib64/libc-2.??.so		rx
+	/lib64/libpam.so.*		rx
+	  /lib64/libdl-2.??.so		rx
+	/lib64/libpam_misc.so.*		rx
+
+	/lib64
+	/lib64/*			h
+	/usr/lib64
+	/usr/lib64/*			h
+
+
+	/proc/[1-9]*/loginuid		r
+	/proc/filesystems		hs
+	/proc/mounts			hs
+	/proc/sys/kernel/ngroups_max	hs
+
+	/proc
+	/proc/*				h
+
+
+	/run/utmp			r
+
+	/run
+	/run/*				h
+
+
+	/sys/fs/selinux
+	/sys/fs/selinux/*		h
+
+	/sys
+	/sys/fs
+	/sys/fs/*			h
+	/sys/*				h
+
+
+	/usr/bin/xauth
+
+	/usr
+	/usr/bin
+	/usr/bin/*			h
+	/usr/*				h
+
+
+	/*				h
+
+	+CAP_SETGID
+	+CAP_SETUID
+
+	bind	disabled
+	connect disabled
+}
+
+
+
+# subject /usr/lib/qubes/qrexec-agent ohpsAKT {
+#
+#	$qrexec_agent
+#
+#	sock_allow_family unix
+# }
+
+# subject /usr/lib/qubes/qrexec-agent:/bin/su odsAKT {
+#
+#	$qrexec_agent_nested_su | $qrexec_agent_nested_su_pamstack
+#
+#	sock_allow_family unix
+# }

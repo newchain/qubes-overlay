@@ -20,7 +20,8 @@ SLOT='0'
 CDEPEND="app-emulation/qubes-core-vchan-xen:3"
 
 DEPEND="${CDEPEND}
-	app-crypt/gnupg"
+	app-crypt/gnupg
+	>=app-emulation/qubes-secpack-20150603"
 RDEPEND="${CDEPEND}"
 
 
@@ -30,11 +31,12 @@ src_prepare() {
 	qubes_prepare
 
 
+	epatch_user
+
+
 	epatch "${FILESDIR}/no-systemd.patch"
 
 	sed -i -- 's/\ -Werror//g' 'daemon/Makefile'
-
-	epatch_user
 }
 
 src_compile() {

@@ -17,8 +17,8 @@ LICENSE='GPL-2'
 
 qubes_slot
 
-CDEPEND="pulseaudio? ( media-sound/pulseaudio )
-	x11-base/xorg-server"
+CDEPEND="pulseaudio? ( media-sound/pulseaudio[xen] )
+	x11-base/xorg-server[xorg]"
 
 if [ ${SLOT} == 3 ]; then {
 
@@ -29,11 +29,12 @@ fi
 
 DEPEND="${CDEPEND}
 	${DEPEND}
-	app-crypt/gnupg"
+	app-crypt/gnupg
+	>=app-emulation/qubes-secpack-20150603"
 RDEPEND="${CDEPEND}
 	candy? ( x11-themes/gnome-themes-standard[gtk] )
-	selinux? ( sec-policy/selinux-qubes-gui )
-	template? ( x11-base/xorg-server[minimal] )"
+	selinux? ( sec-policy/selinux-qubes-gui[pulseaudio?] )
+	template? ( x11-base/xorg-server[minimal,-suid] )"
 	#
 	# ^^ template <= attack surface--
 
@@ -42,17 +43,20 @@ src_prepare() {
 	readonly version_prefix='v'
 	qubes_prepare
 
+	epatch_user
+
 	if [ ${SLOT} == 3 ]; then {
 
 		epatch "${FILESDIR}/Makefile-loud.patch"
 	};
 	fi
 
+	$(use pulseaudio) || sed -i -- '/install.*pulse\//d' 'Makefile'
+
+	sed -i -- '1s/^/BACKEND_VMM ?= xen\n/' 'gui-agent/Makefile' 'pulse/Makefile'
 	sed -i -- 's/\ -Werror//g' 'gui-agent/Makefile'
 
 	sed -i -- 's/LIBTOOLIZE=\"\"/LIBTOOLIZE="libtoolize"/g' 'xf86-input-mfndev/bootstrap'
-
-	epatch_user
 }
 
 src_compile() {
@@ -72,7 +76,7 @@ src_compile() {
 src_install() {
 
 	rm -- 'appvm-scripts/etc/init.d/qubes-gui-agent'
-	doinitd "${FILESDIR}/qubes-gui-agent"
+	cp -- "${FILESDIR}/qubes-gui-agent" 'appvm-scripts/etc/init.d/qubes-gui-agent'
 
 	insinto '/usr/lib/tmpfiles.d'
 	doins "${FILESDIR}/qubes-gui.conf"
@@ -85,47 +89,7 @@ src_install() {
 	};
 	fi
 
-	if $(use pulseaudio); then {
-
-		emake DESTDIR="${D}" install
-
-	}; else {
-
-		# Everything but pulseaudio...
-
-		exeinto '/usr/bin'
-		doexe 'appvm-scripts/usrbin/qubes-change-keyboard-layout'
-		doexe 'appvm-scripts/usrbin/qubes-run-xorg.sh'
-		doexe 'appvm-scripts/usrbin/qubes-session'
-		doexe 'appvm-scripts/usrbin/qubes-set-monitor-layout'
-		doexe 'gui-agent/qubes-gui'
-
-		insinto '/etc/X11'
-		doins 'appvm-scripts/etc/X11/xorg-qubes.conf.template'
-
-		insinto '/etc/X11/Xsession.d'
-		doins 'appvm-scripts/etc/X11/Xsession.d/20qt-x11-no-mitshm'
-
-		insinto '/etc/X11/xinit/xinitrc.d'
-		doins 'appvm-scripts/etc/X11/xinit/xinitrc.d/qubes-keymap.sh'
-
-		insinto '/etc/profile.d'
-		doins 'appvm-scripts/etc/profile.d/qubes-gui.csh'
-		doins 'appvm-scripts/etc/profile.d/qubes-gui.sh'
-		doins 'appvm-scripts/etc/profile.d/qubes-session.sh'
-
-		insinto '/etc/qubes-rpc'
-		doins 'appvm-scripts/etc/qubes-rpc/qubes.SetMonitorLayout'
-
-		insinto '/etc/xdg'
-		doins 'appvm-scripts/etc/xdg/Trolltech.conf'
-		doins 'appvm-scripts/etc/xdg-debian/Xresources'
-
-		into '/usr/lib/xorg/modules/drivers'
-		dolib.so 'xf86-input-mfndev/src/.libs/qubes_drv.so'
-		dolib.so 'xf86-video-dummy/src/.libs/dummyqbs_drv.so'
-	};
-	fi
+	emake DESTDIR="${D}" install
 
 	if ! $(use template); then {
 
@@ -135,4 +99,9 @@ src_install() {
 		rm -rf -- "${D}/etc/profile.d"
 	};
 	fi
+}
+
+pkg_postinst() {
+
+	$(use template) && qubes_to_runlevel qubes-gui-agent
 }

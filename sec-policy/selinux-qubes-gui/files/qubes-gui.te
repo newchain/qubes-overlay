@@ -20,6 +20,14 @@ gen_require(`
 # Definitions
 #
 
+# <desc>
+#	<p>
+#		Hide monitor layout.
+#	</p>
+# </desc>
+
+gen_tunable(qubes_gui_bluepill_monitor, true)
+
 type qubes-gui_t;
 type qubes-gui_exec_t;
 init_daemon_domain(qubes-gui_t, qubes-gui_exec_t)
@@ -174,8 +182,6 @@ allow qubes-gui_initrc_t initrc_state_t : dir { create_dir_perms delete_dir_perm
 allow qubes-gui_initrc_t qrexec-agent_initrc_exec_t : file getattr;
 allow qubes-gui_initrc_t qubesdb_initrc_exec_t : file getattr;
 
-allow qubes-gui_initrc_t qubes-gui_t : process { siginh noatsecure };
-
 
 ########################################
 #
@@ -213,9 +219,9 @@ allow qubes-run-xorg_t shell_exec_t : file read;
 
 # Only meminfo:
 #
-#kernel_dontaudit_read_system_state(qubes-run-xorg_t)
+kernel_dontaudit_read_system_state(qubes-run-xorg_t)
 
-#qubes_core_bluepill_locale(qubes-run-xorg_t)
+qubes_core_bluepill_locale(qubes-run-xorg_t)
 
 # /dev/null:
 #
@@ -225,11 +231,6 @@ qubes_gui_use_fds(qubes-run-xorg_t)
 corecmd_bin_domtrans(qubes-run-xorg_t, qubes-run-xorg_worker_t)
 
 domtrans_pattern(qubes-run-xorg_t, su_exec_t, qubes-run-xorg_su_t)
-
-
-# su doesn't receive args without this...
-#
-permissive qubes-run-xorg_t;
 
 
 ########################################
@@ -279,6 +280,8 @@ allow qubes-run-xorg_su_t xauth_exec_t : file execute;
 
 
 auth_domtrans_chk_passwd(qubes-run-xorg_su_t)
+
+files_dontaudit_search_tmp(qubes-run-xorg_su_t)
 
 init_read_utmp(qubes-run-xorg_su_t)
 
@@ -339,6 +342,10 @@ auth_use_nsswitch(qubes-run-xorg_worker_t)
 
 allow qubes-run-xorg_worker_t qubes-run-xorg_t : fd use;
 allow qubes-run-xorg_worker_t qubes-gui_etc_t : file { read write getattr };
+
+# filesystems
+#
+kernel_dontaudit_read_system_state(qubes-run-xorg_worker_t)
 
 qubes_core_bluepill_locale(qubes-run-xorg_worker_t)
 
@@ -402,7 +409,7 @@ corecmd_bin_domtrans(qubes-run-xorg_xinitrc_t, qubes-run-xorg_xinitrc_worker_t)
 
 # meminfo:
 #
-#kernel_dontaudit_read_system_state(qubes-run-xorg_xinitrc_t)
+kernel_dontaudit_read_system_state(qubes-run-xorg_xinitrc_t)
 
 qubes_core_bluepill_locale(qubes-run-xorg_xinitrc_t)
 
@@ -448,40 +455,10 @@ allow qubes-run-xorg_xinitrc_worker_t user_home_dir_t : file write;
 
 #########################################
 #
-# qubes-rpc-multiplexer_sh_t local policy
-#
-
-domtrans_pattern(qubes-rpc-multiplexer_sh_t, qubes-set-monitor-layout_exec_t, qubes-set-monitor-layout_t)
-
-
-#########################################
-#
 # qubes-set-monitor-layout_t local policy
 #
 
-corecmd_bin_domtrans(qubes-set-monitor-layout_t, qubes-set-monitor-layout_worker_t)
-
-#files_dontaudit_search_home(qubes-set-monitor-layout_t)
-#userdom_dontaudit_search_user_home_dirs(qubes-set-monitor-layout_t)
-userdom_search_user_home_dirs(qubes-set-monitor-layout_t)
-
-
-qubes_core_rw_inherited_qrexec_agent_pipes(qubes-set-monitor-layout_t)
-
-qubes_core_write_inherited_qubes_rpc_stderror(qubes-set-monitor-layout_t)
-
 qubes_core_bluepill_locale(qubes-set-monitor-layout_t)
-
-qubes_core_rw_qrexec_agent_stream_sockets(qubes-set-monitor-layout_t)
-
-
-allow qubes-set-monitor-layout_t self : fifo_file read;
-
-# /dev/null
-#
-qubes_core_use_qrexec_agent_sh_fds(qubes-set-monitor-layout_t)
-
-allow qubes-set-monitor-layout_t shell_exec_t : file read;
 
 
 #########################################
@@ -491,53 +468,11 @@ allow qubes-set-monitor-layout_t shell_exec_t : file read;
 
 qubes_core_bluepill_locale(qubes-set-monitor-layout_worker_t)
 
-qubes_core_rw_inherited_qrexec_agent_pipes(qubes-set-monitor-layout_worker_t)
-
-allow qubes-set-monitor-layout_worker_t qubes-set-monitor-layout_t : process sigchld;
-
-#
-# grep
-#
-
-allow qubes-set-monitor-layout_worker_t qubes-set-monitor-layout_t : fifo_file read;
-
-#
-# sleep
-#
-
-qubes_core_write_inherited_qubes_rpc_stderror(qubes-set-monitor-layout_worker_t)
-
-# /dev/null
-#
-allow qubes-set-monitor-layout_worker_t qubes-rpc-multiplexer_sh_t : fd use;
-allow qubes-set-monitor-layout_worker_t qubes-set-monitor-layout_t : fd use;
-
 #
 # xrandr
 #
 
-# pipefs:
-#
-allow qubes-set-monitor-layout_worker_t qubes-set-monitor-layout_t : fifo_file write;
-
-# /dev/null
-#
-qubes_core_use_qrexec_agent_sh_fds(qubes-set-monitor-layout_worker_t)
-
-qubes_core_rw_qrexec_agent_stream_sockets(qubes-set-monitor-layout_worker_t)
-
-files_search_tmp(qubes-set-monitor-layout_worker_t)
-
-allow qubes-set-monitor-layout_worker_t self : udp_socket { create connect write read };
-auditallow qubes-set-monitor-layout_worker_t self : udp_socket read;
-
 auth_use_nsswitch(qubes-set-monitor-layout_worker_t)
-
-gen_require(`
-	type xdm_tmp_t;
-	')
-allow qubes-set-monitor-layout_worker_t xdm_tmp_t : dir search;
-xserver_stream_connect(qubes-set-monitor-layout_worker_t)
 
 
 ########################################
@@ -560,3 +495,147 @@ qubes_gui_stream_write(xserver_t)
 # /dev/null:
 #
 qubes_gui_use_fds(xserver_t)
+
+
+########################################
+#
+# Tunable policy
+#
+
+tunable_policy(`! qubes_gui_bluepill_monitor',`
+
+	#########################################
+	#
+	# qubes-rpc-multiplexer_sh_t local policy
+	#
+
+	domtrans_pattern(qubes-rpc-multiplexer_sh_t, qubes-set-monitor-layout_exec_t, qubes-set-monitor-layout_t)
+
+
+	#########################################
+	#
+	# qubes-set-monitor-layout_t local policy
+	#
+
+	corecmd_bin_domtrans(qubes-set-monitor-layout_t, qubes-set-monitor-layout_worker_t)
+
+	#files_dontaudit_search_home(qubes-set-monitor-layout_t)
+	#userdom_dontaudit_search_user_home_dirs(qubes-set-monitor-layout_t)
+	userdom_search_user_home_dirs(qubes-set-monitor-layout_t)
+
+	qubes_core_rw_inherited_qrexec_agent_pipes(qubes-set-monitor-layout_t)
+
+	qubes_core_write_inherited_qubes_rpc_stderror(qubes-set-monitor-layout_t)
+
+	qubes_core_rw_qrexec_agent_stream_sockets(qubes-set-monitor-layout_t)
+
+
+	allow qubes-set-monitor-layout_t self : fifo_file read;
+
+	# /dev/null
+	#
+	qubes_core_use_qrexec_agent_sh_fds(qubes-set-monitor-layout_t)
+
+	allow qubes-set-monitor-layout_t shell_exec_t : file read;
+
+
+	#########################################
+	#
+	# qubes-set-monitor-layout_worker_t local policy
+	#
+
+	qubes_core_rw_inherited_qrexec_agent_pipes(qubes-set-monitor-layout_worker_t)
+
+	allow qubes-set-monitor-layout_worker_t qubes-set-monitor-layout_t : process sigchld;
+
+	#
+	# grep
+	#
+
+	allow qubes-set-monitor-layout_worker_t qubes-set-monitor-layout_t : fifo_file read;
+
+	#
+	# sleep
+	#
+
+	qubes_core_write_inherited_qubes_rpc_stderror(qubes-set-monitor-layout_worker_t)
+
+	# /dev/null
+	#
+	allow qubes-set-monitor-layout_worker_t qubes-rpc-multiplexer_sh_t : fd use;
+	allow qubes-set-monitor-layout_worker_t qubes-set-monitor-layout_t : fd use;
+
+	#
+	# xrandr
+	#
+
+	# pipefs:
+	#
+	allow qubes-set-monitor-layout_worker_t qubes-set-monitor-layout_t : fifo_file write;
+
+	# /dev/null
+	#
+	qubes_core_use_qrexec_agent_sh_fds(qubes-set-monitor-layout_worker_t)
+
+	qubes_core_rw_qrexec_agent_stream_sockets(qubes-set-monitor-layout_worker_t)
+
+	files_search_tmp(qubes-set-monitor-layout_worker_t)
+
+	allow qubes-set-monitor-layout_worker_t self : udp_socket { create connect write read };
+	auditallow qubes-set-monitor-layout_worker_t self : udp_socket read;
+
+	gen_require(`
+		type xdm_tmp_t;
+		')
+	allow qubes-set-monitor-layout_worker_t xdm_tmp_t : dir search;
+	xserver_stream_connect(qubes-set-monitor-layout_worker_t)
+')
+
+
+########################################
+#
+# Conditional policy
+#
+
+
+# This is controlled by policy ebuild USE flags.
+
+
+ifdef(`use_pulseaudio',`
+
+	gen_require(`
+
+		type device_t;
+		type pulseaudio_t;
+	')
+
+	fs_search_xenfs(pulseaudio_t)
+	#
+	# /proc/xen/privcmd
+	#
+	allow pulseaudio_t xenfs_t : file { read write open };
+
+
+	# /dev/xen/gntalloc
+	#
+	allow pulseaudio_t xen_device_t : chr_file { read write open };
+
+	# /dev/xen/evtchn
+	#
+	allow pulseaudio_t xen_device_t : chr_file ioctl;
+
+	# /dev/xen/xenbus
+	#
+	allow pulseaudio_t device_t : chr_file { getattr read write open };
+
+
+	optional_policy(`
+
+		gen_require(`
+
+			type user_screen_t;
+		')
+
+		allow pulseaudio_t user_screen_t : fd use;
+	')
+')

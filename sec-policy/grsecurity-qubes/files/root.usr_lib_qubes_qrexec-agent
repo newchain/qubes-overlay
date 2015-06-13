@@ -1,0 +1,17 @@
+subject /usr/lib/qubes/qrexec-agent odhpsAKT {
+
+	$qrexec_agent
+
+	sock_allow_family unix
+}
+
+
+subject /usr/lib/qubes/qrexec-agent:/bin/su odsAKT {
+
+	$qrexec_agent_nested_su_pamstack | $qrexec_agent_nested_su
+
+	+CAP_SETGID
+	+CAP_SETUID
+
+	sock_allow_family unix
+}

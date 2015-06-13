@@ -27,7 +27,8 @@ if ( [ "${PV:0:3}" == '4.2' ] || [ "${PR}" == 'r200' ] ); then {
 };
 fi
 
-DEPEND="app-crypt/gnupg"
+DEPEND="app-crypt/gnupg
+	>=app-emulation/qubes-secpack-20150603"
 
 [[ "${PV}" < '9999' ]] && MY_PV="${PV/_p/-}"
 

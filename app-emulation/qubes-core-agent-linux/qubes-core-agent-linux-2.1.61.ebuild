@@ -8,7 +8,7 @@ EGIT_REPO_URI='https://github.com/QubesOS/qubes-core-agent-linux.git'
 
 PYTHON_COMPAT=( python2_7 )
 
-inherit eutils git-2 python-r1 qubes user
+inherit eutils fcaps git-2 python-r1 qubes user
 
 DESCRIPTION='Qubes RPC agent and utilities for Linux VMs'
 HOMEPAGE='https://github.com/QubesOS/qubes-core-agent-linux'
@@ -25,7 +25,8 @@ CDEPEND="app-emulation/qubes-core-vchan-xen:${SLOT}
 
 DEPEND="${CDEPEND}
 	${DEPEND}
-	app-crypt/gnupg"
+	app-crypt/gnupg
+	>=app-emulation/qubes-secpack-20150603"
 
 # util-linux for logger
 #
@@ -41,7 +42,7 @@ RDEPEND="${CDEPEND}
 		sys-apps/ethtool
 		sys-apps/net-tools
 	)
-	selinux? ( sec-policy/selinux-qubes-core )
+	selinux? ( sec-policy/selinux-qubes-core[net?] )
 	sys-apps/haveged
 	sys-apps/util-linux"
 
@@ -59,6 +60,11 @@ src_prepare() {
 	qubes_prepare
 
 
+	epatch_user
+
+
+	sed -i -- '1s/^/BACKEND_VMM ?= xen\n/' 'qrexec/Makefile'
+
 	for i in misc qrexec qubes-rpc; do {
 
 		sed -i -- 's/\ -Werror//g' "${i}/Makefile"
@@ -72,17 +78,15 @@ src_prepare() {
 		sed -i -- 's|/sbin/route|/bin/route|g' 'network/setup-ip'
 	};
 	fi
-
-	epatch_user
 }
 
 pkg_setup() {
 
+	enewgroup 'qubes'
 	# for regular users to read and place/remove files
-	enewgroup 'qubes-transfer'
 	# 'user' is used in template VMs and qrexec-agent operates
 	# within the associated $HOME when copying files.
-	enewuser 'user' -1 -1 '/home/user' 'qubes-transfer'
+	enewuser 'user' -1 -1 '/home/user' 'qubes'
 }
 
 src_compile() {
@@ -117,17 +121,16 @@ src_install() {
 		diropts '-m0770'
 		dodir 'home.orig/user'
 		dodir 'home.orig/user/QubesIncoming'
-		fowners user:qubes-transfer '/home.orig/user' '/home.orig/user/QubesIncoming'
+		fowners user:qubes '/home.orig/user' '/home.orig/user/QubesIncoming'
 
 	}; else {
 
 		diropts '-m0770'
 		dodir 'home/user/QubesIncoming'
-		fowners user:qubes-transfer '/home/user' '/home/user/QubesIncoming'
+		fowners user:qubes '/home/user' '/home/user/QubesIncoming'
 	};
 	fi
 
-	rm -- 'vm-init.d/qubes-core'
 	doinitd "${FILESDIR}/qubes-core"
 	doinitd "${FILESDIR}/qubes-qrexec-agent"
 
@@ -154,7 +157,7 @@ src_install() {
 	$(use glib) && doexe 'misc/qubes-trigger-sync-appmenus.sh'
 	exeopts '-m0711'
 	doexe 'qubes-rpc/'{qfile-agent,tar2qfile}
-	exeopts '-m4711'
+	exeopts '-m0711'
 	doexe 'qubes-rpc/qfile-unpacker'
 
 	insinto '/usr/lib/tmpfiles.d'
@@ -194,6 +197,8 @@ pkg_preinst() {
 
 pkg_postinst() {
 
+	fcaps cap_setgid,cap_setuid,cap_sys_admin,cap_sys_chroot 'usr/lib/qubes/qfile-unpacker'
+
 	if $(use net); then {
 
 		echo
@@ -219,7 +224,7 @@ pkg_postinst() {
 	einfo "File copying is performed inside the 'user' user's"
 	einfo "\$HOME. Look for files under /home/user/QubesIncoming".
 	echo
-	einfo "Add regular users to the 'qubes-transfer' group to read"
+	einfo "Add regular users to the 'qubes' group to read"
 	einfo "and manipulate files there."
 	echo
 }

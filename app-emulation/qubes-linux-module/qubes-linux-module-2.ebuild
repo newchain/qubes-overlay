@@ -29,6 +29,7 @@ SLOT='0'
 
 DEPEND="app-crypt/gnupg
 	app-emulation/qubes-core-vchan-xen
+	>=app-emulation/qubes-secpack-20150603
 	sys-kernel/hardened-sources"
 
 

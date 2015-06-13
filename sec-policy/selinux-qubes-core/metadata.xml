@@ -5,4 +5,7 @@
 		<email>kunjurcca@gmail.org</email>
 		<name>MB</name>
 	</maintainer>
+	<use>
+		<flag name="net">Allow net.qubes to change on-disk net config.</flag>
+	</use>
 </pkgmetadata>

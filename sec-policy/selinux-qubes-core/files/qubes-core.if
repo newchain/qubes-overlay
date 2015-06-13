@@ -575,6 +575,24 @@ interface(`qubes_core_create_qubes_shared_home_files',`
 
 ###############################
 ## <summary>
+##	Link QubesIncoming files
+## </summary>
+## <param name="domain">
+##	<summary>
+##		Domain to permit link.
+##	</summary>
+## </param>
+
+interface(`qubes_core_link_qubes_shared_home_files',`
+
+	qubes_core_search_qubes_shared_home($1)
+
+	allow $1 qubes_shared_home_t : file link;
+')
+
+
+###############################
+## <summary>
 ##	getattr QubesIncoming files
 ## </summary>
 ## <param name="domain">
@@ -593,6 +611,24 @@ interface(`qubes_core_getattr_qubes_shared_home_files',`
 
 ###############################
 ## <summary>
+##	setattr QubesIncoming files
+## </summary>
+## <param name="domain">
+##	<summary>
+##		Domain to permit setattr.
+##	</summary>
+## </param>
+
+interface(`qubes_core_setattr_qubes_shared_home_files',`
+
+	qubes_core_search_qubes_shared_home($1)
+
+	allow $1 qubes_shared_home_t : file setattr;
+')
+
+
+###############################
+## <summary>
 ##	Read QubesIncoming files
 ## </summary>
 ## <param name="domain">
@@ -606,6 +642,24 @@ interface(`qubes_core_read_qubes_shared_home_files',`
 	qubes_core_search_qubes_shared_home($1)
 
 	allow $1 qubes_shared_home_t : file read_file_perms;
+')
+
+
+###############################
+## <summary>
+##	Write QubesIncoming files
+## </summary>
+## <param name="domain">
+##	<summary>
+##		Domain to permit write.
+##	</summary>
+## </param>
+
+interface(`qubes_core_write_qubes_shared_home_files',`
+
+	qubes_core_search_qubes_shared_home($1)
+
+	allow $1 qubes_shared_home_t : file write;
 ')
 
 

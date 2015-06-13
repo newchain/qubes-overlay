@@ -21,6 +21,7 @@ qubes_slot
 RDEPEND="app-emulation/qubes-core-vchan-xen:${SLOT}
 	app-emulation/xen-tools"
 DEPEND="app-crypt/gnupg
+	>=app-emulation/qubes-secpack-20150603
 	${DEPEND}
 	${RDEPEND}"
 
@@ -29,6 +30,9 @@ src_prepare() {
 
 	version_prefix='v'
 	qubes_prepare
+
+	epatch_user
+
 
 	sed -i -- '1s/^/BACKEND_VMM ?= xen\n/' 'qrexec-lib/Makefile'
 
@@ -39,8 +43,6 @@ src_prepare() {
 		sed -i -- 's/\ -Werror//g' "${i}/Makefile"
 	};
 	done
-
-	epatch_user
 }
 
 src_compile() {

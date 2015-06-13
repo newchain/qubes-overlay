@@ -3,17 +3,20 @@ policy_module(qubes-core, 1)
 
 gen_require(`
 
+	attribute fixed_disk_raw_read;
 	attribute proc_type;
 
 	role sysadm_r;
 	role user_r;
 
 	type configfs_t;
+	type kernel_t;
 	type shell_exec_t;
 	type su_exec_t;
 	type sysadm_t;
 	type tmpfiles_t;
 	type user_t;
+	type var_lib_t;
 	type xauth_exec_t;
 ')
 
@@ -87,6 +90,21 @@ init_daemon_domain(qrexec-agent_t, qrexec-agent_exec_t)
       type qubes-rpc-multiplexer_exec_t;
       init_system_domain(qubes-rpc-multiplexer_t, qubes-rpc-multiplexer_exec_t)
 
+        # Called for incoming copy:
+        #
+        type qubes-rpc-multiplexer_sh_t;
+        application_type(qubes-rpc-multiplexer_sh_t)
+
+          # ( find | xargs )
+          #
+          type qubes-rpc-multiplexer_sh_worker_t;
+          application_type(qubes-rpc-multiplexer_sh_worker_t)
+
+            # ( awk | sleep )
+            #
+            type qubes-rpc-multiplexer_sh_awk_t;
+            application_type(qubes-rpc-multiplexer_sh_awk_t)
+
         # ( mkfifo, logger, rm )
         #
         type qubes-rpc-multiplexer_worker_t;
@@ -122,7 +140,7 @@ init_script_domain(qrexec-agent_initrc_t, qrexec-agent_initrc_exec_t)
 type qrexec-agent_log_t;
 logging_log_file(qrexec-agent_log_t)
 
-type qubes-core_initrc_t, qubes_init_domain;
+type qubes-core_initrc_t, fixed_disk_raw_read, qubes_init_domain;
 type qubes-core_initrc_exec_t;
 files_type(qubes-core_initrc_exec_t)
 init_script_domain(qubes-core_initrc_t, qubes-core_initrc_exec_t)
@@ -239,6 +257,14 @@ role system_r types setup-ip_t;
 type tar2qfile_t;
 type tar2qfile_exec_t;
 init_system_domain(tar2qfile_t, tar2qfile_exec_t)
+
+
+#########################################
+#
+# kernel_t local policy
+#
+
+filetrans_pattern(kernel_t, proc_t, qubes_u2mfn_t, file, "u2mfn")
 
 
 #########################################
@@ -392,6 +418,7 @@ auth_domtrans_chk_passwd(qrexec-agent_su_t)
 domtrans_pattern(qrexec-agent_su_t, shell_exec_t, qrexec-agent_sh_t)
 
 files_dontaudit_getattr_tmp_dirs(qrexec-agent_su_t)
+files_dontaudit_search_tmp(qrexec-agent_su_t)
 
 init_read_utmp(qrexec-agent_su_t)
 
@@ -524,6 +551,11 @@ userdom_search_user_home_dirs(qubes-core_initrc_t)
 
 qubes_core_search_qubes_persistent(qubes-core_initrc_t)
 
+
+filetrans_add_pattern(qubes-core_initrc_t, var_lib_t, qubes_var_lib_t, dir, "qubes")
+allow qubes-core_initrc_t qubes_var_lib_t : dir create;
+create_files_pattern(qubes-core_initrc_t, qubes_var_lib_t, qubes_var_lib_t)
+
 #
 # cp
 #
@@ -537,13 +569,7 @@ allow qubes-core_initrc_t user_home_dir_t : dir setattr_dir_perms;
 
 # diff <- /dev/xvdb
 #
-#gen_require(`
-#	type fixed_disk_device_t;
-#')
-#
-# neverallow violation(?)
-#
-#allow qubes-core_initrc_t fixed_disk_device_t:blk_file { read open };
+allow qubes-core_initrc_t fixed_disk_device_t : blk_file { read open };
 
 
 #########################################
@@ -658,6 +684,22 @@ allow qubes-rpc-multiplexer_t qrexec-agent_su_t : fd use;
 
 #########################################
 #
+# qubes-rpc-multiplexer_sh_t local policy
+#
+
+qubes_core_bluepill_locale(qubes-rpc-multiplexer_sh_t)
+
+
+#########################################
+#
+# qubes-rpc-multiplexer_sh_awk_t local policy
+#
+
+qubes_core_bluepill_locale(qubes-rpc-multiplexer_sh_awk_t)
+
+
+#########################################
+#
 # qubes-rpc-multiplexer_worker_t local policy
 #
 
@@ -763,7 +805,18 @@ qubes_core_qubesdb_domtrans(qubesdb_initrc_t)
 
 allow qubesdb_initrc_t initrc_state_t : dir { create_dir_perms delete_dir_perms };
 
-allow qubesdb_initrc_t qubesdb_t : process { signal sigkill };
+#
+# pkill
+#
+
+allow qubesdb_initrc_t proc_t : dir read;
+allow qubesdb_initrc_t qubesdb_t : dir { getattr search };
+#
+# ( cmdline | status )
+#
+allow qubesdb_initrc_t qubesdb_t : file { read open };
+
+allow qubesdb_initrc_t qubesdb_t : process signal;
 
 
 #########################################
@@ -964,16 +1017,6 @@ qubes_core_qvm_role(sysadm_r, sysadm_t)
 
 #########################################
 #
-# system_r local policy
-#
-
-allow system_r user_r;
-
-role system_r types user_t;
-
-
-#########################################
-#
 # user_r local policy
 #
 
@@ -988,8 +1031,15 @@ qubes_core_qvm_role(user_r, user_t)
 files_pid_filetrans(tmpfiles_t, qubes_var_run_t, dir, "qubes")
 
 logging_log_filetrans(tmpfiles_t, qubes_log_t, dir, "qubes")
+allow tmpfiles_t qubes_log_t : dir create;
 qubes_core_qubes_log_filetrans(tmpfiles_t, qrexec-agent_log_t, file, "qrexec-agent.log")
 qubes_core_qubes_log_filetrans(tmpfiles_t, qubesdb_log_t, file, "qubesdb.log")
+
+
+allow tmpfiles_t { proc_t qubes_u2mfn_t } : file setattr;
+
+allow tmpfiles_t xenfs_t : dir getattr;
+allow tmpfiles_t xenfs_t : file { getattr setattr };
 
 
 #########################################
@@ -1012,22 +1062,16 @@ qubes_core_qubes_log_filetrans(tmpfiles_t, qubesdb_log_t, file, "qubesdb.log")
 
 	# Called for incoming copy:
 	#
-	type qubes-rpc-multiplexer_sh_t;
-	application_type(qubes-rpc-multiplexer_sh_t)
 	corecmd_shell_entry_type(qubes-rpc-multiplexer_sh_t)
 	role system_r types qubes-rpc-multiplexer_sh_t;
 
 	  # ( find | xargs )
 	  #
-	  type qubes-rpc-multiplexer_sh_worker_t;
-	  application_type(qubes-rpc-multiplexer_sh_worker_t)
 	  corecmd_bin_entry_type(qubes-rpc-multiplexer_sh_worker_t)
 	  role system_r types qubes-rpc-multiplexer_sh_worker_t;
 
 	    # ( awk | sleep )
 	    #
-	    type qubes-rpc-multiplexer_sh_awk_t;
-	    application_type(qubes-rpc-multiplexer_sh_awk_t)
 	    corecmd_bin_entry_type(qubes-rpc-multiplexer_sh_awk_t)
 	    role system_r types qubes-rpc-multiplexer_sh_awk_t;
 
@@ -1046,18 +1090,33 @@ qubes_core_qubes_log_filetrans(tmpfiles_t, qubesdb_log_t, file, "qubesdb.log")
 	# qfile-unpacker_t local policy
 	#
 
-	allow qfile-unpacker_t self : capability setgid;
+	allow qfile-unpacker_t self : capability { setgid setuid sys_chroot };
+	auditallow qfile-unpacker_t self : capability  dac_override;
 	#
 	# Oh dear...
 	#
-	#allow qfile-unpacker_t self : capability sys_admin;
+	allow qfile-unpacker_t self : capability sys_admin;
+	auditallow qfile-unpacker_t self : capability sys_admin;
 
+	corecmd_search_bin(qfile-unpacker_t)
 
 	qubes_core_bind_shared_home_files(qfile-unpacker_t)
 
 	qubes_core_create_qubes_shared_home_files(qfile-unpacker_t)
+	qubes_core_write_qubes_shared_home_files(qfile-unpacker_t)
+	qubes_core_link_qubes_shared_home_files(qfile-unpacker_t)
+	#
+	# qfile-unpacker creates files with no dac perms, then
+	# restores perms once created. The idea is to ensure
+	# the user will know what they're opening.
+	#
+	qubes_core_setattr_qubes_shared_home_files(qfile-unpacker_t)
 
 	qubes_core_rw_inherited_qrexec_agent_pipes(qfile-unpacker_t)
+
+	qubes_core_rw_qrexec_agent_stream_sockets(qfile-unpacker_t)
+
+	qubes_core_sigchld_qrexec_agent_su(qfile-unpacker_t)
 
 	qubes_core_write_inherited_qubes_rpc_stderror(qfile-unpacker_t)
 
@@ -1122,8 +1181,6 @@ qubes_core_qubes_log_filetrans(tmpfiles_t, qubesdb_log_t, file, "qubesdb.log")
 
 	corecmd_bin_domtrans(qubes-rpc-multiplexer_sh_t, qubes-rpc-multiplexer_sh_worker_t)
 
-	qubes_core_bluepill_locale(qubes-rpc-multiplexer_sh_t)
-
 	qubes_core_rw_inherited_qrexec_agent_pipes(qubes-rpc-multiplexer_sh_t)
 
 	qubes_core_write_inherited_qubes_rpc_stderror(qubes-rpc-multiplexer_sh_t)
@@ -1185,8 +1242,6 @@ qubes_core_qubes_log_filetrans(tmpfiles_t, qubesdb_log_t, file, "qubesdb.log")
 
 	files_read_usr_files(qubes-rpc-multiplexer_sh_awk_t)
 
-	qubes_core_bluepill_locale(qubes-rpc-multiplexer_sh_awk_t)
-
 	allow qubes-rpc-multiplexer_sh_awk_t qubes-rpc-multiplexer_sh_worker_t : process sigchld;
 
 	# ld:
@@ -1241,27 +1296,18 @@ optional_policy(`
 
 #########################################
 #
-# Temporary policy
+# Conditional policy
 #
 
+ifdef(`use_net',`
 
-# testing
-
-	gen_require(`
-
-		type proc_t;
-		type kernel_t;
-		type sysctl_kernel_t;
-	')
-
-# kernel_t policy
-
-filetrans_pattern(kernel_t, proc_t, qubes_u2mfn_t, file, "u2mfn")
+	# resolv.conf
+	#
+	allow setup-ip_t net_conf_t : file { write append };
+')
 
 
-# testing
-
-
-allow qrexec-agent_sh_t qubes-desktop-run_exec_t : file getattr;
-
-userdom_search_user_home_dirs(qrexec-agent_sh_t)
+#########################################
+#
+# Temporary policy
+#
