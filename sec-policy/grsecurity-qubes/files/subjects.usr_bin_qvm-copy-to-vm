@@ -1,0 +1,68 @@
+define qvm_copy_to_vm {
+
+	/
+
+
+	/bin/cut			xp
+	/bin/du				xp
+	/bin/tail			xp
+
+
+	/dev/null			w
+
+	/dev
+	/dev/*				h
+
+
+	/home/user/QubesIncoming	r
+
+	/home
+	/home/user
+	/home/user/*			h
+	/home/*				h
+
+
+	/lib64				h
+	/usr/lib64			h
+
+
+	/usr/bin/qrexec-client-vm		xp
+	/usr/lib64/qubes/qrexec-client-vm	xp
+
+
+	/*				h
+
+
+	-CAP_ALL
+
+	bind	disabled
+	connect disabled
+}
+
+
+define qvm_copy_to_vm_nested_du {
+
+	/proc
+	/proc/[1-9]*/mountinfo	hs
+	/proc/*			h
+}
+
+
+# subject /usr/bin/qvm-copy-to-vm odsAKT {
+#
+#	$shell_script | $qvm_copy_to_vm
+#
+#	sock_allow_family unix
+# }
+
+
+# subject /usr/bin/qvm-copy-to-vm:/bin/du odsAKT {
+#
+#	$du | $qvm_copy_to_vm_nested_du
+# }
+
+
+# subject /usr/bin/qvm-copy-to-vm:/bin/tail odsAKT {
+#
+#	$tail_base
+# }

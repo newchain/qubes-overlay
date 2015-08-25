@@ -30,6 +30,7 @@ fi
 DEPEND="${CDEPEND}
 	${DEPEND}
 	app-crypt/gnupg
+	app-emulation/qubes-gui-common
 	>=app-emulation/qubes-secpack-20150603"
 RDEPEND="${CDEPEND}
 	candy? ( x11-themes/gnome-themes-standard[gtk] )

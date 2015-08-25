@@ -37,7 +37,7 @@ RDEPEND="${CDEPEND}
 	selinux? ( sec-policy/selinux-qubes-gui[pulseaudio?] )
 	template? ( x11-base/xorg-server[minimal,-suid] )"
 	#
-	# ^^ template <= attack surface--
+	# ^^ template => attack surface--
 
 src_prepare() {
 

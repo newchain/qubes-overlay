@@ -1,11 +1,11 @@
+# role:root
+#
+
 define qrexec_agent {
 
 	/
 
 	/bin/su					xp
-
-	/bin
-	/bin/*					h
 
 
 	/dev/null				rw
@@ -31,12 +31,8 @@ define qrexec_agent {
 	/lib64/ld-2.??.so			x
 	/lib64/libc-2.??.so			rx
 	/usr/lib64/gcc/x86_64-pc-linux-gnu/?.?.?/libgcc_s.so.1	rx
-	/usr/lib64/libxenvchan.so.*		rx
-	  /usr/lib64/libxenctrl.so.*		rx
-	    /lib64/libdl-2.??.so		rx
-	    /usr/lib64/libxenstore.so.*		rx
-	      /lib64/libpthread-2.??.so		rx
-
+	/usr/lib64/libqrexec-utils.so.1		rx
+	
 	/lib64
 	/lib64/*				h
 	/usr/lib64
@@ -47,7 +43,6 @@ define qrexec_agent {
 	/usr/lib64/*				h
 
 
-	/proc/u2mfn				rwFRW
 	/proc/xen/privcmd			rw
 
 	/proc
@@ -132,6 +127,8 @@ define qrexec_agent_nested_su {
 	/proc/sys/kernel/ngroups_max	hs
 
 	/proc
+	/proc/[1-9]*
+	/proc/[1-9]*/*			h
 	/proc/*				h
 
 
@@ -160,6 +157,7 @@ define qrexec_agent_nested_su {
 
 	/*				h
 
+	-CAP_ALL
 	+CAP_SETGID
 	+CAP_SETUID
 
@@ -168,17 +166,88 @@ define qrexec_agent_nested_su {
 }
 
 
+# role:user
+#
+
+define qrexec_agent_nested_su_transitioned {
+
+	/bin/bash			xp
+
+	# Preserve cwd:
+	#
+	/home/user
+	/home/user/*			h
+
+	-CAP_ALL
+
+	bind	disabled
+	connect	disabled
+}
+
+define qrexec_agent_nested_su_transitioned_sh {
+
+	/dev/tty				rw
+
+	/etc/bash/bashrc			hs
+	/etc/nsswitch.conf			r
+	  /lib64/libnss_files-2.??.so		rx
+	/etc/passwd				r
+	/etc/profile				r
+	/etc/profile.d/qubes-gui.sh		r
+	/etc/profile.d/qubes-session.sh		hs
+	/etc/profile.env			r
+
+	/usr/bin/qubes-desktop-run		xp
+	/usr/lib/qubes/qubes-rpc-multiplexer	xp
+
+	-CAP_ALL
+
+	bind	disabled
+	connect	disabled
+}
+
+
+define qrexec_agent_nested_su_transitioned_sh_pass_io {
+
+	/bin/cat	xp
+}
+
+
+define qrexec_agent_nested_su_transitioned_sh_pass_io_cat {
+
+	/home/user/QubesIncoming	r
+}
+
+
+# role:root
+#
 
 # subject /usr/lib/qubes/qrexec-agent ohpsAKT {
 #
-#	$qrexec_agent
+#	$libvchan_xen | $qrexec_agent
 #
 #	sock_allow_family unix
 # }
 
-# subject /usr/lib/qubes/qrexec-agent:/bin/su odsAKT {
+# subject /usr/lib/qubes/qrexec-agent:/bin/su osAKT {
 #
 #	$qrexec_agent_nested_su | $qrexec_agent_nested_su_pamstack
 #
 #	sock_allow_family unix
+# }
+
+
+# role:user
+#
+# subject /bin/su odsAKT {
+#
+#	$su_transitioned | qrexec_agent_nested_su_transitioned
+#
+#	sock_allow_family unix
+# }
+
+
+# subject /bin/su:/bin/bash odsAKT {
+#
+#	$bash | qrexec_agent_nested_su_transitioned_sh
 # }

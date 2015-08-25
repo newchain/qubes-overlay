@@ -46,6 +46,14 @@ gen_tunable(qubes_backdoor, false)
 
 ## <desc>
 ##	<p>
+##		Permit pass-io to dom0 using cat.
+##	</p>
+## </desc>
+
+gen_tunable(qubes_core_pass_io, false)
+
+## <desc>
+##	<p>
 ##		Hide locale, in particular the timezone.
 ##	</p>
 ##	<p>
@@ -207,11 +215,30 @@ type qubes-trigger-sync-appmenus_t;
 type qubes-trigger-sync-appmenus_exec_t;
 application_domain(qubes-trigger-sync-appmenus_t, qubes-trigger-sync-appmenus_exec_t)
 
-  # xenstore-read
+  # xenstore-read (R2)
   #
   type qubes-trigger-sync-appmenus_worker_t;
   application_type(qubes-trigger-sync-appmenus_worker_t)
   corecmd_bin_entry_type(qubes-trigger-sync-appmenus_worker_t)
+
+  type sync-appmenus_qrexec-client-vm_t, qrexec-client-vm_domain;
+  application_type(sync-appmenus_qrexec-client-vm_t)
+  qubes_core_qrexec_client_vm_entry_type(sync-appmenus_qrexec-client-vm_t)
+
+    type sync-appmenus_qrexec-client-vm_sh_t, qrexec-client-vm_sh_domain;
+    application_type(sync-appmenus_qrexec-client-vm_sh_t)
+    corecmd_shell_entry_type(sync-appmenus_qrexec-client-vm_sh_t)
+
+      type sync-appmenus_qrexec-client-vm_sh_worker_t, qrexec-client-vm_sh_worker_domain;;
+      application_type(sync-appmenus_qrexec-client-vm_sh_worker_t)
+      corecmd_bin_entry_type(sync-appmenus_qrexec-client-vm_sh_worker_t)
+
+        type sync-appmenus_qrexec-client-vm_sh_awk_t;
+        application_type(sync-appmenus_qrexec-client-vm_sh_awk_t)
+        corecmd_bin_entry_type(sync-appmenus_qrexec-client-vm_sh_awk_t)
+
+type qubes-trigger-sync-appmenus_etc_t;
+files_config_file(qubes-trigger-sync-appmenus_etc_t)
 
 type qubes_u2mfn_t, proc_type;
 files_type(qubes_u2mfn_t)
@@ -794,14 +821,17 @@ allow qubesdb-cmd_t qubesdb_var_run_t : sock_file write;
 #
 
 init_read_script_files(qubesdb_initrc_t)
+#allow qubesdb_initrc_t initrc_exec_t : file execute;
 init_dontaudit_read_all_script_files(qubesdb_initrc_t)
 
 # ( cmdline | filesystems | meminfo )
 #
-kernel_dontaudit_read_system_state(qubesdb_initrc_t)
+#kernel_dontaudit_read_system_state(qubesdb_initrc_t)
 
 qubes_core_qubesdb_domtrans(qubesdb_initrc_t)
 
+
+allow qubesdb_initrc_t self : process setrlimit;
 
 allow qubesdb_initrc_t initrc_state_t : dir { create_dir_perms delete_dir_perms };
 
@@ -860,11 +890,19 @@ corecmd_bin_domtrans(qubes-trigger-sync-appmenus_t, qubes-trigger-sync-appmenus_
 getty_use_fds(qubes-trigger-sync-appmenus_t)
 userdom_use_user_ttys(qubes-trigger-sync-appmenus_t)
 
+qubes_core_qubesdb_cmd_domtrans(qubes-trigger-sync-appmenus_t)
+
 qubes_core_search_qubes_rpc_worker_exec(qubes-trigger-sync-appmenus_t)
-qrexec_client_vm_domtrans(qubes-trigger-sync-appmenus_t)
+#qrexec_client_vm_domtrans(qubes-trigger-sync-appmenus_t)
+qubes_core_qrexec_client_vm_domtrans(qubes-trigger-sync-appmenus_t, sync-appmenus_qrexec-client-vm_t)
 
 
 allow qubes-trigger-sync-appmenus_t self : fifo_file read;
+
+
+# testing
+#
+allow qubes-trigger-sync-appmenus_t shell_exec_t : file read;
 
 
 #########################################
@@ -1008,6 +1046,14 @@ allow setup-ip_worker_t xenfs_t : file { getattr read write open };
 
 #########################################
 #
+# sync-appmenus_qrexec-client-vm_sh_awk_t local policy
+#
+
+qubes_core_bluepill_locale(sync-appmenus_qrexec-client-vm_sh_awk_t)
+
+
+#########################################
+#
 # sysadm_r local policy
 #
 
@@ -1031,8 +1077,9 @@ qubes_core_qvm_role(user_r, user_t)
 files_pid_filetrans(tmpfiles_t, qubes_var_run_t, dir, "qubes")
 
 logging_log_filetrans(tmpfiles_t, qubes_log_t, dir, "qubes")
-allow tmpfiles_t qubes_log_t : dir create;
+allow tmpfiles_t qubes_log_t : dir { create setattr };
 qubes_core_qubes_log_filetrans(tmpfiles_t, qrexec-agent_log_t, file, "qrexec-agent.log")
+allow tmpfiles_t qrexec-agent_log_t : file { create write open };
 qubes_core_qubes_log_filetrans(tmpfiles_t, qubesdb_log_t, file, "qubesdb.log")
 
 
@@ -1111,6 +1158,7 @@ allow tmpfiles_t xenfs_t : file { getattr setattr };
 	# the user will know what they're opening.
 	#
 	qubes_core_setattr_qubes_shared_home_files(qfile-unpacker_t)
+	allow qfile-unpacker_t qubes_shared_home_t : dir setattr;
 
 	qubes_core_rw_inherited_qrexec_agent_pipes(qfile-unpacker_t)
 
@@ -1164,6 +1212,28 @@ allow tmpfiles_t xenfs_t : file { getattr setattr };
 	#
 
 	corecmd_shell_domtrans(qrexec-client-vm_t, qrexec-client-vm_sh_t)
+
+
+	#########################################
+	#
+	# qrexec-client-vm_sh_t local policy
+	#
+
+	corecmd_search_bin(qrexec-client-vm_sh_t)
+
+	qubes_core_search_qubes_rpc_etc(qrexec-client-vm_sh_t)
+	allow qrexec-client-vm_sh_t qubes-trigger-sync-appmenus_etc_t : file { read open getattr };
+	auditallow qrexec-client-vm_sh_t qubes-trigger-sync-appmenus_etc_t : file getattr;
+
+
+	allow qrexec-client-vm_sh_t qrexec-client-vm_t : process sigchld;
+
+	# shell bin
+	#
+	allow qrexec-client-vm_sh_t qrexec-client-vm_t : fd use;
+
+
+	allow qrexec-client-vm_sh_t qrexec-client-vm_t : unix_stream_socket { read write };
 
 
 	#########################################
@@ -1259,6 +1329,88 @@ allow tmpfiles_t xenfs_t : file { getattr setattr };
 
 	#########################################
 	#
+	# sync-appmenus_qrexec-client-vm_t local policy
+	#
+
+	corecmd_shell_domtrans(sync-appmenus_qrexec-client-vm_t, sync-appmenus_qrexec-client-vm_sh_t)
+
+
+	#########################################
+	#
+	# sync-appmenus_qrexec-client-vm_sh_t local policy
+	#
+
+	corecmd_bin_domtrans(sync-appmenus_qrexec-client-vm_sh_t, sync-appmenus_qrexec-client-vm_sh_worker_t)
+
+	qubes_core_search_qubes_rpc_etc(sync-appmenus_qrexec-client-vm_sh_t)
+	allow sync-appmenus_qrexec-client-vm_sh_t qubes-trigger-sync-appmenus_etc_t : file { read open getattr };
+	auditallow sync-appmenus_qrexec-client-vm_sh_t qubes-trigger-sync-appmenus_etc_t : file getattr;
+
+
+	allow sync-appmenus_qrexec-client-vm_sh_t sync-appmenus_qrexec-client-vm_t : process sigchld;
+
+	# shell bin
+	#
+	allow sync-appmenus_qrexec-client-vm_sh_t sync-appmenus_qrexec-client-vm_t : fd use;
+
+
+	allow sync-appmenus_qrexec-client-vm_sh_t sync-appmenus_qrexec-client-vm_t : unix_stream_socket { read write };
+
+
+	#########################################
+	#
+	# sync-appmenus_qrexec-client-vm_sh_awk_t local policy
+	#
+
+	allow sync-appmenus_qrexec-client-vm_sh_awk_t sync-appmenus_qrexec-client-vm_sh_worker_t : process sigchld;
+
+	# self bin
+	#
+	allow sync-appmenus_qrexec-client-vm_sh_awk_t sync-appmenus_qrexec-client-vm_sh_worker_t : fd use;
+
+
+	allow sync-appmenus_qrexec-client-vm_sh_awk_t sync-appmenus_qrexec-client-vm_t : fd use;
+	allow sync-appmenus_qrexec-client-vm_sh_awk_t sync-appmenus_qrexec-client-vm_t : unix_stream_socket { read write };
+
+
+	allow sync-appmenus_qrexec-client-vm_sh_awk_t usr_t : file { read open getattr };
+
+
+	#########################################
+	#
+	# sync-appmenus_qrexec-client-vm_sh_worker_t local policy
+	#
+
+	allow sync-appmenus_qrexec-client-vm_sh_worker_t self : fifo_file { read write };
+
+	allow sync-appmenus_qrexec-client-vm_sh_worker_t sync-appmenus_qrexec-client-vm_sh_t : process sigchld;
+
+	# ( find | xargs ) pipe
+	#
+	allow sync-appmenus_qrexec-client-vm_sh_worker_t sync-appmenus_qrexec-client-vm_sh_t : fd use;
+	allow sync-appmenus_qrexec-client-vm_sh_worker_t sync-appmenus_qrexec-client-vm_sh_t : fifo_file { read write };
+
+	# ( find | xargs ) socket
+	#
+	allow sync-appmenus_qrexec-client-vm_sh_worker_t sync-appmenus_qrexec-client-vm_t : fd use;
+	allow sync-appmenus_qrexec-client-vm_sh_worker_t sync-appmenus_qrexec-client-vm_t : unix_stream_socket { read write };
+
+	# find
+	#
+	corecmd_list_bin(sync-appmenus_qrexec-client-vm_sh_worker_t)
+	#
+	# so apparently corecmd_list_bin doesn't work...
+	#
+	allow sync-appmenus_qrexec-client-vm_sh_worker_t usr_t : dir read;
+
+	# xargs
+	#
+	corecmd_read_bin_symlinks(sync-appmenus_qrexec-client-vm_sh_worker_t)
+	corecmd_bin_domtrans(sync-appmenus_qrexec-client-vm_sh_worker_t, sync-appmenus_qrexec-client-vm_sh_awk_t)
+
+
+	#########################################
+	#
 	# user_t
 	#
 
@@ -1272,6 +1424,25 @@ allow tmpfiles_t xenfs_t : file { getattr setattr };
 	#
 	allow user_t qubes-desktop-run_exec_t : file { read open };
 #')
+
+
+tunable_policy(`qubes_core_pass_io',`
+
+
+	#########################################
+	#
+	# qrexec-agent_worker_t local policy
+	#
+
+	#
+	# cat
+	#
+
+	qubes_core_read_qubes_shared_home_files(qrexec-agent_worker_t)
+
+	qubes_core_rw_qrexec_agent_stream_sockets(qrexec-agent_worker_t)
+	allow qrexec-agent_worker_t qrexec-agent_t : unix_stream_socket getattr;
+')
 
 
 #########################################
@@ -1299,15 +1470,17 @@ optional_policy(`
 # Conditional policy
 #
 
-ifdef(`use_net',`
+#ifdef(`use_net',`
 
 	# resolv.conf
 	#
 	allow setup-ip_t net_conf_t : file { write append };
-')
+#')
 
 
 #########################################
 #
 # Temporary policy
 #
+
+userdom_search_user_home_dirs(qubes-rpc-multiplexer_sh_t)

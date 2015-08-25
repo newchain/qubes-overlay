@@ -1,4 +1,4 @@
-#!/sbin/runscript
+#!/sbin/openrc-run
 
 
 depend() {
@@ -8,10 +8,14 @@ depend() {
 
 start() {
 
+	ebegin 'Bringing up Qubes virtual network interface'
+
 	INTERFACE='eth0' /usr/lib/qubes/setup-ip
 }
 
 stop() {
+
+	ebegin 'Taking down Qubes virtual network interface'
 
 	/bin/ifconfig eth0 down
 }

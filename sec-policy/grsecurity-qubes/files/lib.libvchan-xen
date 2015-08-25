@@ -1,0 +1,10 @@
+define libvchan_xen {
+
+	/usr/lib64/libvchan-xen.so	rx
+	  /lib64/libc-2.??.so		rx
+	  /usr/lib64/libxenvchan.so.*	rx
+	    /usr/lib64/libxenstore.so.*	rx
+	      /lib64/libpthread-2.??.so	rx
+	    /usr/lib64/libxenctrl.so.*	rx
+	      /lib64/libdl-2.??.so	rx
+}

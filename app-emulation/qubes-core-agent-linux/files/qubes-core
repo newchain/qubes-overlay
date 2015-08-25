@@ -1,4 +1,4 @@
-#!/sbin/runscript
+#!/sbin/openrc-run
 
 
 depends() {
@@ -7,6 +7,8 @@ depends() {
 }
 
 start() {
+
+	ebegin 'Setting up Qubes persistent partition'
 
 	if [ -e '/dev/xvdb' ] ; then {
 

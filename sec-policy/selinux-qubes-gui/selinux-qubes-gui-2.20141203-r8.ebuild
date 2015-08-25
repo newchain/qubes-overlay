@@ -6,7 +6,7 @@ EAPI=5
 
 inherit selinux-policy-2
 
-BASEPOL='2.20141203-r5'
+BASEPOL='2.20141203-r8'
 MODS="qubes-gui"
 POLICY_FILES="qubes-gui.te qubes-gui.if qubes-gui.fc"
 

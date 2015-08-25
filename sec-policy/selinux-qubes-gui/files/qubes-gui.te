@@ -141,8 +141,6 @@ dev_rw_xen(qubes-gui_t)
 fs_search_xenfs(qubes-gui_t)
 allow qubes-gui_t xenfs_t : file { getattr read write open ioctl };
 
-qubes_core_bluepill_locale(qubes-gui_t)
-
 qubes_core_search_qubes_log(qubes-gui_log_t)
 allow qubes-gui_t qubes-gui_log_t : file { append ioctl };
 
@@ -153,6 +151,12 @@ xserver_stream_connect(qubes-gui_t)
 # /dev/xen/xenbus
 #
 allow qubes-gui_t device_t : chr_file { getattr read write open };
+
+# Without this, window titles all stick as 'Untitled'
+#
+allow qubes-gui_t locale_t : dir search;
+allow qubes-gui_t locale_t : file { read open };
+dontaudit qubes-gui_t locale_t : file getattr;
 
 
 ########################################
@@ -508,7 +512,7 @@ tunable_policy(`! qubes_gui_bluepill_monitor',`
 	#
 	# qubes-rpc-multiplexer_sh_t local policy
 	#
-
+	
 	domtrans_pattern(qubes-rpc-multiplexer_sh_t, qubes-set-monitor-layout_exec_t, qubes-set-monitor-layout_t)
 
 
@@ -639,3 +643,9 @@ ifdef(`use_pulseaudio',`
 		allow pulseaudio_t user_screen_t : fd use;
 	')
 ')
+
+
+# testing...
+
+        xserver_object_types_template(qubes-gui)
+        xserver_common_x_domain_template(qubes-gui, qubes-gui_t)

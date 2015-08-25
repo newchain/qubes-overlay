@@ -1,4 +1,4 @@
-#!/sbin/runscript
+#!/sbin/openrc-run
 
 
 depend() {
@@ -9,9 +9,11 @@ depend() {
 
 start() {
 
+	ebegin 'Starting qubesdb-daemon'
+
 	# start-stop-daemon hangs =(
 	#
-	# start-stop-daemon --env DISPLAY=:0 --start --exec /usr/sbin/qubesdb-daemon -- 0
+	# start-stop-daemon --env --start --exec /usr/sbin/qubesdb-daemon -- 0
 
 	/usr/sbin/qubesdb-daemon 0
 }
@@ -19,7 +21,9 @@ start() {
 
 stop() {
 
+	ebegin 'Stopping qubesdb-daemon'
+
 #	start-stop-daemon --stop --pidfile /run/qubes/qubesdb.pid
 
-	pkill -9 qubesdb-daemon
+	pkill -15 qubesdb-daemon
 }

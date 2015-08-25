@@ -1026,12 +1026,17 @@ interface(`qubes_core_qubes_trigger_sync_appmenus_role',`
 	gen_require(`
 
 		type qubes-trigger-sync-appmenus_worker_t;
+		type qubesdb-cmd_t;
+		type sync-appmenus_qrexec-client-vm_t;
+		type sync-appmenus_qrexec-client-vm_sh_t;
+		type sync-appmenus_qrexec-client-vm_sh_awk_t;
+		type sync-appmenus_qrexec-client-vm_sh_worker_t;
+
 	')
 
-	role $1 types { qubes-trigger-sync-appmenus_t qubes-trigger-sync-appmenus_worker_t };
+	role $1 types { qubes-trigger-sync-appmenus_t qubes-trigger-sync-appmenus_worker_t qubesdb-cmd_t sync-appmenus_qrexec-client-vm_t sync-appmenus_qrexec-client-vm_sh_t sync-appmenus_qrexec-client-vm_sh_awk_t sync-appmenus_qrexec-client-vm_sh_worker_t };
 
 	qubes_core_qubes_trigger_sync_appmenus_domtrans($2)
-
 ')
 
 

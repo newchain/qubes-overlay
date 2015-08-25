@@ -33,7 +33,6 @@ src_install() {
 	exeinto '/usr/bin'
 	doexe "${FILESDIR}/qubes-initramfs"
 
-	dodir '/usr/share/qubes'
 	insinto '/usr/share/qubes'
 	doins "${FILESDIR}/init"
 }

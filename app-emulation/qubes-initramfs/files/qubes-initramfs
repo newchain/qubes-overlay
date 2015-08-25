@@ -23,7 +23,7 @@ help() {
 [ "${1-}" == '--help' ] && help
 
 
-readonly src='/usr/share/qubes-initramfs'
+readonly src='/usr/share/qubes'
 readonly dest='/var/tmp/initramfs'
 readonly tmp="${TMP}/qubes-initramfs"
 

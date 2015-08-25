@@ -37,6 +37,9 @@ src_prepare() {
 	epatch "${FILESDIR}/no-systemd.patch"
 
 	sed -i -- 's/\ -Werror//g' 'daemon/Makefile'
+
+	sed -i -- '1s/^/BACKEND_VMM ?= xen\n/' 'client/Makefile'
+	sed -i -- '1s/^/BACKEND_VMM ?= xen\n/' 'daemon/Makefile'
 }
 
 src_compile() {
@@ -47,6 +50,8 @@ src_compile() {
 src_install() {
 
 	emake DESTDIR="${D}" install
+
+	newconfd "${FILESDIR}/qubesdb-daemon_conf" 'qubesdb-daemon'
 
 	into '/usr/lib/tmpfiles.d'
 	doins "${FILESDIR}/qubesdb.conf"

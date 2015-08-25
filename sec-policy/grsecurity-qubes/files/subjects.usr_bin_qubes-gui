@@ -1,0 +1,77 @@
+define qubes_gui {
+
+
+	/
+
+
+	/dev/null			w
+	/dev/xen/evtchn			rw
+	/dev/xen/gntalloc		rw
+	/dev/xen/xenbus			rw
+
+	/dev
+	/dev/xen
+	/dev/xen/*			h
+	/dev/*				h
+
+
+	/proc/xen/privcmd		rw
+
+	/proc
+	/proc/xen
+	/proc/xen/*			h
+	/proc/*				h
+
+
+	/lib64/libc-2.??.so		rx
+
+	/usr/lib64/libXcomposite.so.*	rx
+	/usr/lib64/libXdamage.so.*	rx
+
+	/usr/lib64/libqubesdb.so	rx
+
+	/usr/lib64/libvchan-xen.so	rx
+	  /usr/lib64/libxenvchan.so.*	rx
+	    /usr/lib64/libxenstore.so.*	rx
+	      /lib64/libpthread-2.??.so	rx
+	    /usr/lib64/libxenctrl.so.*	rx
+
+	/lib64				h
+	/usr/lib64			h
+
+
+	/usr/share/X11/locale/C/XLC_LOCALE	r
+	/usr/share/X11/locale/locale.alias	r
+	/usr/share/X11/locale/locale.dir	r
+
+
+	/var/log/qubes/gui-agent.log	a
+
+	/var/log
+	/var/log/*			h
+
+	/var/run/xf86-qubes-socket	cwd
+
+	/var/run
+	/var/run/*
+
+	/var
+	/var/*				h
+
+
+	/*				h
+
+
+	-CAP_ALL
+
+	bind	disabled
+	connect	disabled
+}
+
+
+# subject /usr/bin/qubes-gui odpsAKT {
+#
+#	$libX11 | $libvchan_xen | $qubes_gui
+#
+#	sock_allow_family unix
+# }

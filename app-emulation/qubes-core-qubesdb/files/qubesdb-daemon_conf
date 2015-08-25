@@ -1,0 +1,15 @@
+rc_ulimit="-c 0 -d 512 -f 2048 -i 1 -l 4 -m 131072 -n 16 -q 0 -s 256 -t 4 -u 2 -v 262144 -x 0"
+
+# 0	core file	(-c)
+# 512K	data		(-d)
+# 1M	file create	(-f)
+# 1	pending signals	(-i)
+# 4K	locked memory	(-l)
+# 128M	memory		(-m)
+# 16	open files	(-n)
+# 0	message queues	(-q)
+# 256K	stack size	(-s)
+# 4s	cpu time	(-t)
+# 2	processes	(-u)
+# 256M	virtual memory	(-v)
+# 0	file locks	(-x)

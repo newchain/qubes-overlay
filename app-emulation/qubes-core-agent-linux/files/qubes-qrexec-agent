@@ -1,4 +1,4 @@
-#!/sbin/runscript
+#!/sbin/openrc-run
 
 
 depend() {
@@ -10,11 +10,15 @@ depend() {
 
 start() {
 
+	ebegin 'Starting qrexec-agent'
+
 	start-stop-daemon --start --background --exec /usr/lib/qubes/qrexec-agent --make-pidfile --pidfile /run/qubes/qrexec-agent.pid --stderr /var/log/qubes/qrexec-agent.log
 }
 
 
 stop() {
+
+	ebegin 'Stopping qrexec-agent'
 
 	start-stop-daemon --stop --pidfile /run/qubes/qrexec-agent.pid
 }

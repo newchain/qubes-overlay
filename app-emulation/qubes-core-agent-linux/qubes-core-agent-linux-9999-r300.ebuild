@@ -83,7 +83,6 @@ src_prepare() {
 pkg_setup() {
 
 	enewgroup 'qubes'
-	# for regular users to read and place/remove files
 	# 'user' is used in template VMs and qrexec-agent operates
 	# within the associated $HOME when copying files.
 	enewuser 'user' -1 -1 '/home/user' 'qubes'
@@ -106,26 +105,28 @@ src_install() {
 	# mnt/removable is for a single block device attached through
 	# qvm-block as xvdi.
 
-	# home.orig is copied over to rw/home on an appVM's first boot.
+	# home.orig/user is copied over to rw/home on an appVM's first boot.
 
 	# MAC magic could make appVMs swallow this blue pill.
 
 		diropts '-m0700'
 		dodir 'home'
+		dodir 'home.orig'
 		dodir 'mnt/removable'
 		dodir 'rw'
 
-		diropts '-m0755'
-		dodir 'home.orig'
-
-		diropts '-m0770'
+		diropts '-m0710'
 		dodir 'home.orig/user'
+		diropts '-m0700'
+		dodir 'home.orig/user/Desktop'
+		dodir 'home.orig/user/Downloads'
+		diropts '-m1770'
 		dodir 'home.orig/user/QubesIncoming'
 		fowners user:qubes '/home.orig/user' '/home.orig/user/QubesIncoming'
 
 	}; else {
 
-		diropts '-m0770'
+		diropts '-m1770'
 		dodir 'home/user/QubesIncoming'
 		fowners user:qubes '/home/user' '/home/user/QubesIncoming'
 	};
@@ -145,6 +146,8 @@ src_install() {
 	doins 'qubes-rpc/qubes.'{Backup,Filecopy,OpenInVM,Restore,WaitForSession}
 	$(use glib) && doins 'qubes-rpc/qubes.GetAppmenus'
 
+	fperms 0711 '/etc/qubes-rpc/'
+
 	exeinto '/usr/bin'
 	exeopts '-m0755'
 	$(use glib) && doexe 'misc/qubes-desktop-run'
@@ -155,10 +158,9 @@ src_install() {
 	exeinto '/usr/lib/qubes'
 	exeopts '-m0755'
 	$(use glib) && doexe 'misc/qubes-trigger-sync-appmenus.sh'
+	exeinto "/usr/$(get_libdir)/qubes"
 	exeopts '-m0711'
-	doexe 'qubes-rpc/'{qfile-agent,tar2qfile}
-	exeopts '-m0711'
-	doexe 'qubes-rpc/qfile-unpacker'
+	doexe 'qubes-rpc/'{qfile-agent,qfile-unpacker,tar2qfile}
 
 	insinto '/usr/lib/tmpfiles.d'
 	doins "${FILESDIR}/qubes.conf"
@@ -192,23 +194,22 @@ pkg_preinst() {
 		qubes_to_runlevel 'qubes-qrexec-agent'
 	};
 	fi
-
 }
 
 pkg_postinst() {
 
 	fcaps cap_setgid,cap_setuid,cap_sys_admin,cap_sys_chroot 'usr/lib/qubes/qfile-unpacker'
 
+	echo
+
 	if $(use net); then {
 
-		echo
 		ewarn 'grsec kernels will crash if the vif is detached'
 		ewarn 'while configured. Be sure to stop net.qubes first.'
 		ewarn
 	};
 	fi
 
-	echo
 	ewarn "qrexec-agent must be running before qrexec_timeout"
 	ewarn "(default value = 60 seconds) is reached."
 	ewarn

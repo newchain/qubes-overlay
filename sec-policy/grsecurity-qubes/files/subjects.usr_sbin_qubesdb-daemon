@@ -1,0 +1,111 @@
+define qubesdb_daemon {
+
+	/
+
+
+	/dev/xen/evtchn				rw
+	/dev/xen/gntdev				rw
+
+	/dev
+	/dev/xen
+	/dev/xen/*				h
+	/dev/*					h
+
+
+	/etc/ld.so.cache			r
+
+	/etc
+	/etc/*					h
+
+
+	/lib64/ld-2.??.so			x
+	/lib64/libc-2.??.so			rx
+
+	/usr/lib64/gcc/x86_64-pc-linux-gnu/[1-9]*/libgcc_s.so.1		rx
+
+	/usr/lib64/libvchan-xen.so		rx
+	  /usr/lib64/libxenvchan.so.*		rx
+	    /usr/lib64/libxenstore.so.*		rx
+	      /lib64/libpthread-2.??.so		rx
+	    /usr/lib64/libxenctrl.so.*		rx
+	      /lib64/libdl-2.??.so		rx
+
+	/lib64					h
+	/usr/lib64				h
+	/usr/lib64/gcc/x86_64-pc-linux-gnu	h
+
+
+	/proc/xen/privcmd			rw
+
+
+	/proc
+	/proc/xen
+	/proc/xen/*				h
+	/proc/*					h
+
+
+	/usr
+	/usr/*					h
+
+
+	/var/log/qubes/qubesdb.log		a
+
+	/var/log
+	/var/log/qubes
+	/var/log/qubes/*			h
+	/var/log/*				h
+
+
+	/var/run/qubes/qubesdb.pid		cwd
+	/var/run/qubes/qubesdb.sock		rwcd
+
+	/var/run/qubes/qrexec-agent		h
+	/var/run/qubes/qrexec-agent.pid		h
+	/var/run/qubes/qubes-gui.pid		h
+
+	/var/run
+	/var/run/qubes
+	/var/run/*				h
+
+
+	/var
+	/var/*					h
+
+
+	/*					h
+
+
+	-CAP_ALL
+
+
+	bind	disabled
+	connect	disabled
+}
+
+
+# subject /usr/sbin/qubesdb-daemon odpsAKT {
+#
+#	$qubesdb_daemon
+#
+#	sock_allow_family unix
+#
+#
+#	# Note that these are generous limits,
+#	# you may wish to lower them.
+#
+#	RES_AS		192M 192M
+#	RES_CORE	0 0
+#	RES_CPU		4s 4s
+#	RES_DATA	96M 96M
+#	RES_FSIZE	1M 1M
+#	RES_LOCKS	0 0
+#	RES_MEMLOCK	4K 4K
+#	RES_MSGQUEUE	0 0
+#	RES_NOFILE	16 16
+#	RES_NPROC	2 2
+#	RES_RSS		2M 2M
+#	RES_RTPRIO	0 0
+#	RES_RTTIME	0 0
+#	RES_SIGPENDING	0 0
+#	RES_STACK	160K 160K
+# }

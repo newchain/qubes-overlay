@@ -1,0 +1,23 @@
+subject /usr/sbin/qubesdb-daemon odpsAKT {
+
+	$qubesdb_daemon
+
+	sock_allow_family unix
+
+
+	RES_AS		192M 192M
+	RES_CORE	0 0
+	RES_CPU		4s 4s
+	RES_DATA	96M 96M
+	RES_FSIZE	1M 1M
+	RES_LOCKS	0 0
+	RES_MEMLOCK	4K 4K
+	RES_MSGQUEUE	0 0
+	RES_NOFILE	16 16
+	RES_NPROC	2 2
+	RES_RSS		2M 2M
+	RES_RTPRIO	0 0
+	RES_RTTIME	0 0
+	RES_SIGPENDING	0 0
+	RES_STACK	160K 160K
+}

@@ -1,11 +1,9 @@
-diff --git a/tools/xenstore/xs_lib.c b/tools/xenstore/xs_lib.c
-index 4795162..be761ed 100644
---- a/tools/xenstore/xs_lib.c
-+++ b/tools/xenstore/xs_lib.c
-@@ -81,7 +81,7 @@ const char *xs_domain_dev(void)
- 		return s;
- 
- #if defined(__linux__)
+--- tools/xenstore/xs_lib.c	2015-08-25 02:28:59.527919118 +0000
++++ tools/xenstore/xs_lib.c.old	2015-06-22 13:41:35.000000000 +0000
+@@ -82,7 +82,7 @@
+ #if defined(__RUMPUSER_XEN__) || defined(__RUMPRUN__)
+ 	return "/dev/xen/xenbus";
+ #elif defined(__linux__)
 -	return "/proc/xen/xenbus";
 +	return "/dev/xen/xenbus";
  #elif defined(__NetBSD__)

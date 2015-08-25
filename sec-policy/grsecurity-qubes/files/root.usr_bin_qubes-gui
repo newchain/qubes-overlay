@@ -1,0 +1,23 @@
+subject /usr/bin/qubes-gui odpsAKT {
+
+	$libX11 | $libvchan_xen | $qubes_gui
+
+	sock_allow_family unix
+
+
+	RES_AS		64M 64M
+	RES_CORE	0 0
+	RES_CPU		3600s 3600s
+	RES_DATA	256K 256K
+	RES_FSIZE	1M 1M
+	RES_LOCKS	0 0
+	RES_MEMLOCK	4K 4K
+	RES_MSGQUEUE	0 0
+	RES_NOFILE	16 16
+	RES_NPROC	1 1
+	RES_RSS		4M 4M
+	RES_RTPRIO	0 0
+	RES_RTTIME	0 0
+	RES_SIGPENDING	0 0
+	RES_STACK	192K 192K
+}

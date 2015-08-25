@@ -1,0 +1,18 @@
+subject /usr/bin/qvm-copy-to-vm odsAKT {
+
+	$shell_script | $qvm_copy_to_vm
+
+	sock_allow_family unix
+}
+
+
+subject /usr/bin/qvm-copy-to-vm:/bin/du odsAKT {
+
+	$du | $qvm_copy_to_vm_nested_du
+}
+
+
+subject /usr/bin/qvm-copy-to-vm:/bin/tail odsAKT {
+
+	$tail_base
+}

@@ -30,6 +30,8 @@ src_prepare() {
 
 	epatch_user
 
+	sed -i -- '1s/^/BACKEND_VMM ?= xen\n/' 'qrexec-lib/Makefile'
+
 	sed -i -- 's/\ -Werror//g' 'vchan/Makefile.linux'
 }
 
