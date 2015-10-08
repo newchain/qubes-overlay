@@ -16,6 +16,7 @@ gen_require(`
 	type sysadm_t;
 	type tmpfiles_t;
 	type user_t;
+	type user_tmp_t;
 	type var_lib_t;
 	type xauth_exec_t;
 ')
@@ -301,6 +302,9 @@ filetrans_pattern(kernel_t, proc_t, qubes_u2mfn_t, file, "u2mfn")
 
 allow mount_t qubes_persistent_t : dir { mounton write setattr };
 
+allow mount_t home_root_t : dir write;
+allow mount_t var_lib_t : dir write;
+
 
 #########################################
 #
@@ -433,7 +437,7 @@ qubes_core_rw_qrexec_agent_stream_sockets(qrexec-agent_sh_t)
 
 allow qrexec-agent_su_t self : capability { setuid setgid };
 allow qrexec-agent_su_t self : fifo_file read;
-allow qrexec-agent_su_t self : process setsched;
+allow qrexec-agent_su_t self : process { setfscreate setsched };
 
 # Note: execute alone permits checking +x only:
 #
@@ -462,6 +466,14 @@ qubes_core_bluepill_locale(qrexec-agent_su_t)
 qubes_core_rw_qrexec_agent_stream_sockets(qrexec-agent_su_t)
 
 selinux_compute_access_vector(qrexec-agent_su_t)
+
+
+create_dirs_pattern(qrexec-agent_su_t, tmp_t, tmp_t)
+allow qrexec-agent_su_t tmp_t : dir { relabelfrom relabelto };
+
+filetrans_add_pattern(qrexec-agent_su_t, tmp_t, user_tmp_t, dir, "root")
+filetrans_add_pattern(qrexec-agent_su_t, tmp_t, user_tmp_t, dir, "user")
+allow qrexec-agent_su_t user_tmp_t : dir { create getattr setattr relabelfrom relabelto };
 
 
 #########################################
@@ -572,6 +584,14 @@ mount_domtrans(qubes-core_initrc_t)
 selinux_compute_create_context(qubes-core_initrc_t)
 
 storage_getattr_fixed_disk_dev(qubes-core_initrc_t)
+allow qubes-core_initrc_t fixed_disk_device_t : blk_file read;
+#
+# fixed_disk_device_t is systemhigh
+#
+ifdef(`enable_mls',`
+
+	mls_file_read_to_clearance(qubes-core_initrc_t)
+')
 
 userdom_create_user_home_dirs(qubes-core_initrc_t)
 userdom_search_user_home_dirs(qubes-core_initrc_t)
@@ -580,8 +600,16 @@ qubes_core_search_qubes_persistent(qubes-core_initrc_t)
 
 
 filetrans_add_pattern(qubes-core_initrc_t, var_lib_t, qubes_var_lib_t, dir, "qubes")
-allow qubes-core_initrc_t qubes_var_lib_t : dir create;
+allow qubes-core_initrc_t qubes_var_lib_t : dir { create setattr };
 create_files_pattern(qubes-core_initrc_t, qubes_var_lib_t, qubes_var_lib_t)
+allow qubes-core_initrc_t qubes_var_lib_t : file { write setattr };
+
+filetrans_add_pattern(qubes-core_initrc_t, qubes_persistent_t, home_root_t, dir, "home")
+filetrans_add_pattern(qubes-core_initrc_t, qubes_persistent_t, var_lib_t, dir, "varlib")
+allow qubes-core_initrc_t var_lib_t : dir create;
+filetrans_add_pattern(qubes-core_initrc_t, qubes_persistent_t, var_log_t, dir, "varlog")
+allow qubes-core_initrc_t var_log_t : dir { getattr create };
+
 
 #
 # cp
@@ -1074,19 +1102,32 @@ qubes_core_qvm_role(user_r, user_t)
 # tmpfiles_t local policy
 #
 
+files_search_home(tmpfiles_t)
+filetrans_add_pattern(tmpfiles_t, user_home_dir_t, qubes_shared_home_t, dir, "QubesIncoming")
+allow tmpfiles_t qubes_shared_home_t : dir { getattr setattr };
+
+filetrans_add_pattern(tmpfiles_t, tmp_t, user_tmp_t, dir, "root")
+filetrans_add_pattern(tmpfiles_t, tmp_t, user_tmp_t, dir, "user")
 files_pid_filetrans(tmpfiles_t, qubes_var_run_t, dir, "qubes")
+
+allow tmpfiles_t qubes_persistent_t : dir search;
+allow tmpfiles_t qubes_persistent_config_t : dir { getattr search };
+
+allow tmpfiles_t { proc_t qubes_u2mfn_t } : file setattr;
+
+fs_search_xenfs(tmpfiles_t)
+allow tmpfiles_t xenfs_t : dir getattr;
+allow tmpfiles_t xenfs_t : file { getattr setattr };
+
+allow tmpfiles_t qubes_var_lib_t : dir getattr;
 
 logging_log_filetrans(tmpfiles_t, qubes_log_t, dir, "qubes")
 allow tmpfiles_t qubes_log_t : dir { create setattr };
 qubes_core_qubes_log_filetrans(tmpfiles_t, qrexec-agent_log_t, file, "qrexec-agent.log")
-allow tmpfiles_t qrexec-agent_log_t : file { create write open };
+allow tmpfiles_t qrexec-agent_log_t : file { create write open getattr setattr };
 qubes_core_qubes_log_filetrans(tmpfiles_t, qubesdb_log_t, file, "qubesdb.log")
+allow tmpfiles_t qubesdb_log_t : file { getattr setattr };
 
-
-allow tmpfiles_t { proc_t qubes_u2mfn_t } : file setattr;
-
-allow tmpfiles_t xenfs_t : dir getattr;
-allow tmpfiles_t xenfs_t : file { getattr setattr };
 
 
 #########################################
@@ -1159,6 +1200,7 @@ allow tmpfiles_t xenfs_t : file { getattr setattr };
 	#
 	qubes_core_setattr_qubes_shared_home_files(qfile-unpacker_t)
 	allow qfile-unpacker_t qubes_shared_home_t : dir setattr;
+	allow qfile-unpacker_t qubes_shared_home_t : lnk_file { create read write append setattr getattr unlink };
 
 	qubes_core_rw_inherited_qrexec_agent_pipes(qfile-unpacker_t)
 
@@ -1191,6 +1233,14 @@ allow tmpfiles_t xenfs_t : file { getattr setattr };
 
 	domtrans_pattern(qrexec-agent_sh_t, qbkdr_run_exec_t, user_t)
 	domtrans_pattern(qrexec-agent_sh_t, qubes-desktop-run_exec_t, user_t)
+
+	userdom_search_user_home_dirs(qrexec-agent_sh_t)
+
+
+	ifdef(`enable_mls',`
+
+		range_transition qrexec-agent_sh_t qubes-desktop-run_exec_t : process s0 - s0;
+	')
 
 
 	#########################################
@@ -1470,12 +1520,12 @@ optional_policy(`
 # Conditional policy
 #
 
-#ifdef(`use_net',`
+ifdef(`use_net',`
 
 	# resolv.conf
 	#
 	allow setup-ip_t net_conf_t : file { write append };
-#')
+')
 
 
 #########################################

@@ -1,6 +1,6 @@
 # Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: $
+# $Id$
 
 EAPI=5
 
@@ -51,6 +51,7 @@ src_install() {
 
 	emake DESTDIR="${D}" install
 
+	doinitd "${FILESDIR}/qubesdb-daemon"
 	newconfd "${FILESDIR}/qubesdb-daemon_conf" 'qubesdb-daemon'
 
 	into '/usr/lib/tmpfiles.d'

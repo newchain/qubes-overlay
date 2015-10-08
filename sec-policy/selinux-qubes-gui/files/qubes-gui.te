@@ -12,6 +12,7 @@ gen_require(`
 	type qubes_u2mfn_t;
 	type qubesdb_initrc_exec_t;
 	type su_exec_t;
+	type tmpfiles_t;
 	')
 
 
@@ -477,6 +478,14 @@ qubes_core_bluepill_locale(qubes-set-monitor-layout_worker_t)
 #
 
 auth_use_nsswitch(qubes-set-monitor-layout_worker_t)
+
+
+#########################################
+#
+# tmpfiles_t local policy
+#
+
+allow tmpfiles_t qubes-gui_log_t : file { getattr setattr };
 
 
 ########################################

@@ -1,0 +1,43 @@
+#!/sbin/openrc-run
+# Copyright 1999-2012 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Id$
+
+# This is a copy of selinux_gentoo, which, per Gentoo's infinite wisdom, has decided
+# to remove. initramfs cases aren't worth supporting, apparently.
+
+description="Support SELinux at-boot enforcing mode and other SELinux related fixes"
+
+depend() {
+	need localmount
+}
+
+start() {
+	ebegin "Restoring file contexts for dynamically generated files"
+	/sbin/restorecon -R /sys/devices/system/cpu/online
+	eend 0
+
+	if get_bootparam "norestorecon" ; then
+		ewarn "Skipping restoring file contexts in /dev as requested by kernel cmdline"
+	else
+		ebegin "Restoring file contexts in /dev and /var/log"
+			/sbin/restorecon -R /dev
+			/sbin/restorecon -FR /var/log
+		eend 0
+	fi
+
+	if get_bootparam "nosetenforce" ; then
+		ewarn "Skipping switching to enforcing mode as requested by kernel cmdline"
+	else
+		. /etc/selinux/config
+		CURRENTMODE=$(getenforce)
+		if [ "${SELINUX}" = "enforcing" ] && [ "${CURRENTMODE}" = "Permissive" ];
+		then
+			ebegin "Switching to enforcing mode (skip by setting 'nosetenforce' boot parameter)"
+			setenforce 1
+			eend $?
+		else
+			ewarn "Not switching to enforcing mode, or enforcing mode already enabled"
+		fi
+	fi
+}

@@ -1,0 +1,266 @@
+#!/sbin/openrc-run
+# $Id$
+
+
+readonly iptables_bin="${iptables_bin:-/sbin/iptables}"
+
+
+depend() {
+
+	before net
+}
+
+
+start() {
+
+	ebegin 'Configuring tables'
+
+	"${iptables_bin}" -P INPUT DROP
+	"${iptables_bin}" -P FORWARD DROP
+	"${iptables_bin}" -P OUTPUT DROP
+
+	"${iptables_bin}" -F
+	"${iptables_bin}" -X
+
+
+	local insecure_net_sub
+	local secure_net_sub
+
+	readonly insecure_net_sub="${insecure_net_sub:-2}"
+	readonly secure_net_sub="${secure_net_sub:-3}"
+
+
+	local udp_in_rate
+	local udp_out_rate
+
+	readonly udp_in_rate="${udp_in_rate:-2,1}"
+	readonly udp_out_rate="${udp_out_rate:-2,1}"
+
+
+	local qubesdb_read_bin
+	readonly qubesdb_read_bin="${qubesdb_read_bin:-/usr/bin/qubesdb-read}"
+
+
+	local dns
+	local ip
+
+	readonly dns="$(${qubesdb_read_bin} /qubes-gateway 2>/dev/null)"
+	readonly ip="$(${qubesdb_read_bin} /qubes-ip 2>/dev/null)"
+
+
+	local proxyvm_dns
+
+	if [ -n "${is_proxyvm}" ]; then {
+
+		readonly proxyvm_dns="$(${qubesdb_read_bin} /qubes-netvm-gateway 2>/dev/null)"
+	};
+	fi
+
+
+	local net_local
+	local net_sub
+
+	readonly net_local="${ip%.[0-9]*}"
+	readonly net_sub="${net_local#[0-9]*.[0-9]*.}"
+
+
+	local net_type
+
+	if [ "${net_sub}" = "${secure_net_sub}" ]; then {
+
+		readonly net_type='secure'
+	};
+	elif [ "${net_sub}" = "${insecure_net_sub}" ]; then {
+
+		readonly net_type='insecure'
+	};
+	fi
+
+	# General nastiness (taken from whonix_firewall)
+	#
+	"${iptables_bin}" -I INPUT -m conntrack ! --ctstate ESTABLISHED -j DROP
+	"${iptables_bin}" -A INPUT -f -j DROP
+	"${iptables_bin}" -A INPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG FIN,SYN,RST,ACK -j DROP
+	"${iptables_bin}" -A INPUT -p tcp -m tcp --tcp-flags FIN,SYN FIN,SYN -j DROP
+	"${iptables_bin}" -A INPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG FIN,SYN,RST,PSH,ACK,URG -j DROP
+	"${iptables_bin}" -A INPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG NONE -j DROP
+
+	if [ -n "${drop_uids}" ]; then {
+
+		for i in ${drop_uids}; do {
+
+			"${iptables_bin}" -A INPUT -m owner --uid "${i}" -j DROP
+		};
+		done;
+	};
+	fi
+
+	# ( More likely than other nastiness => above it )
+	#
+	if ! [ -n "${tcp_services_out}" ] ; then {
+
+		"${iptables_bin}" -A INPUT -p tcp -j ACCEPT
+	};
+	else {
+
+		for i in ${tcp_services_out}; do {
+
+			"${iptables_bin}" -A INPUT -p tcp -m tcp --sport "${i}" -j ACCEPT
+		};
+		done
+
+		"${iptables_bin}" -A INPUT -p tcp -j DROP
+	};
+	fi
+
+	"${iptables_bin}" -A INPUT -p icmp -j DROP
+	"${iptables_bin}" -A INPUT -p udp -m udp ! --sport 53 -j DROP
+
+	local net_global
+	readonly net_global="${net_local%.[0-9]*}.0"
+
+	if [ -n "${is_proxyvm}" ]; then {
+
+		"${iptables_bin}" -A INPUT -p udp ! -s "${net_global}/16" -j DROP
+		"${iptables_bin}" -A INPUT -p udp ! -d "${net_global}/16" -j DROP
+	};
+	else {
+		"${iptables_bin}" -A INPUT -p udp ! -s "${dns}/32" -j DROP
+		"${iptables_bin}" -A INPUT -p udp ! -d "${ip}/32" -j DROP
+	};
+	fi
+
+	if [ "${net_type}" = 'insecure' ]; then {
+
+		"${iptables_bin}" -A INPUT -p udp -m recent --set --name DEFAULT --mask 255.255.255.255 --rsource
+
+		local IFS_old="${IFS}"
+		local IFS=','
+		set ${udp_in_rate}
+		"${iptables_bin}" -A INPUT -p udp -m recent --update --seconds "${2}" --hitcount "${1}" --name DEFAULT --mask 255.255.255.255 --rsource -j DROP
+		local IFS="${IFS_old}"
+
+		"${iptables_bin}" -A INPUT -p udp -s "${dns}/32" -j ACCEPT
+
+		if [ -n "${is_proxyvm}" ]; then {
+
+			"${iptables_bin}" -A INPUT -p udp -s "${proxyvm_dns}/32" -j ACCEPT
+		};
+		fi
+	};
+	fi
+
+	# Only for stats without logging
+	#
+	"${iptables_bin}" -A INPUT ! -p tcp -j DROP
+	"${iptables_bin}" -A INPUT -j DROP
+
+
+	if ! [ -n "${is_proxyvm}" ]; then {
+
+		"${iptables_bin}" -I FORWARD -j DROP
+	};
+	else {
+
+		"${iptables_bin}" -I FORWARD -p udp -m udp ! --sport 53 ! --dport 53 -j DROP
+		"${iptables_bin}" -I FORWARD ! -d "${net_global}/16" -p udp -j DROP
+		"${iptables_bin}" -I FORWARD ! -s "${net_global}/16" -p udp -j DROP
+		"${iptables_bin}" -I FORWARD -p udp ! -s "${dns}/32" ! -d "${dns}/32" -j DROP
+		"${iptables_bin}" -I FORWARD -p icmp -j DROP
+		"${iptables_bin}" -I FORWARD -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG NONE -j DROP
+		"${iptables_bin}" -I FORWARD -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG FIN,SYN,RST,PSH,ACK,URG -j DROP
+		"${iptables_bin}" -I FORWARD -p tcp -m tcp --tcp-flags SYN,RST SYN,RST -j DROP
+		"${iptables_bin}" -I FORWARD -p tcp -m tcp --tcp-flags FIN,SYN FIN,SYN -j DROP
+		"${iptables_bin}" -I FORWARD -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG FIN,SYN,RST,ACK -j DROP
+		"${iptables_bin}" -I FORWARD -f -j DROP
+		"${iptables_bin}" -I FORWARD -m conntrack ! --ctstate ESTABLISHED,NEW -j DROP
+	};
+	fi
+
+
+	"${iptables_bin}" -I OUTPUT -m conntrack ! --ctstate ESTABLISHED,NEW -j DROP
+	"${iptables_bin}" -A OUTPUT -f -j DROP
+	"${iptables_bin}" -A OUTPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG FIN,SYN,RST,ACK -j DROP
+	"${iptables_bin}" -A OUTPUT -p tcp -m tcp --tcp-flags FIN,SYN FIN,SYN -j DROP
+	"${iptables_bin}" -A OUTPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG FIN,SYN,RST,PSH,ACK,URG -j DROP
+	"${iptables_bin}" -A OUTPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG NONE -j DROP
+
+	if [ -n "${drop_uids}" ]; then {
+
+		for i in ${drop_uids}; do {
+
+			"${iptables_bin}" -A OUTPUT -m owner --uid "${i}" -j DROP
+		};
+		done;
+	};
+	fi
+
+	if ! [ -n "${tcp_services_out}" ]; then {
+
+		"${iptables_bin}" -A OUTPUT -p tcp -j ACCEPT
+	};
+	else {
+
+		for i in ${tcp_services_out}; do {
+
+
+			"${iptables_bin}" -A OUTPUT -p tcp -m tcp --dport "${i}" -j ACCEPT
+		};
+		done
+
+		"${iptables_bin}" -A OUTPUT -p tcp -j DROP
+	};
+	fi
+
+	"${iptables_bin}" -A OUTPUT -p icmp -j DROP
+	"${iptables_bin}" -A OUTPUT -p udp -m udp ! --dport 53 -j DROP
+
+	if ! [ -n "${is_proxyvm}" ]; then {
+
+		"${iptables_bin}" -A OUTPUT -p udp ! -d "${dns}/32" -j DROP
+	};
+	else {
+
+		"${iptables_bin}" -A OUTPUT -p udp ! -d "${net_global}/16" -j DROP
+	};
+	fi
+
+	if [ "${net_type}" = 'insecure' ]; then {
+
+		"${iptables_bin}" -A OUTPUT -p udp -m recent --set --name DEFAULT --mask 255.255.255.255 --rsource
+
+		local IFS_old="${IFS}"
+		local IFS=','
+		set ${udp_out_rate}
+		"${iptables_bin}" -A OUTPUT -p udp -m recent --update --seconds "${2}" --hitcount "${1}" --name DEFAULT --mask 255.255.255.255 --rsource -j DROP
+		unset ${udp_out_rate}
+		local IFS="${IFS_old}"
+
+		"${iptables_bin}" -A OUTPUT -p udp -d "${dns}/32" -j ACCEPT
+
+		if [ -n "${is_proxyvm}" ]; then {
+
+			"${iptables_bin}" -A OUTPUT -p udp -d "${proxyvm_dns}/32" -j ACCEPT
+		};
+		fi
+	};
+	fi
+
+	# Only for stats without logging
+	#
+	"${iptables_bin}" -A OUTPUT ! -p tcp -j DROP
+	"${iptables_bin}" -A OUTPUT -j DROP
+
+	eend $?
+}
+
+
+stop() {
+
+	ebegin 'Clearing tables'
+
+	"${iptables_bin}" -F
+	"${iptables_bin}" -X
+
+	eend $?
+}

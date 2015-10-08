@@ -1,6 +1,6 @@
 # Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: $
+# $Id$
 
 EAPI=5
 
@@ -52,7 +52,7 @@ src_prepare() {
 	};
 	fi
 
-	$(use pulseaudio) || sed -i -- '/install.*pulse\//d' 'Makefile'
+	$(use pulseaudio) || sed -i -- '/pulse/d' 'Makefile'
 
 	sed -i -- '1s/^/BACKEND_VMM ?= xen\n/' 'gui-agent/Makefile' 'pulse/Makefile'
 	sed -i -- 's/\ -Werror//g' 'gui-agent/Makefile'

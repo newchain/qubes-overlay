@@ -1,6 +1,6 @@
 # Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: $
+# $Id$
 
 EAPI=5
 
@@ -52,7 +52,7 @@ src_compile() {
 
 		sigext=''
 
-		if ( [[ "${i:0:4}" == 'qsb-' ]] && [[ "${i}" > 'qsb-017' ]] ); then {
+		if ( [[ "${i:0:4}" == 'qsb-' ]] && [[ "${i}" > 'qsb-017' ]] && [[ "${i}" < 'qsb-019' ]] ); then {
 
 			sigext='n';
 		};

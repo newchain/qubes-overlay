@@ -1,6 +1,6 @@
 # Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: $
+# $Id$
 
 EAPI=5
 
@@ -134,6 +134,7 @@ src_install() {
 
 	doinitd "${FILESDIR}/qubes-core"
 	doinitd "${FILESDIR}/qubes-qrexec-agent"
+	$(use selinux) && doinitd "${FILESDIR}/qubes-selinux"
 
 	cd "${S}/qrexec"
 
@@ -169,6 +170,7 @@ src_install() {
 	if $(use net); then {
 
 		doinitd "${FILESDIR}/net.qubes"
+		doinitd "${FILESDIR}/qubes-iptables"
 
 		exeinto '/usr/lib/qubes'
 		exeopts '-m700'
@@ -191,6 +193,8 @@ pkg_preinst() {
 
 		qubes_to_runlevel 'net.qubes'
 		qubes_to_runlevel 'qubes-core'
+		qubes_to_runlevel 'qubes-iptables'
+		qubes_to_runlevel 'qubes-selinux'
 		qubes_to_runlevel 'qubes-qrexec-agent'
 	};
 	fi

@@ -1,10 +1,10 @@
 #!/sbin/openrc-run
-
+# $Id$
 
 depend() {
 
-	need selinux_gentoo
-	after tmpfiles.setup
+	need qubes-selinux
+	need tmpfiles.setup
 }
 
 start() {

@@ -1,11 +1,13 @@
 #!/sbin/openrc-run
-
+# $Id$
 
 depend() {
 
+	# If this isn't a template we don't really need qubes-core.
+	#
 	after qubes-core
-	need selinux_gentoo
-	after tmpfiles.setup
+	need qubes-selinux
+	need tmpfiles.setup
 }
 
 start() {
