@@ -1,26 +1,19 @@
 #!/sbin/openrc-run
 # $Id$
 
+
+command='/usr/lib/qubes/qrexec-agent'
+command_background='true'
+description='QubesOS RPC agent'
+pidfile='/run/qubes/qrexec-agent.pid'
+start_stop_daemon_args='--stderr /var/log/qubes/qrexec-agent.log'
+
+
 depend() {
 
 	# If this isn't a template we don't really need qubes-core.
 	#
 	after qubes-core
-	need qubes-selinux
+	need selinux
 	need tmpfiles.setup
-}
-
-start() {
-
-	ebegin 'Starting qrexec-agent'
-
-	start-stop-daemon --start --background --exec /usr/lib/qubes/qrexec-agent --make-pidfile --pidfile /run/qubes/qrexec-agent.pid --stderr /var/log/qubes/qrexec-agent.log
-}
-
-
-stop() {
-
-	ebegin 'Stopping qrexec-agent'
-
-	start-stop-daemon --stop --pidfile /run/qubes/qrexec-agent.pid
 }

@@ -1,0 +1,7 @@
+define qfile_unpacker_user_policy {
+
+	$(HOME)/QubesIncoming/*/*	rwcdl
+	$(HOME)/QubesIncoming/*/	wc
+#	$(HOME)/QubesIncoming/		w
+	$(HOME)/QubesIncoming/
+}

@@ -6,13 +6,14 @@ EAPI=5
 
 inherit selinux-policy-2
 
-BASEPOL='2.20141203-r9'
-MODS="qubes-gpg"
-POLICY_FILES="qubes-gpg.te qubes-gpg.if qubes-gpg.fc"
+BASEPOL='2.20141203-r10'
+MODS="qubes-gui"
+POLICY_FILES="qubes-gui.te qubes-gui.if qubes-gui.fc"
 
-DESCRIPTION='SELinux policy for Qubes split GPG'
-HOMEPAGE='https://github.com/2d1/qubes-policy'
+DESCRIPTION='SELinux policy for Qubes GUI'
+HOMEPAGE='https://github.com/loveithateit/qubes-policy'
 
+IUSE="pulseaudio"
 KEYWORDS="~amd64"
 LICENSE='GPL-3'
 SLOT='0'

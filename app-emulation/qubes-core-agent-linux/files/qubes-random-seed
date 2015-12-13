@@ -1,0 +1,32 @@
+#!/sbin/openrc-run
+# $Id$
+
+
+depends() {
+
+	need qubesdb-daemon
+
+	after urandom
+
+	before haveged
+	before net
+}
+
+start() {
+
+	# path paranoia
+	#
+	readonly base64_bin='/usr/bin/base64'
+	readonly qubesdb_read_bin='/usr/bin/qubesdb-read'
+	readonly qubesdb_rm_bin='/usr/bin/qubesdb-rm'
+
+
+	ebegin 'Seeding PRNG with entropy from dom0'
+
+
+	"${qubesdb_read_bin}" /qubes-random-seed | "${base64_bin}" -d > /dev/urandom
+	"${qubesdb_rm_bin}" /qubes-random-seed
+
+
+	eend $?
+}

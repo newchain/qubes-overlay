@@ -1,0 +1,43 @@
+define qfile_unpacker {
+
+	/				h
+
+
+	/etc/group			r
+	/etc/passwd			r
+
+
+	/home/
+	/home/*				h
+
+
+	/lib64/ld-2.??.so			x
+	  /etc/ld.so.cache			r
+	/lib64/libc-2.??.so			rx
+	/usr/lib64/libqubes-rpc-filecopy.so.*	rx
+
+	/lib64					h
+	/usr/lib64				h
+
+
+	/proc/[1-9]*/fd
+
+	/proc/					h
+
+
+	-CAP_ALL
+	+CAP_SETGID
+	+CAP_SETUID
+	+CAP_SYS_ADMIN audit
+	+CAP_SYS_CHROOT
+
+
+	bind	disabled
+	connect	disabled
+}
+
+
+# subject /usr/lib/qubes/qfile-unpacker odsAKT {
+#
+#	$nsswitch | $qfile_unpacker | $qfile_unpacker_specific_policy
+# }

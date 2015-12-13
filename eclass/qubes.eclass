@@ -1,6 +1,6 @@
 # Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: $
+# $Id$
 
 
 qubes_slot() {
@@ -11,9 +11,17 @@ qubes_slot() {
 		SLOT=2
 		DEPEND="!${CATEGORY}/${PN}:3"
 
-		}; else {
+		};
+		elif ( [ "${PV%.*}" == '3.1' ] || [ "${PR}" == 'r310' ] ); then {
 
 		EGIT_BRANCH='master'
+		SLOT='3/1'
+		DEPEND="!${CATEGORY}/${PN}:2"
+
+		};
+		else {
+
+		EGIT_BRANCH='release3.0'
 		SLOT=3
 		DEPEND="!${CATEGORY}/${PN}:2"
 	};
@@ -23,19 +31,36 @@ qubes_slot() {
 
 qubes_prepare() {
 
+	local version
+
 	if [[ "${PV}" < '9999' ]]; then {
 
 		readonly version="${version_prefix}${MY_PV:=${PV}}"
 		git checkout "${version}" 2>/dev/null
 
-	}; else {
+	};
+	else {
 
 		readonly version="$(git tag --points-at HEAD | head -n 1)"
 	};
 	fi
 
 	gpg --import "${FILESDIR}/qubes-developers-keys.asc"  2>/dev/null
-	git verify-tag "${version}" || die 'Signature verification failed!'
+
+	if [[ "${PV}" < '9999' ]]; then {
+
+		git verify-tag "${version}" || die 'Signature verification failed!'
+
+	};
+	else {
+
+		for i in $(git tag --points-at HEAD); do {
+
+			git verify-tag "${i}" || die 'Signature verification failed!'
+		};
+		done;
+	};
+	fi
 }
 
 

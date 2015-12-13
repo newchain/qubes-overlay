@@ -31,9 +31,6 @@ rc_prepare() {
 
 src_compile() {
 
-#	alias gpg="gpg --keyid-format 0xlong --primary-keyring ${S}/qubes.gpg"
-
-
 	gpg --keyid-format 0xlong --import keys/*/*.asc
 
 
@@ -65,9 +62,6 @@ src_compile() {
 
 
 	gpg --export --output "${S}/qubes.gpg" || die 'Failed to export keyring!'
-
-
-	#unalias gpg
 }
 
 src_install() {

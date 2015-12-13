@@ -1,0 +1,10 @@
+subject /usr/bin/qubes-desktop-run osAKT {
+
+	$qubes_desktop_run
+}
+
+
+subject /usr/bin/qubes-desktop-run:/usr/bin/python2.7 osAKT {
+
+	$libselinux | $python27 | $qubes_desktop_run_nested_python |  $qubes_user_subjects
+}

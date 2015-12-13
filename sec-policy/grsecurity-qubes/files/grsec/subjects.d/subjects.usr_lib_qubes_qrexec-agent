@@ -16,28 +16,27 @@ define qrexec_agent {
 	/dev/xen/gntdev				rw
 	/dev/xen/xenbus				rw
 
-	/dev
-	/dev/xen
+	/dev/
+	/dev/xen/
 	/dev/xen/*				h
 	/dev/*					h
 
 
-	/etc/ld.so.cache			r
-
-	/etc
+	/etc/
 	/etc/*					h
 
 
 	/lib64/ld-2.??.so			x
+	  /etc/ld.so.cache			r
 	/lib64/libc-2.??.so			rx
 	/usr/lib64/gcc/x86_64-pc-linux-gnu/?.?.?/libgcc_s.so.1	rx
 	/usr/lib64/libqrexec-utils.so.1		rx
 	
-	/lib64
+	/lib64/
 	/lib64/*				h
-	/usr/lib64
-	/usr/lib64/gcc
-	/usr/lib64/gcc/x86_64-pc-linux-gnu
+	/usr/lib64/
+	/usr/lib64/gcc/
+	/usr/lib64/gcc/x86_64-pc-linux-gnu/
 	/usr/lib64/gcc/x86_64-pc-linux-gnu/*	h
 	/usr/lib64/gcc/*			h
 	/usr/lib64/*				h
@@ -45,8 +44,8 @@ define qrexec_agent {
 
 	/proc/xen/privcmd			rw
 
-	/proc
-	/proc/xen
+	/proc/
+	/proc/xen/
 	/proc/xen/*				h
 	/proc/*					h
 
@@ -59,16 +58,16 @@ define qrexec_agent {
 	/run/qubes/qubesdb.sock			h
 	/run/qubes/qubes-gui.pid		h
 
-	/run
-	/run/qubes
+	/run/
+	/run/qubes/
 	/run/*					h
 	
 
 	/var/log/qubes/qrexec-agent.log		a
 
-	/var
-	/var/log
-	/var/log/qubes
+	/var/
+	/var/log/
+	/var/log/qubes/
 	/var/log/qubes/*			h
 	/var/log/*				h
 	/var/*					h
@@ -90,67 +89,50 @@ define qrexec_agent_nested_su {
 
 	/dev/log			rw
 
-	/dev
+	/dev/
 	/dev/*				h
 
 
 	/etc/group			r
-	/etc/ld.so.cache		r
 	/etc/localtime			hs
 	/etc/login.defs			r
-	/etc/nsswitch.conf		r
-	  /lib64/libnss_files-2.??.so	rx
-	/etc/pam.d/su			r
 	/etc/passwd			r
 	/etc/shadow			hs
 
-	/etc
-	/etc/pam.d
+	/etc/
+	/etc/pam.d/
 	/etc/pam.d/*			h
 	/etc/*				h
 
-	/lib64/ld-2.??.so		x
-	/lib64/libc-2.??.so		rx
-	/lib64/libpam.so.*		rx
-	  /lib64/libdl-2.??.so		rx
-	/lib64/libpam_misc.so.*		rx
 
-	/lib64
-	/lib64/*			h
-	/usr/lib64
+#	/lib64/
+#	/lib64/*			h
+	/usr/lib64/
 	/usr/lib64/*			h
-
-
-	/proc/[1-9]*/loginuid		r
-	/proc/filesystems		hs
-	/proc/mounts			hs
-	/proc/sys/kernel/ngroups_max	hs
-
-	/proc
-	/proc/[1-9]*
-	/proc/[1-9]*/*			h
-	/proc/*				h
 
 
 	/run/utmp			r
 
-	/run
+	/run/
 	/run/*				h
 
 
-	/sys/fs/selinux
+	/sys/
+	/sys/fs/
+	/sys/fs/selinux/
 	/sys/fs/selinux/*		h
-
-	/sys
-	/sys/fs
 	/sys/fs/*			h
 	/sys/*				h
 
 
+	/tmp/.private/user/		wc
+	/tmp/.private/user/*		h
+
+
 	/usr/bin/xauth
 
-	/usr
-	/usr/bin
+	/usr/
+	/usr/bin/
 	/usr/bin/*			h
 	/usr/*				h
 
@@ -173,10 +155,16 @@ define qrexec_agent_nested_su_transitioned {
 
 	/bin/bash			xp
 
+
 	# Preserve cwd:
 	#
 	/home/user
 	/home/user/*			h
+
+
+	/tmp/.private/user/
+	/tmp/.private/user/*		h
+
 
 	-CAP_ALL
 
@@ -193,12 +181,57 @@ define qrexec_agent_nested_su_transitioned_sh {
 	  /lib64/libnss_files-2.??.so		rx
 	/etc/passwd				r
 	/etc/profile				r
+	/etc/profile.d/
 	/etc/profile.d/qubes-gui.sh		r
 	/etc/profile.d/qubes-session.sh		hs
+	/etc/profile.d/*			h
 	/etc/profile.env			r
 
+	/etc/qubes-rpc/qubes.Filecopy		r
+
+
+	/etc/
+	/etc/qubes-rpc/
+	/etc/qubes-rpc/*			h
+	/etc/*					h
+
+
+	/home/user/.bash_profile		hs
+
+
+	/home/
+	/home/user/
+	/home/user/*				h
+	/home/*					h
+
+
+	/lib64/					h
+
+
+	/tmp/
+	/tmp/.private/
+	/tmp/.private/user/
+	/tmp/.private/user/*			h
+	/tmp/.private/*				h
+	/tmp/*					h
+
+
 	/usr/bin/qubes-desktop-run		xp
-	/usr/lib/qubes/qubes-rpc-multiplexer	xp
+	/usr/lib/qubes/qubes-rpc-multiplexer	rxp
+
+
+	/usr/
+	/usr/bin/
+	/usr/bin/*				h
+	/usr/lib/
+	/usr/lib/qubes/
+	/usr/lib/qubes/*			h
+	/usr/lib/*				h
+	/usr/lib64/
+	/usr/lib64/qubes/
+	/usr/lib64/*				h
+	/usr/*					h
+
 
 	-CAP_ALL
 
@@ -210,12 +243,14 @@ define qrexec_agent_nested_su_transitioned_sh {
 define qrexec_agent_nested_su_transitioned_sh_pass_io {
 
 	/bin/cat	xp
+
+	/lib64/		h
 }
 
 
 define qrexec_agent_nested_su_transitioned_sh_pass_io_cat {
 
-	/home/user/QubesIncoming	r
+	/home/user/QubesIncoming/	r
 }
 
 
@@ -231,7 +266,7 @@ define qrexec_agent_nested_su_transitioned_sh_pass_io_cat {
 
 # subject /usr/lib/qubes/qrexec-agent:/bin/su osAKT {
 #
-#	$qrexec_agent_nested_su | $qrexec_agent_nested_su_pamstack
+#	$su | $qrexec_agent_nested_su | $qrexec_agent_nested_su_pamstack
 #
 #	sock_allow_family unix
 # }

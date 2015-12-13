@@ -1,0 +1,82 @@
+define qubes_rpc_multiplexer {
+
+	/				h
+
+
+	/bin/bash			xp
+	/bin/mkfifo			xp
+	/bin/rm				xp
+	/usr/bin/logger			xp
+
+
+	/dev/null			r
+	/dev/tty			rw
+
+
+	/etc/qubes-rpc/qubes.Filecopy
+
+
+	/home/
+	/home/*				h
+
+
+	/lib64/				h
+
+
+	/proc/meminfo			hs
+
+
+	/tmp/
+	/tmp/qrexec-rpc-stderr.[1-9]*	w
+	/tmp/*
+
+
+	-CAP_ALL
+
+	bind	disabled
+	connect	disabled
+}
+
+
+define qubes_rpc_multiplexer_nested_sh {
+
+	/etc/qubes-rpc/qubes.Filecopy	r
+
+
+	/usr/lib64/qubes/qfile-unpacker	xp
+}
+
+
+define qubes_rpc_multiplexer_nested_logger {
+
+	/tmp/
+	/tmp/qrexec-rpc-stderr.[1-9]*	r
+}
+
+
+define qubes_rpc_multiplexer_nested_mkfifo {
+
+	/tmp/
+	/tmp/qrexec-rpc-stderr.[1-9]*	wc
+}
+
+
+define qubes_rpc_multiplexer_nested_rm {
+
+	/tmp/
+	/tmp/qrexec-rpc-stderr.[1-9]*	wd
+}
+
+
+# define qubes_rpc_multiplexer_specific_policy {
+#
+#	$(HOME)/
+#	$(HOME)/*			h
+# }
+
+
+# subject /usr/lib64/qubes/qubes-rpc-multiplexer odsAKT {
+#
+#	$shell_system | $qubes_rpc_multiplexer | $qubes_rpc_multiplexer_specific_policy
+# }
+

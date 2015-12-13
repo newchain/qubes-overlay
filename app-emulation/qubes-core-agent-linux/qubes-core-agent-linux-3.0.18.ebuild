@@ -13,7 +13,7 @@ inherit eutils fcaps git-2 python-r1 qubes user
 DESCRIPTION='Qubes RPC agent and utilities for Linux VMs'
 HOMEPAGE='https://github.com/QubesOS/qubes-core-agent-linux'
 
-IUSE="glib net selinux svg template"
+IUSE="-dbus glib net selinux svg template"
 KEYWORDS="~amd64"
 LICENSE='GPL-2'
 
@@ -26,7 +26,8 @@ CDEPEND="app-emulation/qubes-core-vchan-xen:${SLOT}
 DEPEND="${CDEPEND}
 	${DEPEND}
 	app-crypt/gnupg
-	>=app-emulation/qubes-secpack-20150603"
+	>=app-emulation/qubes-secpack-20150603
+	dbus? ( dev-python/dbus-python )"
 
 # util-linux for logger
 #
@@ -71,13 +72,29 @@ src_prepare() {
 	};
 	done
 
-	if $(use net); then {
+	sed -i -- 's|/sbin/ethtool|/usr/sbin/ethtool|g' 'network/setup-ip'
+	sed -i -- 's|/sbin/ifconfig|/bin/ifconfig|g' 'network/setup-ip'
 
-		sed -i -- 's|/sbin/ethtool|/usr/sbin/ethtool|g' 'network/setup-ip'
-		sed -i -- 's|/sbin/ifconfig|/bin/ifconfig|g' 'network/setup-ip'
-		sed -i -- 's|/sbin/route|/bin/route|g' 'network/setup-ip'
-	};
-	fi
+	sed -i -- 's|/sbin/route|/bin/route|g' 'network/setup-ip'
+
+
+	exorcise_dbus() {
+
+		epatch "${FILESDIR}/${PN}-3.0.14_exorcise-dbus.patch"
+	}
+
+	appearance_dissonance_ego_identity_reputation() {
+
+		sed -i '/etc\/polkit-1/d' 'Makefile'
+		sed -i '/qubes\.sudoers/d;/sudoers\.d_umask/d' 'Makefile'
+	}
+
+
+	sed -i '/var\/run/d' 'Makefile'
+	sed -i 's|etc/udev|lib/udev|' 'Makefile'
+
+	$(use dbus) || exorcise_dbus
+	appearance_dissonance_ego_identity_reputation
 }
 
 pkg_setup() {
@@ -112,8 +129,6 @@ src_install() {
 		diropts '-m0700'
 		dodir 'home'
 		dodir 'home.orig'
-		dodir 'mnt/removable'
-		dodir 'rw'
 
 		diropts '-m0710'
 		dodir 'home.orig/user'
@@ -132,9 +147,21 @@ src_install() {
 	};
 	fi
 
+
 	doinitd "${FILESDIR}/qubes-core"
+	doinitd "${FILESDIR}/qubes-iptables"
+	doinitd "${FILESDIR}/qubes-random-seed"
 	doinitd "${FILESDIR}/qubes-qrexec-agent"
-	$(use selinux) && doinitd "${FILESDIR}/qubes-selinux"
+	doinitd "${FILESDIR}/selinux"
+
+	if $(use net); then {
+
+		doinitd "${FILESDIR}/net.qubes"
+	};
+	fi
+
+
+	emake DESTDIR="${D}" install-common
 
 	cd "${S}/qrexec"
 
@@ -143,45 +170,24 @@ src_install() {
 	cd "${S}"
 
 
-	insinto '/etc/qubes-rpc'
-	doins 'qubes-rpc/qubes.'{Backup,Filecopy,OpenInVM,Restore,WaitForSession}
-	$(use glib) && doins 'qubes-rpc/qubes.GetAppmenus'
-
 	fperms 0711 '/etc/qubes-rpc/'
+	fperms 0711 '/usr/lib/qubes/qfile-agent'
+	fperms 0711 '/usr/lib/qubes/qfile-unpacker'
+	fperms 0711 '/usr/lib/qubes/qrexec-agent'
+	fperms 0700 '/usr/lib/qubes/setup-ip'
+	fperms 0711 '/usr/lib/qubes/tar2qfile'
+
+	fperms 0700 '/mnt/removable'
+	fperms 0700 '/rw'
+
 
 	exeinto '/usr/bin'
-	exeopts '-m0755'
-	$(use glib) && doexe 'misc/qubes-desktop-run'
-	doexe 'qubes-rpc/qvm-'{copy-to-vm,move-to-vm,mru-entry,open-in-dvm,open-in-vm,run}
-
 	$(use selinux) && doexe "${FILESDIR}/qbkdr_run"
 
-	exeinto '/usr/lib/qubes'
-	exeopts '-m0755'
-	$(use glib) && doexe 'misc/qubes-trigger-sync-appmenus.sh'
-	exeinto "/usr/$(get_libdir)/qubes"
-	exeopts '-m0711'
-	doexe 'qubes-rpc/'{qfile-agent,qfile-unpacker,tar2qfile}
-
+	insopts '-m0700'
 	insinto '/usr/lib/tmpfiles.d'
 	doins "${FILESDIR}/qubes.conf"
 	$(use template) && doins "${FILESDIR}/qubes-template.conf"
-
-	if $(use net); then {
-
-		doinitd "${FILESDIR}/net.qubes"
-		doinitd "${FILESDIR}/qubes-iptables"
-
-		exeinto '/usr/lib/qubes'
-		exeopts '-m700'
-		doexe 'network/setup-ip'
-
-		# grsec kernels trigger nil dereference when the
-		# vif is detached, so just rely on init script.
-		#insinto '/lib/udev/rules.d'
-		#doins 'network/udev-qubes-network.rules'
-	};
-	fi
 
 	docinto '/usr/share/doc/qubes'
 	dodoc 'misc/fstab'
@@ -194,8 +200,9 @@ pkg_preinst() {
 		qubes_to_runlevel 'net.qubes'
 		qubes_to_runlevel 'qubes-core'
 		qubes_to_runlevel 'qubes-iptables'
-		qubes_to_runlevel 'qubes-selinux'
+		qubes_to_runlevel 'qubes-random-seed'
 		qubes_to_runlevel 'qubes-qrexec-agent'
+		qubes_to_runlevel 'selinux'
 	};
 	fi
 }
@@ -205,15 +212,6 @@ pkg_postinst() {
 	fcaps cap_setgid,cap_setuid,cap_sys_admin,cap_sys_chroot 'usr/lib/qubes/qfile-unpacker'
 
 	echo
-
-	if $(use net); then {
-
-		ewarn 'grsec kernels will crash if the vif is detached'
-		ewarn 'while configured. Be sure to stop net.qubes first.'
-		ewarn
-	};
-	fi
-
 	ewarn "qrexec-agent must be running before qrexec_timeout"
 	ewarn "(default value = 60 seconds) is reached."
 	ewarn

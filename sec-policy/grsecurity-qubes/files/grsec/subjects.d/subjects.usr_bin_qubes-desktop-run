@@ -1,0 +1,91 @@
+define qubes_desktop_run {
+
+	/					h
+
+
+	/etc/env.d/python/config		r
+
+
+	/lib64/ld-2.??.so			x
+	  /etc/ld.so.cache			r
+	/lib64/libc-2.??.so			rx
+
+	/lib64/					h
+
+
+	/usr/bin/python
+	/usr/bin/python-wrapper			xp
+	/usr/bin/python2.7			xp
+
+
+	-CAP_ALL
+
+	bind	disabled
+	connect	disabled
+}
+
+
+define qubes_desktop_run_nested_python {
+
+
+	/				h
+
+	/dev/null			r
+
+
+	/proc/
+	/proc/[1-9]*/fd
+	/proc/[1-9]*/mounts		hs
+	/proc/filesystems		hs
+	/proc/mounts			hs
+	/proc/*				h
+
+	/usr/bin/gettext
+	/usr/bin/locale
+	/usr/bin/qubes-desktop-run	r
+
+	/usr/
+	/usr/bin/
+	/usr/bin/*			h
+	/usr/*
+	
+
+	/usr/lib64/gconv/gconv-modules.cache		r
+	/usr/lib64/girepository-1.0/
+	/usr/lib64/girepository-1.0/*.typelib		r
+	/usr/lib64/locale/locale-archive		r
+	/usr/lib64/python2.7/lib-dynload/_collections.so	rx
+	/usr/lib64/python2.7/lib-dynload/_functools.so	rx
+	/usr/lib64/python2.7/lib-dynload/_heapq.so	rx
+	/usr/lib64/python2.7/lib-dynload/_locale.so	rx
+	/usr/lib64/python2.7/lib-dynload/_struct.so	rx
+	/usr/lib64/python2.7/lib-dynload/datetime.so	rx
+	/usr/lib64/python2.7/lib-dynload/itertools.so	rx
+	/usr/lib64/python2.7/lib-dynload/operator.so	rx
+	/usr/lib64/python2.7/lib-dynload/strop.so	rx
+
+	/usr/lib64/python2.7/site-packages/gi/_gi.so	rx
+	  /usr/lib64/libffi.so.*			rx
+	  /usr/lib64/libgirepository-1.0.so.*		rx
+	    /usr/lib64/libgio-2.0.so.*			rx
+	      /lib64/libresolv-2.??.so			rx
+	      /lib64/libz.so.*				rx
+	  /usr/lib64/libglib-2.0.so.*			rx
+	  /usr/lib64/libgmodule-2.0.so.*		rx
+	  /usr/lib64/libgobject-2.0.so.*		rx
+	  /usr/lib64/libgthread-2.0.so.*		rx
+
+	/lib64/					h
+	/usr/lib64/
+	/usr/lib64/python2.7/
+	/usr/lib64/python2.7/*/*		r
+	/usr/lib64/python2.7/*			r
+	/usr/lib64/*				h
+
+
+	/sys/fs/selinux/
+	/sys/fs/selinux/*			h
+
+
+	/usr/share/locale/			r
+}

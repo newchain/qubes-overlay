@@ -1,0 +1,4 @@
+subject /usr/lib64/qubes/qfile-agent odsAKT {
+
+	$qfile_agent | $qfile_agent_qfile_policy
+}

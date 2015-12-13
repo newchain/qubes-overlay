@@ -1,5 +1,5 @@
---- tools/xenstore/xs_lib.c	2015-08-25 02:28:59.527919118 +0000
-+++ tools/xenstore/xs_lib.c.old	2015-06-22 13:41:35.000000000 +0000
+--- tools/xenstore/xs_lib.c
++++ tools/xenstore/xs_lib.c
 @@ -82,7 +82,7 @@
  #if defined(__RUMPUSER_XEN__) || defined(__RUMPRUN__)
  	return "/dev/xen/xenbus";

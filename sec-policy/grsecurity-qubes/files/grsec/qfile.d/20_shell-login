@@ -1,0 +1,24 @@
+define shell_login_qfile_policy {
+
+	/usr/bin/qvm-copy-to-vm	xp
+
+
+
+	$(HOME)/QubesIncoming/
+
+
+	$(HOME)/
+	$(HOME)/*		h
+
+
+	/bin/
+	/bin/*			h
+	/opt/
+	/opt/*			h
+	/usr/
+	/usr/bin/
+	/usr/bin/*		h
+	/usr/*			h
+
+	/*			h
+}

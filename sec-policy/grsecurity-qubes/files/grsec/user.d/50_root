@@ -1,0 +1,9 @@
+subject / odsAKT {
+
+	/			h
+
+	-CAP_ALL
+
+	bind	disabled
+	connect	disabled
+}

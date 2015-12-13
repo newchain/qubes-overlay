@@ -1,0 +1,7 @@
+subject /usr/bin/Xorg odsAKT {
+
+	$Xorg | $Xorg_qubes
+
+
+	RES_MEMLOCK 128M 128M
+}

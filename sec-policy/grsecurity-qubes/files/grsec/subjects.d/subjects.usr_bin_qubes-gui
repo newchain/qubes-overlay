@@ -9,16 +9,16 @@ define qubes_gui {
 	/dev/xen/gntalloc		rw
 	/dev/xen/xenbus			rw
 
-	/dev
-	/dev/xen
+	/dev/
+	/dev/xen/
 	/dev/xen/*			h
 	/dev/*				h
 
 
 	/proc/xen/privcmd		rw
 
-	/proc
-	/proc/xen
+	/proc/
+	/proc/xen/
 	/proc/xen/*			h
 	/proc/*				h
 
@@ -47,15 +47,15 @@ define qubes_gui {
 
 	/var/log/qubes/gui-agent.log	a
 
-	/var/log
+	/var/log/
 	/var/log/*			h
 
 	/var/run/xf86-qubes-socket	cwd
 
-	/var/run
+	/var/run/
 	/var/run/*
 
-	/var
+	/var/
 	/var/*				h
 
 

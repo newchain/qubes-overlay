@@ -1,0 +1,10 @@
+subject /bin/su osAKT {
+
+	$su_transitioned | $qrexec_agent_nested_su_transitioned | $su_user_policy
+}
+
+
+subject /bin/su:/bin/bash odsAKT {
+
+	$shell_system | $qrexec_agent_nested_su_transitioned_sh
+}

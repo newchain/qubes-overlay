@@ -1,0 +1,7 @@
+define su_user_policy {
+
+	/home/user
+	/home/user/*		h
+
+	/bin/bash		xp
+}

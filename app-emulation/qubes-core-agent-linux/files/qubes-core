@@ -8,6 +8,7 @@ depends() {
 	# the template (and therefore every other appvm!)
 	#
 	before urandom
+
 	need qubesdb-daemon
 }
 
@@ -19,62 +20,77 @@ start() {
 	readonly blockdev_bin='/sbin/blockdev'
 	readonly cp_bin='/bin/cp'
 	readonly dd_bin='/bin/dd'
+	readonly diff_bin='/usr/bin/diff'
 	readonly mkdir_bin='/bin/mkdir'
 	readonly mkfs_ext4_bin='/sbin/mkfs.ext4'
 	readonly mount_bin='/bin/mount'
-#	readonly qubesdb-read_bin='/usr/bin/qubesdb-read'
-#	readonly rm_bin='/bin/rm'
-	readonly diff_bin='/usr/bin/diff'
+	readonly qubesdb_read_bin='/usr/bin/qubesdb-read'
 	readonly resize2fs_bin='/sbin/resize2fs'
+	readonly rm_bin='/bin/rm'
 	readonly touch_bin='/usr/bin/touch'
 
 	ebegin 'Setting up Qubes persistent partition'
 
 	if [ -e /dev/xvdb ] ; then {
 
-		# check if private.img (xvdb) is empty - all zeros
+		# Check if private.img (xvdb) is empty - all zeros
+		#
 		private_size_512=`"${blockdev_bin}" --getsz /dev/xvdb`
 
 		if "${dd_bin}" if=/dev/zero bs=512 count=$private_size_512 | "${diff_bin}" /dev/xvdb - >/dev/null; then {
 
-			# the device is empty, create filesystem
-			echo "--> Virgin boot of the VM: creating filesystem on private.img"
+			# The device is empty, create filesystem
+			#
+			einfo '--> Virgin boot of the VM: creating filesystem on private.img'
 			"${mkfs_ext4_bin}" -m 0 -q /dev/xvdb || exit 1
-
 		};
 		fi
 
-		"${resize2fs_bin}" /dev/xvdb 2> /dev/null || echo "'resize2fs /dev/xvdb' failed"
-		"${mount_bin}" -- /rw
+		"${mount_bin}" -- '/rw'
 
-		[ -e /rw/home ] || "${mkdir_bin}" -m 700 -- '/rw/home' || echo 'Unable to mount /home'
-		[ -e /rw/varlib ] || "${mkdir_bin}" -m 700 -- '/rw/varlib' || echo 'Unable to mount /var/lib'
-		[ -e /rw/varlog ] || "${mkdir_bin}" -m 700 -- '/rw/varlog' || echo 'Unable to mount  /var/log'
+		"${resize2fs_bin}" /dev/xvdb 2> /dev/null || ewarn "'resize2fs /dev/xvdb' failed"
 
-	        if ! [ -e /rw/home/user ] ; then {
+		if ! [ -e /rw/home/user ] ; then {
 
-	        	echo
-	        	echo "--> Virgin boot of the VM: Linking /home to /rw/home"
+			einfo
+			einfo '--> Virgin boot of the VM: Copying /home.orig/user to /rw/home/user'
 
-	            "${cp_bin}" -aZ -- '/home.orig/user' '/rw/home'
-	        };
+			"${cp_bin}" -aZ -- '/home.orig/user' '/rw/home'
+		};
 		fi
 
+
+		"${mount_bin}" -- '/home' || ewarn 'Unable to mount /home!'
+
+		"${mount_bin}" -- '/var/lib' || ewarn 'Unable to mount /var/lib!'
+
+		if [ -e /var/lib/qubes/before-first-boot ]; then {
+
+			local vm_type
+			readonly vm_type="$(${qubesdb_read_bin} /qubes-vm-type)"
+
+			if [ "${vm_type}" = 'AppVM' ]; then {
+
+				if "${rm_bin}" -- '/var/lib/misc/random-seed'; then {
+
+					"${rm_bin}" -- '/var/lib/qubes/before-first-boot' || ewarn 'Unable to remove before-first-boot!'
+				};
+				else {
+
+					ewarn 'Unable to remove template prng seed!'
+				};
+				fi
+			};
+			fi
+		};
+		fi
 
 		# Oh dear. Whenever was this domain created?
 		#
 		"${touch_bin}" -t 200001010000 -- '/var/lib/qubes/first-boot-completed'
-		"${touch_bin}" -t 200001010000 -- '/var/lib/qubes'
-
-		"${mount_bin}" -- /home
-		#
-		# whatcouldpossiblygowrong
-		#
-		# [ "$(/usr/bin/qubesdb-read /qubes-vm-type)" = 'AppVM' ] && "${rm_bin} -RF --one-file-system -- /var/lib/*
-		#
-		"${mount_bin}" -- '/var/lib' || echo 'Unable to mount /var/lib!'
+		"${touch_bin}" -t 200001010000 -- '/var/lib/qubes/'
 	};
-	else ewarn "persistent volume not found!"
+	else ewarn 'Persistent volume not found!'
 	fi
 
 	return 0

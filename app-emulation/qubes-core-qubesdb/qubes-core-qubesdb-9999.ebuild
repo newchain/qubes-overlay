@@ -51,7 +51,6 @@ src_install() {
 
 	emake DESTDIR="${D}" install
 
-	doinitd "${FILESDIR}/qubesdb-daemon"
 	newconfd "${FILESDIR}/qubesdb-daemon_conf" 'qubesdb-daemon'
 
 	into '/usr/lib/tmpfiles.d'

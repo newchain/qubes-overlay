@@ -1,0 +1,21 @@
+define shell_login_user_policy {
+
+	/sbin/gradm		xp
+
+
+
+	$(HOME)/
+	$(HOME)/*		h
+
+
+	/bin/
+	/bin/*			h
+	/opt/
+	/opt/*			h
+	/usr/
+	/usr/bin/
+	/usr/bin/*		h
+	/usr/*			h
+
+	/*			h
+}

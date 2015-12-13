@@ -8,11 +8,12 @@ subject /usr/lib/qubes/qrexec-agent odhpsAT {
 
 subject /usr/lib/qubes/qrexec-agent:/bin/su odsAKT {
 
-	$qrexec_agent_nested_su_pamstack | $qrexec_agent_nested_su
+	$qrexec_agent_nested_su_pamstack | $qrexec_agent_nested_su | $su
 
 	-CAP_ALL
 	+CAP_SETGID
 	+CAP_SETUID
 
+	sock_allow_family netlink
 	sock_allow_family unix
 }

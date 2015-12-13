@@ -1,0 +1,28 @@
+subject /usr/lib64/qubes/qubes-rpc-multiplexer osAKT {
+
+	$shell_system | $qubes_rpc_multiplexer | $qubes_rpc_multiplexer_user_policy
+}
+
+
+subject /usr/lib64/qubes/qubes-rpc-multiplexer:/bin/bash osAKT {
+
+	$shell_system | $qubes_rpc_multiplexer_nested_sh
+}
+
+
+subject /usr/lib64/qubes/qubes-rpc-multiplexer:/bin/mkfifo osAKT {
+
+	$libselinux | $mkfifo | $qubes_rpc_multiplexer_nested_mkfifo
+}
+
+
+subject /usr/lib64/qubes/qubes-rpc-multiplexer:/bin/rm osAKT {
+
+	$rm | $qubes_rpc_multiplexer_nested_rm
+}
+
+
+subject /usr/lib64/qubes/qubes-rpc-multiplexer:/usr/bin/logger osAKT {
+
+	$logger | $qubes_rpc_multiplexer_nested_logger
+}

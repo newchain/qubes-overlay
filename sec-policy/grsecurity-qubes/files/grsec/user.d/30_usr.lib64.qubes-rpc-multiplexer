@@ -1,0 +1,5 @@
+define qubes_rpc_multiplexer_user_policy {
+
+	$(HOME)/
+	$(HOME)/*		h
+}

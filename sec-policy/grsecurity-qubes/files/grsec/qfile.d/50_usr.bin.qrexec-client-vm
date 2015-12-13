@@ -1,0 +1,6 @@
+subject /usr/bin/qrexec-client-vm osAKT {
+
+	$libvchan_xen | $qrexec_client_vm | $qvm_copy_to_vm_nested_qvm_client_vm
+
+	sock_allow_family unix
+}

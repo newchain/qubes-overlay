@@ -946,6 +946,31 @@ interface(`qubes_core_write_qubes_var_run_files',`
 
 ###############################
 ## <summary>
+##	<p>
+##		Permit read and open of regular files in /run/qubes.
+##	</p>
+##	<p>
+##		Note that regular files appear to be limited
+##		to pid files, so one type for all daemons should
+##		be relatively safe.
+##	</p>
+## </summary>
+## <param name="domain">
+##	<summary>
+##		Domain to permit read.
+##	</summary>
+## </param>
+
+interface(`qubes_core_read_qubes_var_run_files',`
+
+	qubes_core_search_qubes_var_run($1)
+
+	allow $1 qubes_var_run_t : file { read open };
+')
+
+
+###############################
+## <summary>
 ##	Permit deletion of regular files in /run/qubes.
 ## </summary>
 ## <param name="domain">

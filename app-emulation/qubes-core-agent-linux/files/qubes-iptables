@@ -48,9 +48,9 @@ start() {
 	readonly ip="$(${qubesdb_read_bin} /qubes-ip 2>/dev/null)"
 
 
-	local proxyvm_dns
-
 	if [ -n "${is_proxyvm}" ]; then {
+
+		local proxyvm_dns
 
 		readonly proxyvm_dns="$(${qubesdb_read_bin} /qubes-netvm-gateway 2>/dev/null)"
 	};
@@ -85,20 +85,11 @@ start() {
 	"${iptables_bin}" -A INPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG FIN,SYN,RST,PSH,ACK,URG -j DROP
 	"${iptables_bin}" -A INPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG NONE -j DROP
 
-	if [ -n "${drop_uids}" ]; then {
-
-		for i in ${drop_uids}; do {
-
-			"${iptables_bin}" -A INPUT -m owner --uid "${i}" -j DROP
-		};
-		done;
-	};
-	fi
-
 	# ( More likely than other nastiness => above it )
 	#
 	if ! [ -n "${tcp_services_out}" ] ; then {
 
+		"${iptables_bin}" -A INPUT -p tcp -m tcp --sport 53 -j DROP
 		"${iptables_bin}" -A INPUT -p tcp -j ACCEPT
 	};
 	else {
@@ -132,12 +123,12 @@ start() {
 
 	if [ "${net_type}" = 'insecure' ]; then {
 
-		"${iptables_bin}" -A INPUT -p udp -m recent --set --name DEFAULT --mask 255.255.255.255 --rsource
+		"${iptables_bin}" -A INPUT -p udp -m recent --set --name UDP_IN --mask 255.255.255.255 --rsource
 
 		local IFS_old="${IFS}"
 		local IFS=','
 		set ${udp_in_rate}
-		"${iptables_bin}" -A INPUT -p udp -m recent --update --seconds "${2}" --hitcount "${1}" --name DEFAULT --mask 255.255.255.255 --rsource -j DROP
+		"${iptables_bin}" -A INPUT -p udp -m recent --update --seconds "${2}" --hitcount "${1}" --name UDP_IN --mask 255.255.255.255 --rsource -j DROP
 		local IFS="${IFS_old}"
 
 		"${iptables_bin}" -A INPUT -p udp -s "${dns}/32" -j ACCEPT
@@ -189,7 +180,7 @@ start() {
 
 		for i in ${drop_uids}; do {
 
-			"${iptables_bin}" -A OUTPUT -m owner --uid "${i}" -j DROP
+			"${iptables_bin}" -A OUTPUT -m owner --uid-owner "${i}" -j DROP
 		};
 		done;
 	};
@@ -197,6 +188,7 @@ start() {
 
 	if ! [ -n "${tcp_services_out}" ]; then {
 
+		"${iptables_bin}" -A OUTPUT -p tcp -m tcp --dport 53 -j DROP
 		"${iptables_bin}" -A OUTPUT -p tcp -j ACCEPT
 	};
 	else {
@@ -227,13 +219,12 @@ start() {
 
 	if [ "${net_type}" = 'insecure' ]; then {
 
-		"${iptables_bin}" -A OUTPUT -p udp -m recent --set --name DEFAULT --mask 255.255.255.255 --rsource
+		"${iptables_bin}" -A OUTPUT -p udp -m recent --set --name UDP_OUT --mask 255.255.255.255 --rsource
 
 		local IFS_old="${IFS}"
 		local IFS=','
 		set ${udp_out_rate}
-		"${iptables_bin}" -A OUTPUT -p udp -m recent --update --seconds "${2}" --hitcount "${1}" --name DEFAULT --mask 255.255.255.255 --rsource -j DROP
-		unset ${udp_out_rate}
+		"${iptables_bin}" -A OUTPUT -p udp -m recent --update --seconds "${2}" --hitcount "${1}" --name UDP_OUT --mask 255.255.255.255 --rsource -j DROP
 		local IFS="${IFS_old}"
 
 		"${iptables_bin}" -A OUTPUT -p udp -d "${dns}/32" -j ACCEPT

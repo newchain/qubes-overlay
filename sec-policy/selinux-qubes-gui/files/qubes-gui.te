@@ -80,7 +80,6 @@ role system_r types xauth_t;
 
 type qubes-gui_initrc_t, qubes_init_domain;
 type qubes-gui_initrc_exec_t;
-files_type(qubes-gui_initrc_t)
 init_script_domain(qubes-gui_initrc_t, qubes-gui_initrc_exec_t)
 
 type qubes-session_t;
@@ -108,6 +107,17 @@ logging_log_file(qubes-gui_log_t)
 
 type qubes-gui_var_run_t;
 files_type(qubes-gui_var_run_t)
+
+
+define(`qubes_userspace_highlimit',`
+
+	s5:c0.c1023
+')
+
+define(`qubes_userspace_range',
+
+	mls_systemlow` - 'qubes_userspace_highlimit
+)
 
 
 ########################################
@@ -165,12 +175,17 @@ dontaudit qubes-gui_t locale_t : file getattr;
 # qubes-gui_initrc_t local policy
 #
 
+ifdef(`enable_mls',`
+
+	range_transition qubes-gui_initrc_t qubes-gui_exec_t : process qubes_userspace_range;
+')
+
 domtrans_pattern(qubes-gui_initrc_t, qubes-gui_exec_t, qubes-gui_t)
 
 init_read_script_files(qubes-gui_initrc_t)
 init_dontaudit_read_all_script_files(qubes-gui_initrc_t)
 
-# (cmdline | filesystems | meminfo )
+# ( cmdline | filesystems | meminfo )
 #
 kernel_dontaudit_read_system_state(qubes-gui_initrc_t)
 
@@ -180,12 +195,19 @@ allow qubes-gui_initrc_t qubes-gui_log_t : file { append open };
 qubes_core_create_qubes_var_run_files(qubes-gui_initrc_t)
 qubes_core_write_qubes_var_run_files(qubes-gui_initrc_t)
 qubes_core_delete_qubes_var_run_files(qubes-gui_initrc_t)
-
+allow qubes-gui_initrc_t qubes_var_run_t : file read;
 
 allow qubes-gui_initrc_t initrc_state_t : dir { create_dir_perms delete_dir_perms };
 
 allow qubes-gui_initrc_t qrexec-agent_initrc_exec_t : file getattr;
 allow qubes-gui_initrc_t qubesdb_initrc_exec_t : file getattr;
+
+
+# Stop
+#
+
+allow qubes-gui_initrc_t proc_t : dir read;
+allow qubes-gui_initrc_t qubes-gui_t : process { signal signull };
 
 
 ########################################

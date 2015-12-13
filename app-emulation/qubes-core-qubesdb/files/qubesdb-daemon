@@ -1,9 +1,15 @@
 #!/sbin/openrc-run
 # $Id$
 
+
+command='/usr/sbin/qubesdb-daemon'
+command_args='0'
+pidfile='/run/qubes/qubesdb.pid'
+
+
 depend() {
 
-	need qubes-selinux
+	need selinux
 	need tmpfiles.setup
 }
 
@@ -16,14 +22,4 @@ start() {
 	# start-stop-daemon --env --start --exec /usr/sbin/qubesdb-daemon -- 0
 
 	/usr/sbin/qubesdb-daemon 0
-}
-
-
-stop() {
-
-	ebegin 'Stopping qubesdb-daemon'
-
-#	start-stop-daemon --stop --pidfile /run/qubes/qubesdb.pid
-
-	pkill -15 qubesdb-daemon
 }

@@ -1,0 +1,6 @@
+role user uGT
+role_transitions qfile
+role_allow_ip	0.0.0.0/32
+
+
+include </etc/grsec/user.d>

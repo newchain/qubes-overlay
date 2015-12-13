@@ -6,19 +6,18 @@ define qubesdb_daemon {
 	/dev/xen/evtchn				rw
 	/dev/xen/gntdev				rw
 
-	/dev
-	/dev/xen
+	/dev/
+	/dev/xen/
 	/dev/xen/*				h
 	/dev/*					h
 
 
-	/etc/ld.so.cache			r
-
-	/etc
+	/etc/
 	/etc/*					h
 
 
 	/lib64/ld-2.??.so			x
+	  /etc/ld.so.cache			r
 	/lib64/libc-2.??.so			rx
 
 	/usr/lib64/gcc/x86_64-pc-linux-gnu/[1-9]*/libgcc_s.so.1		rx
@@ -30,28 +29,28 @@ define qubesdb_daemon {
 	    /usr/lib64/libxenctrl.so.*		rx
 	      /lib64/libdl-2.??.so		rx
 
-	/lib64					h
-	/usr/lib64				h
+	/lib64/					h
+	/usr/lib64/				h
 	/usr/lib64/gcc/x86_64-pc-linux-gnu	h
 
 
 	/proc/xen/privcmd			rw
 
 
-	/proc
-	/proc/xen
+	/proc/
+	/proc/xen/
 	/proc/xen/*				h
 	/proc/*					h
 
 
-	/usr
+	/usr/
 	/usr/*					h
 
 
 	/var/log/qubes/qubesdb.log		a
 
-	/var/log
-	/var/log/qubes
+	/var/log/
+	/var/log/qubes/
 	/var/log/qubes/*			h
 	/var/log/*				h
 
@@ -63,12 +62,12 @@ define qubesdb_daemon {
 	/var/run/qubes/qrexec-agent.pid		h
 	/var/run/qubes/qubes-gui.pid		h
 
-	/var/run
-	/var/run/qubes
+	/var/run/
+	/var/run/qubes/
 	/var/run/*				h
 
 
-	/var
+	/var/
 	/var/*					h
 
 

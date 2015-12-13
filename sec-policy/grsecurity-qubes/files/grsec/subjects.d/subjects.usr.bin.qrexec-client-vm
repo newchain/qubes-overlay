@@ -1,0 +1,39 @@
+define qrexec_client_vm {
+
+
+	/					h
+
+
+	/dev/xen/evtchn				rw
+	/dev/xen/gntalloc			rw
+	/dev/xen/xenbus				rw
+
+
+	/lib64/ld-2.??.so			x
+	  /etc/ld.so.cache			r
+	/usr/lib64/libqrexec-utils.so.*		rx
+
+	/lib64					h
+	/usr/lib64				h
+
+
+	/proc/xen/privcmd			rw
+
+
+	/run/qubes/qrexec-agent			rw
+
+
+	-CAP_ALL
+
+
+	bind	disabled
+	connect	disabled
+}
+
+
+# subject /usr/bin/qrexec-client-vm osAK {
+#
+#	$libvchan_xen | $qrexec_client_vm
+#
+#	sock_allow_family unix
+# }

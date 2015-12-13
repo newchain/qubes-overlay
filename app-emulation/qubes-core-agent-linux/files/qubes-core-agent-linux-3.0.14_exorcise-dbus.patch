@@ -1,0 +1,27 @@
+Adding dbus as a broker is 110% certain to reduce attack service, 110% certain to reduce
+information channels, 110% certain to improve policy, and 110% certain to be more simple.
+
+But to those lacking the dispassionate and indisputable logic of Qubes devs, it just feels bad, y'know?
+
+---
+--- misc/xdg.py
++++ misc/xdg.py
+@@ -2,18 +2,9 @@
+ 
+ from gi.repository import Gio
+ import sys
+-import dbus
+ 
+ def launch(desktop, *files):
+     launcher = Gio.DesktopAppInfo.new_from_filename(desktop)
+-    if hasattr(launcher, 'get_boolean'):
+-        activatable = launcher.get_boolean('DBusActivatable')
+-        if activatable:
+-            bus = dbus.SessionBus()
+-            service_id = launcher.get_id()
+-            # cut the .desktop suffix
+-            service_id = service_id[:-8]
+-            bus.start_service_by_name(service_id)
+     launcher.launch(files, None)
+ 
+ if __name__ == "__main__":

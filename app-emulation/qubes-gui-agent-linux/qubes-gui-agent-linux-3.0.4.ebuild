@@ -37,7 +37,7 @@ RDEPEND="${CDEPEND}
 	selinux? ( sec-policy/selinux-qubes-gui[pulseaudio?] )
 	template? ( x11-base/xorg-server[minimal,-suid] )"
 	#
-	# ^^ template <= attack surface--
+	# ^^ template => attack surface--
 
 src_prepare() {
 
@@ -52,7 +52,7 @@ src_prepare() {
 	};
 	fi
 
-	$(use pulseaudio) || sed -i -- '/install.*pulse\//d' 'Makefile'
+	$(use pulseaudio) || sed -i -- '/pulse/d' 'Makefile'
 
 	sed -i -- '1s/^/BACKEND_VMM ?= xen\n/' 'gui-agent/Makefile' 'pulse/Makefile'
 	sed -i -- 's/\ -Werror//g' 'gui-agent/Makefile'
