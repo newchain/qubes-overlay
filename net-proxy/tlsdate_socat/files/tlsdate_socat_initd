@@ -1,0 +1,183 @@
+#!/sbin/openrc-run
+
+
+command="${command:-/usr/bin/socat}"
+command_background='yes'
+command_group="${command_group:-${RC_SVCNAME}}"
+command_umask="${command_umask:-0177}"
+command_user="${command_user:-${RC_SVCNAME}}"
+description="Unix socket proxy for ${RC_SVCNAME%%_socat}"
+pidfile="${piddir:-/var/run}/${RC_SVCNAME}.pid"
+rc_cgroup_cleanup="${rc_cgroup_cleanup:-yes}"
+required_files="${qubes_service_status_dir:-/var/run/qubes-service}/${qubes_service_name:-${RC_SVCNAME}}"
+#required_files="${socket_dir}"
+
+qubesdb_read_exe="${qubesdb_read_exe:-/usr/bin/qubesdb-read}"
+
+client_secret_max_chars="${client_secret_max_chars:-44}"
+readonly qrexec_client_vm_exe="${qrexec_client_vm_exe:-/usr/bin/qrexec-client-vm}"
+readonly qubes_rpc_name="${qubes_rpc_name:-TorSocksUnix}"
+
+keep="_ EINFO_LASTCMD EINFO_LOG EINFO_VERBOSE PATH PWD RC_LIBEXECDIR RC_OPENRC_PID RC_SVCDIR SVCNAME TERM RC_TMPDIR"
+
+late="LANG RC_SERVICE RC_SVCNAME ROOTPATH SHLVL"
+
+# TERM breaks script formatting
+# HOME is set by ssd
+# USER is set by ssd
+
+for env in $(env | cut -d '=' -f 1 -- - | sed -e '/[\ }]/d;/^$/d' -- -)
+do
+
+	for preserve in ${keep} ${late}
+	do
+
+		[ "${env}" = "${preserve}" ] && continue 2
+
+	done
+
+	unset "${env}" || true
+
+done
+
+readonly name="$(${qubesdb_read_exe} /name 2>>/dev/null)"
+readonly client_secret="$(openssl rand -hex 64 | sha512sum -- - | cut -d ' ' -f 1 -- - | sed -Ee s/^[a-f0-9]{$(( 128 - ${client_secret_max_chars} ))}//g -- - )"
+
+
+start() {
+
+	socat_timeout="${socat_timeout:-100}"
+	socat_umask="${socat_umask:-0177}"
+	socket_dir="${socket_dir:-/var/run/qrtunnels/${RC_SVCNAME%%_socat}}"
+	socks="${socks:-0}"
+	tcp="${tcp:-0}"
+
+	if [ "${tcp}" -eq 0 ] && [ "${socks}" -eq 0 ]
+	then
+
+		# Note: curl does not support socks over unix sockets.  Try
+		# tcp=1 and sockets_wrapper with curl.
+
+		socket_mode="${socket_mode:-0600}"
+		socket_name="${socket_name:-sock}"
+		socket_path="${socket_path:-${socket_dir}/${socket_name}}"
+
+		command_args=( "-t${socat_timeout}" "UNIX-LISTEN:${socket_path},mode=${socket_mode},perm-early=${socket_mode},reuseaddr,umask=${socat_umask},fork" "EXEC:${qrexec_client_vm_exe}\ ${name} qubes.${qubes_rpc_name}+${client_secret}" )
+
+	elif  [ "${tcp}" -eq 1 ] && [ "${socks}" -eq 0 ]
+	then
+
+		#command_umask='0111'
+		command_umask='0117'
+		socket_path="${socket_path:-${socket_dir}/TOA}"
+		tcp_address="${tcp_address:-127.0.0.10}"
+		tcp_mask="${tcp_mask:-32}"
+		tcp_port="${tcp_port:-9050}"
+
+		# bind hangs socat (socket_wrapper performance?)
+		command_args=( "-t${socat_timeout}" "TCP4-LISTEN:${tcp_port},dontroute,pf=ip4,range=${tcp_address}/${tcp_mask},reuseaddr,type=1,fork" "EXEC:${qrexec_client_vm_exe} ${name} qubes.${qubes_rpc_name}+${client_secret}" )
+
+	elif [ "${tcp}" -eq 1 ] && [ "${socks}" -eq 1 ]
+	then
+
+		#command_umask='0111'
+		command_umask='0117'
+		socks_user="$(openssl rand -hex 64 | sha512sum -- - | cut -d ' ' -f 1 -- - | sed -Ee s/^[a-f0-9]{120}//g -- - )"
+		socks_password="$(openssl rand -hex 64 | sha512sum -- - | cut -d ' ' -f 1 -- - | sed -Ee s/^[a-f0-9]{120}//g -- - )"
+		socket_path="${socket_path:-${socket_dir}/TOA}"
+		tcp_port="${tcp_port:-9050}"
+
+		# bind hangs socat (socket_wrapper performance?)
+		command_args=( "-t${socat_timeout}" "TCP-LISTEN:${tcp_port},dontroute,pf=ip4,range=${tcp_address}/${tcp_mask},reuseaddr,type=1,fork" "SOCKS5:${destination}:${destination_port},socksuser=${socks_user}:${socks_password} | exec:${qrexec_client_vm_exe}\ ${name} qubes.${qubes_rpc_name}+${client_secret}" )
+
+	elif [ "${tcp}" -eq 0 ] && [ "${socks}" -eq 1 ]
+	then
+
+		# Note that socat cannot(?) perform transparent socks
+		# encapsulation for http requests--the destination is fixed.
+		# For http, try socket_wrapper applied to a tcp->socks proxy
+		# with tcp=1 and socks=0.
+
+		socks_user="$(openssl rand -hex 64 | sha512sum -- - | cut -d ' ' -f 1 -- - | sed -Ee s/^[a-f0-9]{120}//g -- - )"
+		socks_password="$(openssl rand -hex 64 | sha512sum -- - | cut -d ' ' -f 1 -- - | sed -Ee s/^[a-f0-9]{120}//g -- - )"
+		socket_mode="${socket_mode:-0600}"
+		socket_name="${socket_name:-sock}"
+		socket_path="${socket_path:-${socket_dir}/${socket_name}}"
+
+		command_args=( "-t${socat_timeout}" "UNIX-LISTEN:${socket_path},mode=${socket_mode},perm-early=${socket_mode},reuseaddr,umask=${socat_umask},fork" "SOCKS5:${destination}:${destination_port},socksuser=${socks_user}:${socks_password} | EXEC:${qrexec_client_vm_exe}\ ${name} qubes.${qubes_rpc_name}+${client_secret}" )
+
+	fi
+
+
+	# In case tmpfiles is not installed/enabled
+	#
+	[ "${tcp}" -eq 0 ] && checkpath -d --mode '0300' -o "${command_user}" "${socket_dir}"
+	[ "${tcp}" -eq 1 ] && checkpath -d --mode '7700' -o "${command_user}" "${socket_dir}"
+
+
+	for env in ${late}
+	do
+		unset "${env}"
+	done
+
+
+	einfo "args are ${command_args[@]}"
+
+	if [ "${tcp:-0}" = 0 ]
+	then
+
+		start-stop-daemon --start --env _= --env EINFO_LOG= --env EINFO_LASTCMD= --env EINFO_VERBOSE= --env PATH= --env SVCNAME= --env TERM= --exec "${command}" --user "${command_user}" --group "${command_group}" --umask "${command_umask}" --make-pidfile --pidfile "${pidfile}" --background -- "${command_args[@]}"
+
+	else
+
+		libdir="${libdir:-/usr/lib64}"
+		mtu="${mtu:-1500}"
+		# 10=10, 20=100, 2-9,11-19=?
+		socket_wrapper_iface="${socket_wrapper_iface:-10}"
+		socket_wrapper_so="${socket_wrapper_so:-libsocket_wrapper.so}"
+		socket_wrapper_path="${libdir}/${socket_wrapper_so}"
+
+		start-stop-daemon --start --env _= --env EINFO_LASTCMD= --env EINFO_LOG= --env EINFO_VERBOSE= --env PATH= --env SVCNAME= --env TERM= --env LD_PRELOAD="${socket_wrapper_path}" --env SOCKET_WRAPPER_DEFAULT_IFACE="${socket_wrapper_iface}" --env SOCKET_WRAPPER_DIR="${socket_dir}" --env SOCKET_WRAPPER_MTU="${mtu}" --exec "${command}" --user "${command_user}" --group "${command_group}" --umask "${command_umask}" --make-pidfile --pidfile "${pidfile}" --background -- "${command_args[@]}"
+
+	fi
+
+
+	sleep 1
+
+	chgrp_exe="${chgrp_exe:-$(command -v chgrp 2>/dev/null)}"
+	client_users="${client_users:-user}"
+	setfacl_exe="${setfacl_exe:-$(command -v setfacl 2>/dev/null)}"
+
+	for username in ${client_users}
+	do
+
+	  # OpenRC tmpfiles does not support ACLs yet.
+
+	  if [ "${tcp}" -eq 0 ]
+	  then
+
+		  "${setfacl_exe}" -m "u:${username}:x" -- "${socket_dir}" || ewarn "Unable to setfacl socket directory ${socket_dir}."
+		  "${setfacl_exe}" -m "u:${username}:rw" -- "${socket_path}" || ewarn "Unable to setfacl socket ${socket_path}."
+	  else
+
+		  "${chgrp_exe}" "${client_users}" -- "${socket_dir}" || ewarn "Unable to chgrp socket directory ${socket_dir}."
+		  "${setfacl_exe}" -m "u:${username}:rwx" -- "${socket_dir}" || ewarn "Unable to setfacl socket directory ${socket_dir}."
+		  "${setfacl_exe}" -m "u:${username}:rw" -- "${socket_path}"* || ewarn "Unable to setfacl socket ${socket_path}."
+
+	  fi
+
+	done
+
+
+	unset late
+}
+
+
+stop() {
+
+	readonly shutdown_word="${shutdown_word:--}"
+
+	start-stop-daemon --stop --pidfile "${pidfile}"
+
+	"${qrexec_client_vm_exe}" "${name}" "qubes.${qubes_rpc_name}+${client_secret}${shutdown_word}"
+}

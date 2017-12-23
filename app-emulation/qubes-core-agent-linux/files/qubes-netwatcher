@@ -1,9 +1,9 @@
 #!/sbin/openrc-run
-# $Id$
 
 
 command='/usr/sbin/qubes-netwatcher'
 command_background='true'
+command_umask='0177'
 pidfile='/run/qubes/qubes-netwatcher.pid'
 rc_cgroup_cleanup='yes'
 required_files='/run/qubes-service/qubes-netwatcher'

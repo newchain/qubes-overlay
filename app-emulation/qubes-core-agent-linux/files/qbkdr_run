@@ -1,6 +1,5 @@
 #!/bin/sh
-# $Id$
 
-set -eu
+set -o errexit -o nounset
 
 exec "${1}"

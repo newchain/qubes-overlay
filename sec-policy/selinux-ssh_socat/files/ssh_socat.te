@@ -1,0 +1,30 @@
+policy_module(ssh_socat, 1)
+
+
+gen_require(`
+
+	type etc_t;
+	type locale_t;
+')
+
+########################################
+#
+# Declarations
+#
+
+attribute ssh_socat_proxycommand_domain;
+
+socat_qrexec_domain_base_template(ssh)
+
+########################################
+#
+# ssh_socat_proxycommand_domain policy
+#
+
+dontaudit ssh_socat_proxycommand_domain self : unix_dgram_socket create;
+	
+# nsswitch
+dontaudit ssh_socat_proxycommand_domain etc_t : file read;
+dontaudit ssh_socat_proxycommand_domain locale_t : file read;
+
+ssh_socat_rw_ssh_socat_socket_var_run_sock_files(ssh_socat_proxycommand_domain)

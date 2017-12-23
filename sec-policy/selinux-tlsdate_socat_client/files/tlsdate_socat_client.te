@@ -1,0 +1,46 @@
+policy_module(tlsdate_socat_client, 1)
+
+
+optional_policy(`
+
+	# Making this optional simply allows socket_wrapper and tlsdate modules
+	# to be removed, altered, and reinstalled.
+
+	gen_require(`
+
+		type initrc_t;
+		type socket_wrapper_lib_t;
+		type tlsdated_t;
+		type tlsdate-helper_t;
+		type tlsdate-helper_socat_socket_var_run_t;
+	')
+
+	########################################
+	#
+	# Declarations
+	#
+
+	type tlsdate-helper_socket_var_run_t;
+	files_type(tlsdate-helper_socket_var_run_t)
+
+	########################################
+	#
+	# tlsdated_t policy
+	#
+
+	socket_wrapper_preload_socket_wrapper_lib_files(tlsdated_t, initrc_t)
+
+	########################################
+	#
+	# tlsdate-helper_t policy
+	#
+
+	socket_wrapper_preload_socket_wrapper_lib_files(tlsdate-helper_t, tlsdated_t)
+
+	tlsdate_socat_rw_tlsdate_socat_socket_var_run_sock_files(tlsdate-helper_t)
+
+	tlsdate_socat_filetrans_tlsdate_socat_socket_var_run_sock_files(tlsdate-helper_t, tlsdate-helper_socket_var_run_t)
+	allow tlsdate-helper_t tlsdate-helper_socket_var_run_t : sock_file { read write };
+	create_sock_files_pattern(tlsdate-helper_t, tlsdate-helper_socat_socket_var_run_t, tlsdate-helper_socket_var_run_t)
+	delete_sock_files_pattern(tlsdate-helper_t, tlsdate-helper_socat_socket_var_run_t, tlsdate-helper_socket_var_run_t)
+')

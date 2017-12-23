@@ -11,9 +11,14 @@ gen_require(`
 	role user_r;
 
 	type configfs_t;
+	type default_context_t;
 	type initrc_t;
+	type initrc_var_run_t;
+	type iptables_t;
+	type iptables_exec_t;
 	type iptables_initrc_exec_t;
 	type kernel_t;
+	type selinux_config_t;
 	type shell_exec_t;
 	type su_exec_t;
 	type sysadm_t;
@@ -392,14 +397,12 @@ application_domain(qubes-trigger-sync-appmenus_t, qubes-trigger-sync-appmenus_ex
 type qubes-trigger-sync-appmenus_etc_t;
 files_config_file(qubes-trigger-sync-appmenus_etc_t)
 
-# Breakout target =(
-#
 type qubes_u2mfn_t, proc_type;
 files_type(qubes_u2mfn_t)
 #
 # Must be added to base policy :(
 #
-#genfscon proc /u2mfn gen_context(system_u:object_r:qubes_u2mfn_t,qubes_userspace_highlimit)
+#genfscon proc /u2mfn gen_context(system_u:object_r:qubes_u2mfn_t,qubes_userspace_range)
 
 type qubes_var_lib_t;
 files_type(qubes_var_lib_t)
@@ -441,6 +444,26 @@ domain_type(tar2qfile_t)
 type tar2qfile_exec_t;
 domain_entry_file(tar2qfile_t, tar2qfile_exec_t)
 role system_r types tar2qfile_t;
+
+type qubes_functions_t;
+files_type(qubes_functions_t)
+
+
+ifdef(`enable_mls',`
+
+# typeattribute cannot be applied to attributes
+	mls_file_write_to_clearance(qrexec-agent_initrc_t)
+	mls_file_write_to_clearance(qubes-core_initrc_t)
+	mls_file_write_to_clearance(qubes-firewall_initrc_t)
+	mls_file_write_to_clearance(qubes-iptables_initrc_t)
+	mls_file_write_to_clearance(qubes-net_initrc_t)
+	mls_file_write_to_clearance(qubes-netwatcher_initrc_t)
+	mls_file_write_to_clearance(qubes-network_initrc_t)
+	mls_file_write_to_clearance(qubes-random-seed_initrc_t)
+	mls_file_write_to_clearance(qubes-service_initrc_t)
+	mls_file_write_to_clearance(qubes-service_initrc_t)
+	mls_file_write_to_clearance(qubesdb_initrc_t)
+')
 
 
 #########################################
@@ -573,6 +596,7 @@ allow qrexec-agent_t qrexec-agent_log_t : file { append ioctl };
 
 
 allow qrexec-agent_t xenfs_t : file { getattr read write open ioctl };
+allow qrexec-agent_t device_t : chr_file { getattr read write open ioctl };
 #allowxperm qrexec-agent_t xenfs_t : file ioctl 0x5000;
 #neverallowxperm qrexec-agent_t xenfs_t : file ioctl ~0x5000;
 
@@ -603,8 +627,6 @@ allow qrexec-agent_initrc_t qrexec-agent_log_t : file { append open };
 
 qubes_core_create_qubes_var_run_files(qrexec-agent_initrc_t)
 qubes_core_write_qubes_var_run_files(qrexec-agent_initrc_t)
-
-#userdom_dontaudit_search_user_home_dirs(qrexec-agent_initrc_t)
 
 
 neverallow ~init_run_all_scripts_domain qrexec-agent_initrc_t : process transition;
@@ -760,6 +782,8 @@ auditallow qrexec-client-vm_domain xen_device_t : chr_file ioctl;
 #
 allow qrexec-client-vm_domain xenfs_t : file { read write open ioctl };
 auditallow qrexec-client-vm_domain xenfs_t : file ioctl;
+allow qrexec-client-vm_domain device_t : chr_file { read write open ioctl };
+auditallow qrexec-client-vm_domain device_t : chr_file ioctl;
 
 
 #########################################
@@ -858,9 +882,8 @@ allow qubes-core_initrc_t var_log_t : dir { getattr create };
 
 # Dependency: need qubesdb-daemon
 #
-init_getattr_script_files(qubes-core_initrc_t)
+qubes_core_depend_qubesdb(qubes-core_initrc_t)
 init_dontaudit_read_all_script_files(qubes-core_initrc_t)
-allow qubes-core_initrc_t qubesdb_initrc_exec_t : file getattr;
 
 
 neverallow ~init_run_all_scripts_domain qubes-core_initrc_t : process transition;
@@ -905,6 +928,8 @@ corecmd_exec_shell(qubes_init_domain)
 
 files_read_etc_files(qubes_init_domain)
 files_read_etc_runtime_files(qubes_init_domain)
+search_dirs_pattern(qubes_init_domain, selinux_config_t, default_context_t)
+allow qubes_init_domain default_context_t : file { read open };
 
 fs_manage_cgroup_dirs(qubes_init_domain)
 fs_manage_cgroup_files(qubes_init_domain)
@@ -921,14 +946,24 @@ init_use_script_ptys(qubes_init_domain)
 
 logging_send_syslog_msg(qubes_init_domain)
 
+
 qubes_core_bluepill_locale(qubes_init_domain)
 
+userdom_dontaudit_search_user_home_dirs(qubes_init_domain)
 
-allow qubes_init_domain initrc_state_t : dir { create_dir_perms list_dir_perms delete_dir_perms };
+
+# Testing:
+# initrc_var_run_t seems to have replaced initrc_state_t?
+
+allow qubes_init_domain { initrc_state_t initrc_var_run_t } : dir { create_dir_perms list_dir_perms delete_dir_perms };
 create_files_pattern(qubes_init_domain, initrc_state_t, initrc_state_t)
-allow qubes_init_domain initrc_state_t : file write_file_perms;
+create_files_pattern(qubes_init_domain, initrc_var_run_t, initrc_var_run_t)
+allow qubes_init_domain { initrc_state_t initrc_var_run_t } : file write_file_perms;
 delete_files_pattern(qubes_init_domain, initrc_state_t, initrc_state_t)
-allow qubes_init_domain initrc_state_t : lnk_file { create_lnk_file_perms read_lnk_file_perms delete_lnk_file_perms };
+delete_files_pattern(qubes_init_domain, initrc_var_run_t, initrc_var_run_t)
+allow qubes_init_domain { initrc_state_t initrc_var_run_t } : lnk_file { create_lnk_file_perms read_lnk_file_perms delete_lnk_file_perms };
+# deptree, depconfig, softlevel
+allow qubes_init_domain initrc_var_run_t : file read;
 
 
 #########################################
@@ -969,9 +1004,7 @@ allow qubes-firewall_initrc_t qubes-netwatcher_t : process sigchld;
 
 # dependency : need qubes-service
 #
-init_getattr_script_files(qubes-firewall_initrc_t)
-allow qubes-firewall_initrc_t qubesdb_initrc_exec_t : file getattr;
-allow qubes-firewall_initrc_t qubes-service_initrc_exec_t : file getattr;
+qubes_core_depend_qubes_service(qubes-firewall_initrc_t)
 #
 # dependency: need qubes-network
 #
@@ -998,7 +1031,9 @@ corecmd_bin_domtrans(qubes-firewall_t, qubes-firewall_worker_t)
 neverallow ~qubes-firewall_t qubes-firewall_worker_t : process transition;
 neverallow qubes-firewall_t bin_t : file execute_no_trans;
 
-iptables_domtrans(qubes-firewall_t)
+# Currently broken interface
+#iptables_domtrans(qubes-firewall_t)
+domtrans_pattern(qubes-firewall_t, iptables_exec_t, iptables_t)
 
 kernel_search_network_sysctl(qubes-firewall_t)
 allow qubes-firewall_t sysctl_net_t : file { write open };
@@ -1039,11 +1074,13 @@ allow qubes-firewall_worker_t qubes-firewall_t : fifo_file { read write };
 
 
 ########################################
-#
+# 
 # qubes-iptables_initrc_t local policy
 #
 
-iptables_domtrans(qubes-iptables_initrc_t)
+# Currently broken interface
+#iptables_domtrans(qubes-iptables_initrc_t)
+domtrans_pattern(qubes-iptables_initrc_t, iptables_exec_t, iptables_t)
 sysnet_domtrans_ifconfig(qubes-iptables_initrc_t)
 
 init_read_script_files(qubes-iptables_initrc_t)
@@ -1056,8 +1093,6 @@ kernel_dontaudit_read_system_state(qubes-iptables_initrc_t)
 qubes_core_qubesdb_cmd_domtrans(qubes-iptables_initrc_t)
 
 qubes_core_read_inherited_qubes_service_var_run(qubes-iptables_initrc_t)
-
-userdom_dontaudit_search_user_home_dirs(qubes-iptables_initrc_t)
 
 
 neverallow ~{ init_run_all_scripts_domain qubes-netwatcher_t } qubes-iptables_initrc_t : process transition;
@@ -1078,9 +1113,7 @@ allow qubes-iptables_initrc_t qubes-net_initrc_exec_t : file { read getattr exec
 
 # Dependency : need qubes-service
 #
-init_getattr_script_files(qubes-iptables_initrc_t)
-allow qubes-iptables_initrc_t qubesdb_initrc_exec_t : file getattr;
-allow qubes-iptables_initrc_t qubes-service_initrc_exec_t : file getattr;
+qubes_core_depend_qubes_service(qubes-iptables_initrc_t)
 
 
 #########################################
@@ -1102,8 +1135,6 @@ qubes_core_setup_ip_domtrans(qubes-net_initrc_t)
 #
 sysnet_domtrans_ifconfig(qubes-net_initrc_t)
 
-#userdom_dontaudit_search_user_home_dirs(qubes-net_initrc_t)
-
 
 neverallow ~init_run_all_scripts_domain qubes-net_initrc_t : process transition;
 
@@ -1115,8 +1146,7 @@ neverallow qubes-net_initrc_t ~qubes-net_initrc_exec_t : file entrypoint;
 init_read_script_files(qubes-net_initrc_t)
 init_dontaudit_read_all_script_files(qubes-net_initrc_t)
 allow qubes-net_initrc_t qubesdb_initrc_exec_t : file { getattr execute };
-allow qubes-net_initrc_t iptables_initrc_exec_t : file { getattr execute };
-allow qubes-net_initrc_t qubes-iptables_initrc_exec_t : file { getattr execute };
+allow qubes-net_initrc_t iptables_initrc_exec_t : file execute;
 
 
 #########################################
@@ -1148,9 +1178,7 @@ qubes_core_read_inherited_qubes_service_var_run(qubes-netwatcher_initrc_t)
 
 # dependency : need qubes-service
 #
-init_getattr_script_files(qubes-netwatcher_initrc_t)
-allow qubes-netwatcher_initrc_t qubesdb_initrc_exec_t : file getattr;
-allow qubes-netwatcher_initrc_t qubes-service_initrc_exec_t : file getattr;
+qubes_core_depend_qubes_service(qubes-netwatcher_initrc_t)
 
 # dependency: after qubes-firewall
 #
@@ -1244,13 +1272,12 @@ qubes_core_read_inherited_qubes_service_var_run(qubes-network_initrc_t)
 
 # dependency : need qubes-service
 #
-init_getattr_script_files(qubes-network_initrc_t)
-allow qubes-network_initrc_t qubesdb_initrc_exec_t : file getattr;
-allow qubes-network_initrc_t qubes-service_initrc_exec_t : file getattr;
+qubes_core_depend_qubes_service(qubes-network_initrc_t)
 #
-# dependency: need iptables
+# dependency: need qubes-iptables
 #
 allow qubes-network_initrc_t qubes-iptables_initrc_exec_t : file getattr;
+allow qubes-network_initrc_t qubes-iptables_etc_t : file getattr;
 
 
 #########################################
@@ -1262,7 +1289,7 @@ dev_write_urand(qubes-random-seed_initrc_t)
 
 # openrc <- meminfo, mkdir <- filesystems
 #
-kernel_dontaudit_read_system_state(qubes-net_initrc_t)
+kernel_dontaudit_read_system_state(qubes-random-seed_initrc_t)
 
 qubes_core_qubesdb_cmd_domtrans(qubes-random-seed_initrc_t)
 
@@ -1295,7 +1322,7 @@ qubes_core_sigchld_qrexec_agent_su(qubes-rpc-multiplexer_t)
 
 qubes_core_search_qubes_rpc_etc(qubes-rpc-multiplexer_t)
 
-allow qubes-rpc-multiplexer_t qubes_rpc_stderror_t : fifo_file { write open getattr };
+allow qubes-rpc-multiplexer_t qubes_rpc_stderror_t : fifo_file { write read open getattr };
 
 allow qubes-rpc-multiplexer_t shell_exec_t : file read;
 
@@ -1419,7 +1446,7 @@ neverallow qubes-service_t ~qubes-service_exec_t : file entrypoint;
 #
 allow qubes-service_t qubes-service_initrc_t : fd use;
 allow qubes-service_t qubes-service_initrc_t : process sigchld;
-allow qubes-service_t shell_exec_t : file read;
+allow qubes-service_t shell_exec_t : file { read execute };
 
 
 #########################################
@@ -1441,8 +1468,6 @@ qubes_core_bluepill_locale(qubes-service_initrc_t)
 
 qubes_core_search_qubes_rpc_worker_exec(qubes-service_initrc_t)
 
-userdom_dontaudit_search_user_home_dirs(qubes-service_initrc_t)
-
 
 neverallow qubes-service_initrc_t ~qubes-service_initrc_exec_t : file entrypoint;
 
@@ -1451,9 +1476,9 @@ neverallow ~init_run_all_scripts_domain qubes-service_initrc_t : process transit
 
 # dependency: need qubesdb-daemon
 #
+qubes_core_depend_qubesdb(qubes-service_initrc_t)
 init_read_script_files(qubes-service_initrc_t)
 init_dontaudit_read_all_script_files(qubes-service_initrc_t)
-allow qubes-service_initrc_t qubesdb_initrc_exec_t : file getattr;
 
 
 #########################################
@@ -1477,7 +1502,7 @@ allow qubes-service_worker_t qubes-service_t : fifo_file { read write getattr io
 #neverallowxperm qubes-service_worker_t qubes-service_t : fifo_file ioctl ~0x5401;
 
 # null
-#
+# 
 allow qubes-service_worker_t qubes-service_initrc_t : fd use;
 
 # { touch rm }
@@ -1496,7 +1521,9 @@ corecmd_bin_domtrans(qubes-setup-dnat-to-ns_t, qubes-setup-dnat-to-ns_worker_t)
 neverallow ~qubes-setup-dnat-to-ns_t qubes-setup-dnat-to-ns_worker_t : process transition;
 neverallow qubes-setup-dnat-to-ns_t bin_t : file execute_no_trans;
 
-iptables_domtrans(qubes-setup-dnat-to-ns_t)
+# Currently broken interface
+#iptables_domtrans(qubes-setup-dnat-to-ns_t)
+domtrans_pattern(qubes-setup-dnat-to-ns_t, iptables_exec_t, iptables_t)
 
 qubes_core_bluepill_locale(qubes-setup-dnat-to-ns_t)
 
@@ -1570,7 +1597,7 @@ filetrans_pattern(qubesdb_t, qubes_var_run_t, qubesdb_var_run_t, sock_file)
 allow qubesdb_t qubesdb_var_run_t : sock_file { create_sock_file_perms delete_sock_file_perms };
 
 qubes_core_search_qubes_log(qubesdb_t)
-allow qubesdb_t qubesdb_log_t: file { write open ioctl };
+allow qubesdb_t qubesdb_log_t: file { write append open ioctl };
 #allowxperm qubesdb_t qubesdb_log_t: : file ioctl 0x5401;
 #neverallowxperm qubesdb_t qubesdb_log_t: : file ioctl ~0x5401;
 
@@ -1600,6 +1627,7 @@ fs_search_xenfs(qubesdb_t)
 # /proc/xen/privcmd:
 #
 allow qubesdb_t xenfs_t : file { read open write ioctl };
+allow qubesdb_t device_t : chr_file { read open write ioctl };
 #allowxperm qubesdb_t xenfs_t : file ioctl 0x5000;
 #neverallowxperm qubesdb_t xenfs_t : file ioctl ~0x5000;
 
@@ -1640,9 +1668,14 @@ neverallow qubesdb-cmd_t ~qubesdb-cmd_exec_t : file entrypoint;
 ifdef(`enable_mls',`
 
 	range_transition qubesdb_initrc_t qubesdb_exec_t : process mls_systemlow - qubes_qubesdb_level;
+
+#	mls_process_set_level(qubesdb_initrc_t)
+#	mls_rangetrans_source(qubesdb_initrc_t)
+#	mls_rangetrans_target(qubesdb_t)
 ')
 neverallow ~qubesdb_initrc_t qubesdb_t : process transition;
 neverallow qubesdb_initrc_t qubesdb_exec_t : file execute_no_trans;
+
 
 init_read_script_files(qubesdb_initrc_t)
 init_dontaudit_read_all_script_files(qubesdb_initrc_t)
@@ -1650,6 +1683,7 @@ init_dontaudit_read_all_script_files(qubesdb_initrc_t)
 # ( cmdline | filesystems | meminfo )
 #
 kernel_dontaudit_read_system_state(qubesdb_initrc_t)
+init_dontaudit_read_state(qubesdb_initrc_t)
 
 qubes_core_qubesdb_domtrans(qubesdb_initrc_t)
 
@@ -1666,6 +1700,7 @@ allow qubesdb_initrc_t self : process setrlimit;
 #
 
 qubes_core_read_qubes_var_run_files(qubesdb_initrc_t)
+# startp-stop-daemon deamonizes and checks the process name before signalling.
 kernel_list_proc(qubesdb_initrc_t)
 allow qubesdb_initrc_t qubesdb_t : process { signal signull };
 
@@ -1673,7 +1708,7 @@ allow qubesdb_initrc_t qubesdb_t : process { signal signull };
 #########################################
 #
 # qvm-copy-to-vm_t local policy
-#
+# 
 
 allow qvm-copy-to-vm_t self : fifo_file read;
 
@@ -1701,7 +1736,7 @@ userdom_use_user_ptys(qvm-copy-to-vm_t)
 
 allow qvm-copy-to-vm_t qrexec-client-vm_exec_t : lnk_file read;
 
-allow qvm-copy-to-vm_t shell_exec_t : file read;
+allow qvm-copy-to-vm_t shell_exec_t : file { read execute };
 
 
 #########################################
@@ -1726,10 +1761,7 @@ neverallow qubes-trigger-sync-appmenus_t qrexec-client-vm_exec_t : file execute_
 
 allow qubes-trigger-sync-appmenus_t self : fifo_file read;
 
-
-# testing
-#
-allow qubes-trigger-sync-appmenus_t shell_exec_t : file read;
+allow qubes-trigger-sync-appmenus_t shell_exec_t : file { read execute };
 
 
 #########################################
@@ -1756,7 +1788,7 @@ allow qubes-trigger-sync-appmenus_worker_t xenfs_t : file { getattr read write o
 #########################################
 #
 # qvm-copy-to-vm_worker_t local policy
-#
+# 
 
 neverallow qvm-copy-to-vm_worker_t ~bin_t : file entrypoint;
 
@@ -1804,6 +1836,10 @@ qubes_core_list_qubes_shared_home(qvm-copy-to-vm_worker_t)
 #
 # setup-ip_t local policy
 #
+
+qubes_core_read_qubes_functions(setup-ip_t)
+allow setup-ip_t qubes_functions_t : file execute;
+auditallow setup-ip_t qubes_functions_t : file execute;
 
 domain_auto_transition_pattern(setup-ip_t, qubes-setup-dnat-to-ns_exec_t, qubes-setup-dnat-to-ns_t)
 neverallow setup-ip_t qubes-setup-dnat-to-ns_exec_t : file execute_no_trans;
@@ -2291,7 +2327,7 @@ ifdef(`enable_mls',`
 
 	# xargs
 	#
-	corecmd_read_bin_symlinks(sync-appmenus_qrexec-client-vm_sh_worker_t)
+	corecmd_search_bin(sync-appmenus_qrexec-client-vm_sh_worker_t)
 	corecmd_bin_domtrans(sync-appmenus_qrexec-client-vm_sh_worker_t, sync-appmenus_qrexec-client-vm_sh_awk_t)
 
 
@@ -2366,6 +2402,12 @@ tunable_policy(`qubes_core_pass_io',`
 
 optional_policy(`
 
+	extra_perms_depend_extra_perms(qubes-service_initrc_t)
+')
+
+
+optional_policy(`
+
 	gen_require(`
 
 		type user_screen_t;
@@ -2395,7 +2437,34 @@ optional_policy(`
 
 #########################################
 #
+# Conditional policy
+#
+
+#ifdef(`use_net',`
+
+	# resolv.conf
+	#
+	allow setup-ip_t net_conf_t : file { write append };
+#')
+
+
+#########################################
+#
 # Temporary policy
 #
 
 userdom_search_user_home_dirs(qubes-rpc-multiplexer_sh_t)
+
+
+#########################################
+#
+# Dev
+#
+
+gen_require(`
+
+	type initrc_t;
+')
+
+
+qubes_core_read_inherited_qubes_service_var_run(initrc_t)

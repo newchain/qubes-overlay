@@ -1,0 +1,9 @@
+policy_module(pidgin_socat, 1)
+
+
+########################################
+#
+# Declarations
+#
+
+socat_qrexec_domain_faux_tcp_template(pidgin)

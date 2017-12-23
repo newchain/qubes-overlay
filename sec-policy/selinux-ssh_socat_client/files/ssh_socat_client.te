@@ -1,0 +1,80 @@
+policy_module(ssh_socat_client, 1)
+
+
+gen_require(`
+
+	role user_r;
+
+	type ssh_t;
+	type user_devpts_t;
+	type user_t;
+')
+
+# Syntax error even when reduced to a type declaration:
+#ssh_socat_client_domain_template(ssh_socat_proxycommand_t, ssh_t, user_devpts_t, user_t, user_r)
+
+
+########################################
+#
+# Declarations
+#
+
+type ssh_socat_proxycommand_t;
+
+role user_r types ssh_socat_proxycommand_t;
+
+
+########################################
+#
+# ssh_socat_proxycommand_t policy
+#
+
+# bin, ld, pipe
+allow ssh_socat_proxycommand_t ssh_t : fd use;
+allow ssh_socat_proxycommand_t ssh_t : fifo_file { read write };
+allow ssh_socat_proxycommand_t ssh_t : process sigchld;
+
+# terminal
+allow ssh_socat_proxycommand_t user_t : fd use;
+allow ssh_socat_proxycommand_t user_devpts_t : chr_file { read write };
+
+
+########################################
+#
+# ssh_t policy
+#
+
+allow ssh_t ssh_socat_proxycommand_t : process signal;
+
+
+########################################
+#
+# Optional policy
+#
+
+optional_policy(`
+
+	# Making this optional simply allows socat module to be
+	# removed, altered, and reinstalled.
+
+	gen_require(`
+
+		type socat_exec_t;
+	')
+
+	socat_socat_domain(ssh_socat_proxycommand_t)
+	socat_socat_domain_auto_transition_pattern(ssh_t, ssh_socat_proxycommand_t)
+')
+
+optional_policy(`
+
+	# Making this optional simply allows ssh_socat module to be
+	# removed, altered, and reinstalled.
+
+	gen_require(`
+
+		attribute ssh_socat_proxycommand_domain;
+	')
+
+	typeattribute ssh_socat_proxycommand_t ssh_socat_proxycommand_domain;
+')

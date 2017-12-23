@@ -1,0 +1,7 @@
+/etc/conf\.d/ssh_socat	--	gen_context(system_u:object_r:ssh_socat_initrc_etc_t,mls_systemlow)
+/etc/rc\.d/init\.d/ssh_socat	--	gen_context(system_u:object_r:ssh_socat_initrc_exec_t,mls_systemlow)
+
+/run/qrtunnels/ssh		-d	gen_context(system_u:object_r:ssh_socat_socket_var_run_t,mls_systemlow)
+/run/qrtunnels/ssh/.+		-s	gen_context(system_u:object_r:ssh_socat_socket_var_run_t,mls_systemlow)
+/var/run/qrtunnels/ssh		-d	gen_context(system_u:object_r:ssh_socat_socket_var_run_t,mls_systemlow)
+/var/run/qrtunnels/ssh/.+	-s	gen_context(system_u:object_r:ssh_socat_socket_var_run_t,mls_systemlow)

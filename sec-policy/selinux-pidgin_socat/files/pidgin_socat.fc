@@ -1,0 +1,8 @@
+/etc/conf\.d/pidgin_socat	--	gen_context(system_u:object_r:pidgin_socat_initrc_etc_t,mls_systemlow)
+/etc/rc\.d/init\.d/pidgin_socat	--	gen_context(system_u:object_r:pidgin_socat_initrc_exec_t,mls_systemlow)
+
+/run/qrtunnels/pidgin		-d	gen_context(system_u:object_r:pidgin_socat_socket_var_run_t,mls_systemlow)
+/run/qrtunnels/pidgin/.+	-s	gen_context(system_u:object_r:pidgin_socat_socket_var_run_t,mls_systemlow)
+/var/run/qrtunnels/pidgin	-d	gen_context(system_u:object_r:pidgin_socat_socket_var_run_t,mls_systemlow)
+/var/run/qrtunnels/pidgin/.+	-s	gen_context(system_u:object_r:pidgin_socat_socket_var_run_t,mls_systemlow)
+

@@ -1,23 +1,25 @@
-# Copyright 1999-2016 Gentoo Foundation
+# Copyright 1999-2017 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Id$
 
-EAPI=5
+EAPI=6
 
 EGIT_REPO_URI='https://github.com/QubesOS/qubes-core-agent-linux.git'
 
 PYTHON_COMPAT=( python2_7 )
 
-inherit eutils fcaps git-2 python-r1 qubes user
+inherit eutils fcaps git-r3 python-single-r1 qubes user
 
 DESCRIPTION='Qubes RPC agent and utilities for Linux VMs'
 HOMEPAGE='https://github.com/QubesOS/qubes-core-agent-linux'
 
 IUSE="-dbus glib net -networkmanager selinux svg template"
-KEYWORDS="~amd64"
+[ "${PV%%[_-]*}" != '9999' ] && [ "${PV%%.*}" != '4' ] && KEYWORDS="amd64 x86"
 LICENSE='GPL-2'
 
 qubes_slot
+
+tag_date='20150428'
+qubes_keys_depend
 
 CDEPEND="app-emulation/qubes-core-vchan-xen:${SLOT}
 	app-emulation/qubes-linux-utils:${SLOT}
@@ -25,23 +27,21 @@ CDEPEND="app-emulation/qubes-core-vchan-xen:${SLOT}
 
 DEPEND="${CDEPEND}
 	${DEPEND}
-	app-crypt/gnupg
-	>=app-emulation/qubes-secpack-20150603
 	dbus? ( dev-python/dbus-python )"
 
 # util-linux for logger
 #
 RDEPEND="${CDEPEND}
 	glib?	(
-		dev-python/pygobject
-		svg? (
-			dev-python/pycairo[svg]
-			dev-python/pygobject[cairo]
-		)
+	  dev-python/pygobject
+	  svg? (
+	    dev-python/pycairo[svg]
+	    dev-python/pygobject[cairo]
+	  )
 	)
 	net? (
-		sys-apps/ethtool
-		sys-apps/net-tools
+	  sys-apps/ethtool
+	  sys-apps/net-tools
 	)
 	networkmanager? ( net-misc/networkmanager )
 	selinux? ( sec-policy/selinux-qubes-core[net?] )
@@ -51,21 +51,23 @@ RDEPEND="${CDEPEND}
 REQUIRED_USE="
 	svg? ( glib )
 	template? (
-			svg
-			net
-		)"
+	  svg
+	  net
+	 )"
 
 
-src_prepare() {
+src_unpack() {
 
 	readonly version_prefix='v'
 	qubes_prepare
+}
+
+src_prepare() {
+
+	eapply_user
 
 
-	epatch_user
-
-
-	$(use dbus) || epatch "${FILESDIR}/${PN}-3.0.14_exorcise-dbus.patch"
+	use dbus || epatch "${FILESDIR}/${PN}-3.0.14_exorcise-dbus.patch"
 
 
 	sed -i '/^PYTHON3_SITELIB/d' -- 'Makefile'
@@ -77,10 +79,11 @@ src_prepare() {
 
 	sed -i '1s/^/BACKEND_VMM ?= xen\n/' -- 'qrexec/Makefile'
 
-	for i in misc qrexec qubes-rpc; do {
+	for i in misc qrexec qubes-rpc
+	do
 
-		sed -i 's/\ -Werror//g' -- "${i}/Makefile"
-	};
+	  sed -i 's/\ -Werror//g' -- "${i}/Makefile"
+
 	done
 
 	sed -i 's/^python:\ python2\ python3/python: python2/g' -- 'misc/Makefile'
@@ -90,26 +93,30 @@ src_prepare() {
 
 	# network-proxy-setup.sh
 	#
+
 	sed -i 's|/sbin/ethtool|/usr/sbin/ethtool|g' -- 'vm-systemd/network-proxy-setup.sh'
-	sed -i 's/^\(\s*\)\(gateway=\|netmask=\|network=\|secondary_dns=\)\([^"]*\)$/\1readonly \2"\3"/' -- 'vm-systemd/network-proxy-setup.sh'
 
 
 	# qubes-firewall
 	#
-	sed -i '/^#\ PID/,/TERM/d' -- 'network/qubes-firewall'
+
+	mv -- 'network/qubes-firewall' 'qubes-firewall.old'
+	cat -- 'qubes-firewall.old' | tr '\n' '\v' | sed -e 's/#\ PID.*TERM//' | tr '\v' '\n' > 'network/qubes-firewall'
+
 	sed -i '/^PIDFILE/d' -- 'network/qubes-firewall'
-	sed -i 's/=\$(\([^"]*)\)/="$(\1"/' -- 'network/qubes-firewall'
-	sed -i 's/^\(XENSTORE_ERROR=\|XENSTORE_IPTABLES=\|XENSTORE_IPTABLES_HEADER=\)\([^"]*\)$/readonly \1"\2"/' -- 'network/qubes-firewall'
 	sed -i 's/qubesdb-write $XENSTORE_ERROR/qubesdb-write "$XENSTORE_ERROR"/' -- 'network/qubes-firewall'
 
 
 	# qubes-netwatcher
 	#
-	sed -i '/^#\ PID/,/TERM/d' -- 'network/qubes-netwatcher'
+	mv -- 'network/qubes-netwatcher' 'qubes-netwatcher.old'
+	cat -- 'qubes-netwatcher.old' | tr '\n' '\v' | sed -e 's/#\ PID.*TERM//' | tr '\v' '\n' > 'network/qubes-netwatcher'
+	rm -- 'qubes-netwatcher.old'
+
 	sed -i '/^PIDFILE/d' -- 'network/qubes-netwatcher'
-	sed -i 's/=\$(\([^"]*)\)/="$(\1"/' -- 'network/qubes-netwatcher'
+
 	sed -i 's|/sbin/service qubes-firewall|/etc/init.d/qubes-firewall -D|' -- 'network/qubes-netwatcher'
-	sed -i 's|\( -D start$\)|\1\;\n\t\t\t/etc/init.d/qubes-iptables -D proxy_flush;|' -- 'network/qubes-netwatcher'
+	sed -i 's|\( -D start$\)|\1\;\n\t\t\t/etc/init.d/qubes-iptables -D stop;\n\t\t\t/etc/init.d/qubes-iptables -D start;|' -- 'network/qubes-netwatcher'
 
 
 	# qubes-setup-dnat-to-ns
@@ -119,6 +126,7 @@ src_prepare() {
 
 	# qubes-sysinit.sh
 	#
+
 	mv -- 'vm-systemd/qubes-sysinit.sh' 'qubes-sysinit.sh.old'
 	cat -- 'qubes-sysinit.sh.old'  | tr '\n' '\v' | sed -e 's|\vsystemd.*u2mfn\v||;s|\v# Set\ the\ hostname.*\vexit 0\v|\vexit 0\v|' | tr '\v' '\n' > 'vm-systemd/qubes-sysinit.sh'
 	rm -- 'qubes-sysinit.sh.old'
@@ -126,38 +134,22 @@ src_prepare() {
 	sed -i '/^PROTECTED_/d' -- 'vm-systemd/qubes-sysinit.sh'
 	sed -i '/^# Location /d' -- 'vm-systemd/qubes-sysinit.sh'
 
-	sed -i 's/^\(DEFAULT_ENABLED_APPVM\|DEFAULT_ENABLED_NETVM\|DEFAULT_ENABLED_PROXYVM\|DEFAULT_ENABLED_TEMPLATEVM\|TYPE\)=/readonly \1=/' -- 'vm-systemd/qubes-sysinit.sh'
-	sed -i 's/^\(QDB_LS\|QDB_READ\)=\([^"]*\)$/readonly \1="\2"/' -- 'vm-systemd/qubes-sysinit.sh'
-	sed -i 's/ DEFAULT_ENABLED=\$\([^$]*\)/ readonly DEFAULT_ENABLED="$\1"/' -- 'vm-systemd/qubes-sysinit.sh'
-	sed -i 's/=`\([^"]*\)`/="$(\1)"/' -- 'vm-systemd/qubes-sysinit.sh'
-	sed -i 's/\(\s\)\$QDB_READ/\1"$QDB_READ"/g' -- 'vm-systemd/qubes-sysinit.sh'
-	sed -i 's/`\$QDB_LS /`"$QDB_LS" /' -- 'vm-systemd/qubes-sysinit.sh'
-	sed -i 's| /var/run/qubes-service/\$srv| "/var/run/qubes-service/$srv"|' -- 'vm-systemd/qubes-sysinit.sh'
-	sed -i 's/\(\srm -f\|\stouch\) "/\1 -- "/g' -- 'vm-systemd/qubes-sysinit.sh'
-
 
 	# setup-ip
 	#
 
-	if ! $(use net) || $(use selinux); then {
+	if ! use net || use selinux
+	then
 
-		mv -- 'network/setup-ip' 'setup-ip.old'
-		cat 'setup-ip.old' | tr '\n' '\v' | sed -e 's|if \[ -f /var/run/qubes-service/network-manager.*chmod 600 \$nm_config\s*fi||' | tr '\v' '\n' > 'network/setup-ip'
-		rm -- 'setup-ip.old'
-	};
+	  mv -- 'network/setup-ip' 'setup-ip.old'
+	  cat -- 'setup-ip.old' | tr '\n' '\v' | sed -e 's|if \[ -f /var/run/qubes-service/network-manager.*chmod 600 \$nm_config\s*fi||' | tr '\v' '\n' > 'network/setup-ip'
+	  rm -- 'setup-ip.old'
+
 	fi
 
 	sed -i 's|/sbin/ethtool|/usr/sbin/ethtool|g' -- 'network/setup-ip'
 	sed -i 's|/sbin/ifconfig|/bin/ifconfig|g' -- 'network/setup-ip'
 	sed -i 's|/sbin/route|/bin/route|g' -- 'network/setup-ip'
-
-	sed -i 's/=\$(\([^"]*)\)/="$(\1"/' -- 'network/setup-ip'
-	sed -i 's/=`\([^"]*\)`/="$(\1)"/' -- 'network/setup-ip'
-	sed -i 's/ \$ip / "$ip" /' -- 'network/setup-ip'
-	sed -i 's|\(/bin/.* \)\$INTERFACE|\1"$INTERFACE"|' -- 'network/setup-ip'
-	sed -i 's|\(/bin/.* \)\$gateway|\1"$gateway"|' -- 'network/setup-ip'
-	sed -i 's/^\(PROTECTED_FILE_LIST=\|disabledns=\|disablegw=\|ip=\)/readonly \1/' -- 'network/setup-ip'
-	sed -i 's/echo "\(NS[12]=\$[a-z_]*\)"/echo "readonly \1"/' -- 'network/setup-ip'
 
 }
 
@@ -176,7 +168,7 @@ src_compile() {
 
 src_install() {
 
-	if $(use template); then {
+	if use template; then {
 
 	# rw is a mountpoint for a persistent partition. That partition
 	# is what is preserved after shutdown for non-template VMs.
@@ -190,24 +182,24 @@ src_install() {
 
 	# grsec MAC magic (h object mode) makes appVMs swallow this blue pill.
 
-		diropts '-m0700'
-		dodir 'home'
-		dodir 'home.orig'
+	  diropts '-m0700'
+	  dodir 'home'
+	  dodir 'home.orig'
 
-		diropts '-m0710'
-		dodir 'home.orig/user'
-		diropts '-m0700'
-		dodir 'home.orig/user/Desktop'
-		dodir 'home.orig/user/Downloads'
-		diropts '-m1770'
-		dodir 'home.orig/user/QubesIncoming'
-		fowners user:qubes '/home.orig/user' '/home.orig/user/QubesIncoming'
+	  diropts '-m0710'
+	  dodir 'home.orig/user'
+	  diropts '-m0700'
+	  dodir 'home.orig/user/Desktop'
+	  dodir 'home.orig/user/Downloads'
+	  diropts '-m1770'
+	  dodir 'home.orig/user/QubesIncoming'
+	  fowners user:qubes '/home.orig/user' '/home.orig/user/QubesIncoming'
 
 	}; else {
 
-		diropts '-m1770'
-		dodir 'home/user/QubesIncoming'
-		fowners user:qubes '/home/user' '/home/user/QubesIncoming'
+	  diropts '-m1770'
+	  dodir 'home/user/QubesIncoming'
+	  fowners user:qubes '/home/user' '/home/user/QubesIncoming'
 	};
 	fi
 
@@ -224,6 +216,7 @@ src_install() {
 	doinitd "${FILESDIR}/selinux"
 
 	fperms 0700 '/etc/init.d/'{net.qubes,qubes-core,qubes-firewall,qubes-iptables,qubes-netwatcher,qubes-network,qubes-random-seed,qubes-qrexec-agent,qubes-service,selinux}
+#	fperms 0700 'etc/conf.d/'*
 
 	dosym '/etc/init.d/net.qubes' 'etc/init.d/net.eth0'
 
@@ -253,35 +246,37 @@ src_install() {
 
 
 	exeinto '/usr/bin'
-	$(use selinux) && doexe "${FILESDIR}/qbkdr_run"
+	use selinux && doexe "${FILESDIR}/qbkdr_run"
 
 	insopts '-m0600'
 	insinto '/usr/lib/tmpfiles.d'
 	doins "${FILESDIR}/qubes.conf"
-	$(use template) && doins "${FILESDIR}/qubes-template.conf"
+	use template && doins "${FILESDIR}/qubes-template.conf"
 
 	docinto '/usr/share/doc/qubes'
 	dodoc 'misc/fstab'
 
 	exeopts '-m0700'
 	exeinto '/usr/lib/qubes/init'
-	doexe 'vm-systemd/'*'.sh'
+	doexe 'vm-systemd/'*.sh
+#	doexe "${FILESDIR}/qubes-sysinit.sh"
 }
 
 pkg_preinst() {
 
-	if $(use template); then {
+	if use template
+	then
 
-		qubes_to_runlevel 'net.eth0'
-		qubes_to_runlevel 'qubes-core'
-		qubes_to_runlevel 'qubes-firewall'
-		qubes_to_runlevel 'qubes-iptables'
-		qubes_to_runlevel 'qubes-netwatcher'
-		qubes_to_runlevel 'qubes-network'
-		qubes_to_runlevel 'qubes-random-seed'
-		qubes_to_runlevel 'qubes-qrexec-agent'
-		qubes_to_runlevel 'selinux'
-	};
+	  qubes_to_runlevel 'net.eth0'
+	  qubes_to_runlevel 'qubes-core'
+	  qubes_to_runlevel 'qubes-firewall'
+	  qubes_to_runlevel 'qubes-iptables'
+	  qubes_to_runlevel 'qubes-netwatcher'
+	  qubes_to_runlevel 'qubes-network'
+	  qubes_to_runlevel 'qubes-random-seed'
+	  qubes_to_runlevel 'qubes-qrexec-agent'
+	  use selinux && qubes_to_runlevel 'selinux'
+
 	fi
 }
 

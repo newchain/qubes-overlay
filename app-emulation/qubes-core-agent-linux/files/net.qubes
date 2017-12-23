@@ -1,9 +1,9 @@
 #!/sbin/openrc-run
-# $Id$
 
 
 command='/usr/lib/qubes/setup-ip'
 command_background='false'
+command_umask='0177'
 description='Virtual network interface'
 start_stop_daemon_args="--env INTERFACE=\'eth0\' -k 0177"
 
@@ -23,7 +23,7 @@ start() {
 
 	ebegin 'Bringing up virtual network interface'
 
-	INTERFACE="${RC_SVCNAME#.*}" /usr/lib/qubes/setup-ip
+	INTERFACE="${RC_SVCNAME#net.}" '/usr/lib/qubes/setup-ip'
 
 	eend $?
 }

@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
 <pkgmetadata>
 	<maintainer>
-		<email>loveithateit@users.noreply.github.com</email>
+		<email>newchain@users.noreply.github.com</email>
 		<name>MB</name>
 	</maintainer>
 	<use>
 		<flag name="candy">Install (numerous) dependencies for standard GNOME themes.</flag>
+		<flag name="icon">Send icons to dom0</flag>
 		<flag name="template">Install files which are necessary for a templateVM, but interfere with regular use.</flag>
 	</use>
 </pkgmetadata>

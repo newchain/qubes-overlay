@@ -1,0 +1,149 @@
+#### <summary>curl_socat policy</summary>
+#### <desc>
+####	<p>
+####	  Policy for socat daemon implementing Unix-over-Qubes-RPC
+####	  tunnel.
+####	</p>
+#### </desc>
+
+
+###############################
+### <summary>
+###	Create curl_socat_socket_var_run_t
+### </summary>
+### <param name="domain">
+###	<summary>
+###	  Domain to permit.
+###	</summary>
+### </param>
+
+interface(`curl_socat_create_curl_socat_socket_var_run_dir',`
+
+	# todo: Figure out how to define interfaces in templates
+
+	optional_policy(`
+
+		# Making this optional simply allows curl_socat module to be
+		# removed, altered, and reinstalled.
+
+		gen_require(`
+
+			type curl_socat_socket_var_run_t;
+		')
+
+		socat_qrexec_search_socat_qrexec_var_run($1)
+		filetrans_add_pattern($1, socat_qrexec_var_run_t, socat_qrexec_var_run_t, dir, "curl")
+		allow $1 socat_qrexec_var_run_t : dir create;
+	')
+')
+
+
+###############################
+### <summary>
+###	getattr and setattr curl_socat_socket_var_run_t
+### </summary>
+### <param name="domain">
+###	<summary>
+###	  Domain to permit.
+###	</summary>
+### </param>
+
+interface(`curl_socat_setattr_curl_socat_socket_var_run_dir',`
+
+	# todo: Figure out how to define interfaces in templates
+
+	optional_policy(`
+
+		# Making this optional simply allows curl_socat module to be
+		# removed, altered, and reinstalled.
+
+		gen_require(`
+
+			type curl_socat_socket_var_run_t;
+		')
+
+		socat_qrexec_search_socat_qrexec_var_run($1)
+		allow $1 curl_socat_socket_var_run_t : dir { getattr setattr };
+	')
+')
+
+
+###############################
+### <summary>
+###	Connect, read, and write curl_socat_socket_var_run_t
+### </summary>
+### <param name="prefix">
+###	<summary>
+###	  Domain to permit use.
+###	</summary>
+### </param>
+
+interface(`curl_socat_rw_curl_socat_socket_var_run_sock_files',`
+
+	# todo: Figure out how to define interfaces in templates
+
+	optional_policy(`
+
+		# Making this optional simply allows curl_socat module to be
+		# removed, altered, and reinstalled.
+
+		gen_require(`
+	
+			type curl_socat_socket_var_run_t;
+			type curl_socat_t;
+		')
+	
+	
+		########################################
+		#
+		# $1 policy
+		#
+	
+		socat_qrexec_search_socat_qrexec_var_run($1)
+		rw_sock_files_pattern($1, curl_socat_socket_var_run_t, curl_socat_socket_var_run_t)
+		allow $1 curl_socat_t : unix_stream_socket connectto;
+	')
+')
+
+
+###############################
+### <summary>
+###	<p>
+###	  Create sock_files in curl_socat_socket_var_run_t with a transition
+###       to a private type.  This should be a curl domain.
+###	</p>
+###	<p>
+###	  Sockets created by socket_wrapper have predictable bases but varying
+###	  stem.  SELinux policy does not support wildcards or regex in type
+###	  transitions, so no name can be specified.
+###	</p>
+### </summary>
+### <param name="domain">
+###	<summary>
+###	  Domain to permit create, transition, and delete.
+###	</summary>
+### </param>
+### <param name="type">
+###	<summary>
+###	  Type of the sockets created.
+###	</summary>
+### </param>
+
+interface(`curl_socat_filetrans_curl_socat_socket_var_run_sock_files',`
+
+	# todo: Figure out how to define interfaces in templates
+
+	optional_policy(`
+
+		# Making this optional simply allows curl_socat module to be
+		# removed, altered, and reinstalled.
+
+		gen_require(`
+
+			type curl_socat_socket_var_run_t;
+		')
+
+		socat_qrexec_search_socat_qrexec_var_run($1)
+		filetrans_pattern($1, curl_socat_socket_var_run_t, $2, sock_file)
+	')
+')

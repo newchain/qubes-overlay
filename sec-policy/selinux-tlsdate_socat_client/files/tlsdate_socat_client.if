@@ -1,0 +1,6 @@
+#### <summary>tlsdate_socat_client policy</summary>
+#### <desc>
+####	<p>
+####	  Policy allowing tlsdate-helper to use tlsdate_socat sockets.
+####	</p>
+#### </desc>

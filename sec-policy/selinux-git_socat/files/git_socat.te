@@ -1,0 +1,9 @@
+policy_module(git_socat, 1)
+
+
+########################################
+#
+# Declarations
+#
+
+socat_qrexec_domain_faux_tcp_template(git)

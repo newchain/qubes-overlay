@@ -1,32 +1,40 @@
-# Copyright 1999-2015 Gentoo Foundation
+# Copyright 1999-2017 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Id$
 
-EAPI=5
+EAPI=6
 
 EGIT_REPO_URI='https://github.com/QubesOS/qubes-secpack.git'
 
-inherit eutils git-2 qubes
-[[ "${PV}" < '9999' ]] && inherit versionator
+inherit eutils git-r3 qubes
+[ "${PV%%[_-]*}" != '9999' ] && inherit versionator
 
 DESCRIPTION='Keys, security advisories, and integrity attestations from Qubes developers.'
 HOMEPAGE='https://github.com/QubesOS/qubes-secpack'
 
 IUSE=""
-KEYWORDS="~amd64"
+[ "${PV%%[_-]*}" != '9999' ] && KEYWORDS="alpha amd64 hppa ia64 m68k mips ppc ppc64 s390 sh sparc x86"
 LICENSE='GPL-2'
 SLOT='0'
 
 DEPEND="app-crypt/gnupg"
 RDEPEND=""
 
-#MY_PV=''
+MY_PV=''
 
 
-rc_prepare() {
+src_prepare() {
+
+	if [ "${PV%%[_-]*}" != '9999' ] && [ -z "${MY_PV}" ]
+	then
+
+	  die "MY_PV must be set for specific tags"
+
+	fi
 
 	readonly version_prefix=''
 	qubes_prepare
+
+	eapply_user
 }
 
 src_compile() {
@@ -36,51 +44,54 @@ src_compile() {
 
 	cd "${S}/canaries"
 
-	for i in canary-*.txt; do {
+	for canary in canary-*.txt
+	do
 
-		gpg --keyid-format 0xlong --verify "${i}.sig.joanna" "${i}" || die "Failed to verify authenticity of ${i}!"
-		gpg --keyid-format 0xlong --verify "${i}.sig.marmarek" "${i}" || die "Failed to verify authenticity of ${i}!"
-	};
+	  [ "${canary}" = 'canary-template.txt' ] && continue
+	  gpg --keyid-format 0xlong --verify "${canary}.sig.joanna" "${canary}" || die "Failed to verify authenticity of ${canary}!"
+	  gpg --keyid-format 0xlong --verify "${canary}.sig.marmarek" "${canary}" || die "Failed to verify authenticity of ${canary}!"
+
 	done
 
 	cd "${S}/QSBs"
 
-	for i in qsb-*.txt xsa-*.dot; do {
+	for advisory in qsb-*.txt xsa-*.dot
+	do
 
-		sigext=''
+	  sigext=''
 
-		if ( [[ "${i:0:4}" == 'qsb-' ]] && [[ "${i}" > 'qsb-017' ]] ); then {
+	  if [ "${advisory}" \> 'qsb-017' ] && [ "${advisory}" \< 'qsb-019' ]
+	  then
 
-			sigext='n';
-		};
-		fi
+	    sigext='n'
 
-		gpg --keyid-format 0xlong --verify "${i}.sig${sigext}.joanna" "${i}" || die "Failed to verify authenticity of ${i}!"
-		gpg --keyid-format 0xlong --verify "${i}.sig.marmarek" "${i}" || die "Failed to verify authenticity of ${i}!"
-	};
+	  fi
+
+	  # bad signatures....
+	  if [ "${advisory}" = 'qsb-002-2012.txt' ] || [ "${advisory}" = 'qsb-023-2015.txt' ]
+	  then
+
+	    gpg --keyid-format 0xlong --verify "${advisory}.sig${sigext}.joanna" "${advisory}" || ewarn "Failed to verify authenticity of ${advisory}!"
+	    continue
+
+	  fi
+
+	  gpg --keyid-format 0xlong --verify "${advisory}.sig${sigext}.joanna" "${advisory}" || die "Failed to verify authenticity of ${advisory}!"
+	  gpg --keyid-format 0xlong --verify "${advisory}.sig.marmarek" "${advisory}" || die "Failed to verify authenticity of ${advisory}!"
+
 	done
 
-
-	gpg --export --output "${S}/qubes.gpg" || die 'Failed to export keyring!'
+	gpg --export --compress-level 9 --output "${S}/qubes_pubring.gpg" || die 'Failed to export keyring!'
+	#gpg --export-ownertrust | cut -d ',' -f 1 -- - | cat -- - > "${S}/qubes_trust.txt" || die 'Failed to export ownertrust!'
 }
 
 src_install() {
 
 	insinto '/usr/share/qubes'
-	doins 'qubes.gpg'
-
-	insinto '/usr/share/qubes/canaries'
-	doins 'canaries/'*
-
-	for i in 'keys/'*; do {
-
-		dodir "/usr/share/qubes/keys/${i}"
-
-		insinto "/usr/share/qubes/keys/${i}"
-		doins "${i}/"*
-	};
-	done;
-
-	insinto '/usr/share/qubes/QSBs'
-	doins 'QSBs/'*
+	doins 'qubes_pubring.gpg'
+	newins "${FILESDIR}/trustdb.txt" 'qubes_trustdb.txt'
+	newins "${HOME}/.gnupg/trustdb.gpg" 'qubes_trustdb.gpg'
+	doins -r 'canaries'
+	doins -r 'keys'
+	doins -r 'QSBs'
 }

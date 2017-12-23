@@ -1,14 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
 <pkgmetadata>
 	<maintainer>
-		<email>loveithateit@users.noreply.github.com</email>
+		<email>newchain@users.noreply.github.com</email>
 		<name>MB</name>
 	</maintainer>
 	<use>
-		<flag name="glib">Pull in pygobject, which is required for app menu generation.</flag>
-		<flag name="net">Allow init scripts to write persistent net configuration.</flag>
-		<flag name="svg">Pull in pycairo[svg], which is required to transfer icons for dom0 menus.</flag>
-		<flag name="template">Install files which are necessary for a templateVM, but interfere with regular use.</flag>
+		<flag name="X11">Enable seemless opening of X11 applications as a disposable VM</flag>
+		<flag name="dbus">Use dbus activation for launching applications</flag>
+		<flag name="entropy">Pull in sys-apps/haveged</flag>
+		<flag name="glib">Pull in pygobject, which is required for application menu generation and integration</flag>
+		<flag name="iptables">Install firewall integration</flag>
+		<flag name="log">Relay RPC errors syslog, pulls in sys-apps/util-linux or sys-apps/busybox[syslog]</flag>
+		<flag name="nautilus">Install gnome-base/nautilus customizations</flag>
+		<flag name="net">Install IP networking scripts</flag>
+		<flag name="nm-applet">Install gnome-extra/nm-applet integration</flag>
+		<flag name="svg">Pull in pycairo[svg], which is required to transfer icons for dom0 menus</flag>
+		<flag name="qubes-rpc_Backup">Back up to another VM using qubes.Backup</flag>
+		<flag name="qubes-rpc_DetachPciDevice">Detach PCI devices automatically using qubes.DetachPciDevice</flag>
+		<flag name="qubes-rpc_Filecopy">Copy files to another VM using qubes.Filecopy</flag>
+		<flag name="qubes-rpc_GetAppmenus">Send application desktop entries to dom0 for automated, integrated application menus</flag>
+		<flag name="qubes-rpc_GetImageRGBA">Convert images to a simpler format</flag>
+		<flag name="qubes-rpc_InstallUpdatesGUI">Install updates through Qubes integrated GUI</flag>
+		<flag name="qubes-rpc_OpenInVM">Open files sent from other VMs</flag>
+		<flag name="qubes-rpc_OpenURL">Open urls sent from other VMs, pulls in x11-misc/xdg-utils</flag>
+		<flag name="qubes-rpc_Restore">Restore backups stored in other VMs</flag>
+		<flag name="qubes-rpc_SelectDirectory">Select directory using prompt, pulls in gnome-extra/zenity</flag>
+		<flag name="qubes-rpc_SelectFile">Select file using prompt, pulls in gnome-extra/zenity</flag>
+		<flag name="qubes-rpc_SetDateTime">Set date passed from dom0 (privacy risk)</flag>
+		<flag name="qubes-rpc_Suspend">Install qubes.Suspend*</flag>
+		<flag name="qubes-rpc_SyncNtpClock">Install qubes.SyncNtpClock. pulls in net-misc/ntp</flag>
+		<flag name="qubes-rpc_WaitforSession">Set environment for X session</flag>
+		<flag name="qubes-rpc_VMShell">Open shell for remote VM</flag>
+		<flag name="template">Install files which are necessary for a templateVM, but interfere with regular use</flag>
+		<flag name="tinyproxy">Install tinyproxy to serve as an IP proxy for package updates (dangerous)</flag>
+		<flag name="usb">Install scripts required to act as a USB backend</flag>
 	</use>
 </pkgmetadata>

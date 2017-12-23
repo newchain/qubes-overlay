@@ -1,0 +1,8 @@
+/etc/conf\.d/portage_git_socat	--	gen_context(system_u:object_r:portage_git_socat_initrc_etc_t,mls_systemlow)
+/etc/rc\.d/init\.d/portage_git_socat	--	gen_context(system_u:object_r:portage_git_socat_initrc_exec_t,mls_systemlow)
+
+/run/qrtunnels/portage_git		-d	gen_context(system_u:object_r:portage_git_socat_socket_var_run_t,mls_systemlow)
+/run/qrtunnels/portage_git/.+		-s	gen_context(system_u:object_r:portage_git_socat_socket_var_run_t,mls_systemlow)
+/var/run/qrtunnels/portage_git		-d	gen_context(system_u:object_r:portage_git_socat_socket_var_run_t,mls_systemlow)
+/var/run/qrtunnels/portage_git/.+	-s	gen_context(system_u:object_r:portage_git_socat_socket_var_run_t,mls_systemlow)
+

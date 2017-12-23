@@ -1,0 +1,235 @@
+policy_module(socat_qrexec, 1)
+
+
+gen_require(`
+
+	type initrc_state_t;
+	type initrc_var_run_t;
+	type locale_t;
+	type net_conf_t;
+	type socat_exec_t;
+	type tmpfiles_t;
+')
+
+
+########################################
+#
+# Declarations
+#
+
+attribute socat_qrexec_domain;
+attribute socat_qrexec_faux_tcp_domain;
+attribute socat_qrexec_socket_type;
+attribute socat_qrexec_tcp_domain;
+attribute socat_qrexec_initrc_domain;
+
+domain_entry_file(socat_qrexec_domain, socat_exec_t)
+role system_r types socat_qrexec_domain;
+
+type socat_qrexec_var_run_t;
+files_type(socat_qrexec_var_run_t);
+
+
+########################################
+#
+# socat_qrexec_faux_tcp_domain policy
+#
+
+# passwd
+#files_dontaudit_read_etc_files(socat_qrexec_faux_tcp_domain)
+
+# resolv.conf
+#dontaudit socat_qrexec_faux_tcp_domain net_conf_t : file read;
+
+
+########################################
+#
+# socat_qrexec_tcp_domain policy
+#
+
+#allow socat_qrexec_tcp_domain self : tcp_socket { create connect getattr write read shutdown };
+
+
+########################################
+#
+# socat_qrexec_domain policy
+#
+
+dontaudit socat_qrexec_domain self : unix_dgram_socket read;
+
+# Find qrexec-client-vm
+corecmd_search_bin(socat_qrexec_domain)
+
+# localtime
+dontaudit socat_qrexec_domain locale_t : file read;
+
+socat_qrexec_search_socat_qrexec_var_run(socat_qrexec_domain)
+
+#gen_require(`
+#
+#	attribute device_node;
+#	type sysctl_vm_t;
+#')
+#
+#allowxperm socat_qrexec_domain self : { dir file lnk_file unix_stream_socket } ioctl 0x0;
+#
+#allowxperm socat_qrexec_domain file_type : { dir file lnk_file } ioctl 0x0;
+#
+#allowxperm socat_qrexec_domain device_node : chr_file ioctl 0x0;
+#
+#allowxperm socat_qrexec_domain sysctl_vm_t : { dir file } ioctl 0x0;
+
+
+########################################
+#
+# socat_qrexec_initrc_domain policy
+#
+
+# These include generic permissions required by OpenRC scripts.
+
+allow socat_qrexec_initrc_domain self : capability dac_override;
+allow socat_qrexec_initrc_domain self : fifo_file { write read ioctl getattr };
+#allowxperm socat_qrexec_initrc_domain self : fifo_file ioctl 0x5401;
+#neverallowxperm socat_qrexec_initrc_domain self : fifo_file ioctl ~0x5401;
+
+# cgroup cleanup
+allow socat_qrexec_initrc_domain self : process signal;
+
+corecmd_exec_bin(socat_qrexec_initrc_domain)
+corecmd_exec_shell(socat_qrexec_initrc_domain)
+
+files_read_etc_files(socat_qrexec_initrc_domain)
+files_read_etc_runtime_files(socat_qrexec_initrc_domain)
+
+# no deps aside from tmpfiles which starts early on.
+init_dontaudit_read_all_script_files(socat_qrexec_initrc_domain)
+
+fs_manage_cgroup_dirs(socat_qrexec_initrc_domain)
+fs_manage_cgroup_files(socat_qrexec_initrc_domain)
+
+init_exec_rc(socat_qrexec_initrc_domain)
+
+init_read_script_status_files(socat_qrexec_initrc_domain)
+
+# /dev/null
+init_dontaudit_use_fds(socat_qrexec_initrc_domain)
+
+init_use_script_ptys(socat_qrexec_initrc_domain)
+
+# socat is daemonized and start-stop-daemon checks for a matching process name
+# before signalling.
+kernel_list_proc(socat_qrexec_initrc_domain)
+init_dontaudit_read_state(socat_qrexec_initrc_domain)
+
+kernel_dontaudit_search_kernel_sysctl(socat_qrexec_initrc_domain)
+
+logging_send_syslog_msg(socat_qrexec_initrc_domain)
+
+kernel_dontaudit_read_system_state(socat_qrexec_initrc_domain)
+
+userdom_dontaudit_search_user_home_dirs(socat_qrexec_initrc_domain)
+
+allow socat_qrexec_initrc_domain { initrc_state_t initrc_var_run_t } : dir { create_dir_perms list_dir_perms delete_dir_perms };
+create_files_pattern(socat_qrexec_initrc_domain, initrc_state_t, initrc_state_t)
+create_files_pattern(socat_qrexec_initrc_domain, initrc_var_run_t, initrc_var_run_t)
+allow socat_qrexec_initrc_domain { initrc_state_t initrc_var_run_t } : file write_file_perms;
+delete_files_pattern(socat_qrexec_initrc_domain, initrc_state_t, initrc_state_t)
+delete_files_pattern(socat_qrexec_initrc_domain, initrc_var_run_t, initrc_var_run_t)
+allow socat_qrexec_initrc_domain { initrc_state_t initrc_var_run_t } : lnk_file { create_lnk_file_perms read_lnk_file_perms delete_lnk_file_perms };
+# deptree, depconfig, softlevel
+allow socat_qrexec_initrc_domain initrc_var_run_t : file read;
+
+dontaudit socat_qrexec_initrc_domain locale_t : dir search;
+
+
+# fsetid for setfacl
+allow socat_qrexec_initrc_domain self : capability { fowner fsetid };
+
+# For PAM
+allow socat_qrexec_initrc_domain self : capability { setgid setuid };
+allow socat_qrexec_initrc_domain self : process setsched;
+
+dontaudit socat_qrexec_initrc_domain self : capability audit_control;
+init_dontaudit_rw_utmp(socat_qrexec_initrc_domain)
+
+files_dontaudit_search_tmp(socat_qrexec_initrc_domain)
+
+
+#SIGTERM
+allow socat_qrexec_initrc_domain self : capability kill;
+
+
+########################################
+#
+# tmpfiles_t policy
+#
+
+socat_qrexec_create_socat_qrexec_var_run(tmpfiles_t)
+
+
+########################################
+#
+# Optional policy
+#
+
+optional_policy(`
+
+	# This simply allows extra_perms_initrc module to be removed, altered,
+	# and reinstalled.
+	#
+	# The purpose of extra_perms_initrc is to set ACLs which OpenRC cannot
+	# do.
+
+	gen_require(`
+
+		type extra_perms_initrc_t;
+	')
+
+	socat_qrexec_setattr_socat_qrexec_var_run(extra_perms_initrc_t)
+	socat_qrexec_search_socat_qrexec_var_run(extra_perms_initrc_t)
+	allow extra_perms_initrc_t socat_qrexec_socket_type : dir { getattr setattr search };
+	allow extra_perms_initrc_t socat_qrexec_socket_type : sock_file { getattr setattr };
+')
+
+
+optional_policy(`
+
+	# This allows reading name in the init script, from which to make a
+	# redirected qrexec request.
+
+	gen_require(`
+
+		type qubesdb-cmd_t;
+	')
+
+	########################################
+	#
+	# qubesdb-cmd_t policy
+	#
+
+	allow qubesdb-cmd_t initrc_devpts_t : chr_file { read write };
+	allow qubesdb-cmd_t socat_qrexec_initrc_domain : fd use;
+	allow qubesdb-cmd_t socat_qrexec_initrc_domain : fifo_file { getattr write };
+	allow qubesdb-cmd_t socat_qrexec_initrc_domain : process sigchld;
+
+	########################################
+	#
+	# socat_qrexec_initrc_domain policy
+	#
+
+	qubes_core_qubesdb_cmd_auto_domtrans(socat_qrexec_initrc_domain)
+')
+
+
+optional_policy(`
+
+	########################################
+	#
+	# socat_qrexec_initrc_domain policy
+	#
+
+	qubes_core_bluepill_locale(socat_qrexec_initrc_domain)
+	# For qubes-service in dom0
+	qubes_core_read_inherited_qubes_service_var_run(socat_qrexec_initrc_domain)
+	qubes_core_depend_qubes_service(socat_qrexec_initrc_domain)
+')

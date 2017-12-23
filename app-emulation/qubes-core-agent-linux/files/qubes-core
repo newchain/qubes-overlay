@@ -1,5 +1,4 @@
 #!/sbin/openrc-run
-# $Id$
 
 
 rc_keyword='-shutdown'
@@ -31,66 +30,78 @@ start() {
 
 	ebegin 'Setting up Qubes persistent partition'
 
-	if [ -e /dev/xvdb ] ; then {
+	if [ -e /dev/xvdb ]
+	then
 
-		# Check if private.img (xvdb) is empty - all zeros
-		#
-		private_size_512=`"${blockdev_bin}" --getsz /dev/xvdb`
+	  # Check if private.img (xvdb) is empty - all zeros
+	  #
+	  private_size_512="$(${blockdev_bin} --getsz /dev/xvdb)"
 
-		if "${dd_bin}" if=/dev/zero bs=512 count=$private_size_512 | "${diff_bin}" /dev/xvdb - >/dev/null; then {
+	  if "${dd_bin}" if=/dev/zero bs=512 count="${private_size_512}" | "${diff_bin}" -- '/dev/xvdb' - >>/dev/null
+	  then
 
-			# The device is empty, create filesystem
-			#
-			einfo '--> Virgin boot of the VM: creating filesystem on private.img'
-			"${mkfs_ext4_bin}" -m 0 -q /dev/xvdb || exit 1
-		};
-		fi
+	    # The device is empty, create filesystem
+	    #
+	    einfo '--> Virgin boot of the VM: creating filesystem on private.img'
+	    "${mkfs_ext4_bin}" -m 0 -q '/dev/xvdb' || exit 1
 
-		"${mount_bin}" -- '/rw'
+	  fi
 
-		"${resize2fs_bin}" /dev/xvdb 2> /dev/null || ewarn "'resize2fs /dev/xvdb' failed"
+	  "${touch_bin}" -t 200001010000 -- '/rw' || ewarn 'Unable to set timestamp on /rw'
 
-		if ! [ -e /rw/home/user ] ; then {
+	  "${mount_bin}" -- '/rw'
 
-			einfo
-			einfo '--> Virgin boot of the VM: Copying /home.orig/user to /rw/home/user'
+	  "${resize2fs_bin}" '/dev/xvdb' 2>> /dev/null || ewarn "'resize2fs /dev/xvdb' failed"
 
-			"${cp_bin}" -aZ -- '/home.orig/user' '/rw/home'
-		};
-		fi
+	  if ! [ -e '/rw/home/user' ]
+	  then
+
+	    einfo
+	    einfo '--> Virgin boot of the VM: Copying /home.orig/user to /rw/home/user'
+
+	    ! [ -e '/rw/home' ] && mkdir -m 0700 -- '/rw/home' || ewarn 'Unable to mkdir /rw/home'
+	    "${cp_bin}" -aZ -- '/home.orig/user' '/rw/home/' || ewarn 'Unable to copy /home.orig/user to /rw/home/'
+
+	  fi
 
 
-		"${mount_bin}" -- '/home' || ewarn 'Unable to mount /home!'
+	  "${mount_bin}" -- '/home' || ewarn 'Unable to mount /home!'
 
-		"${mount_bin}" -- '/var/lib' || ewarn 'Unable to mount /var/lib!'
+	  "${mount_bin}" -- '/var/lib' || ewarn 'Unable to mount /var/lib!'
 
-		if [ -e /var/lib/qubes/before-first-boot ]; then {
+	  if [ -e '/var/lib/qubes/before-first-boot' ]
+	  then
 
-			local vm_type
-			readonly vm_type="$(${qubesdb_read_bin} /qubes-vm-type)"
+	    local vm_type
+	    readonly vm_type="$(${qubesdb_read_bin} /qubes-vm-type)"
 
-			if [ "${vm_type}" = 'AppVM' ]; then {
+	    if [ "${vm_type}" = 'AppVM' ]
+	    then
 
-				if "${rm_bin}" -- '/var/lib/misc/random-seed'; then {
+	      if "${rm_bin}" -- '/var/lib/misc/random-seed'
+	      then
 
-					"${rm_bin}" -- '/var/lib/qubes/before-first-boot' || ewarn 'Unable to remove before-first-boot!'
-				};
-				else {
+	        "${rm_bin}" -- '/var/lib/qubes/before-first-boot' || ewarn 'Unable to remove before-first-boot!'
 
-					ewarn 'Unable to remove template prng seed!'
-				};
-				fi
-			};
-			fi
-		};
-		fi
+	      else
 
-		# Oh dear. Whenever was this domain created?
-		#
-		"${touch_bin}" -t 200001010000 -- '/var/lib/qubes/first-boot-completed'
-		"${touch_bin}" -t 200001010000 -- '/var/lib/qubes/'
-	};
-	else ewarn 'Persistent volume not found!'
+	        ewarn 'Unable to remove template prng seed!'
+
+	      fi
+
+	    fi
+
+	  fi
+
+	  "${touch_bin}" -t 200001010000 -- '/rw/home' || ewarn 'Unable to set timestamp on /rw/home'
+	  "${touch_bin}" -t 200001010000 -- '/rw/home/user' || ewarn 'Unable to set timestamp on /rw/home/user'
+	  "${touch_bin}" -t 200001010000 -- '/var/lib/qubes/first-boot-completed'
+	  "${touch_bin}" -t 200001010000 -- '/var/lib/qubes/'
+
+	else
+
+	  ewarn 'Persistent volume not found!'
+
 	fi
 
 	return 0

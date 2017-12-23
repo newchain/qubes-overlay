@@ -1,0 +1,10 @@
+#/etc/rc\.d/etc\.d/$1_socat	--	gen_context(system_u:object_r:$1_socat_initrc_etc_t,mls_systemlow)
+#/etc/rc\.d/init\.d/$1_socat	--	gen_context(system_u:object_r:$1_socat_initrc_exec_t,mls_systemlow)
+
+/run/qrtunnels			-d	gen_context(system_u:object_r:socat_qrexec_var_run_t,mls_systemlow)
+#/run/qrtunnels/$1		-d	gen_context(system_u:object_r:$1_socat_socket_var_run_t,mls_systemlow)
+#/run/qrtunnels/$1/.+		-s	gen_context(system_u:object_r:$1_socat_socket_var_run_t,mls_systemlow)
+/var/run/qrtunnels		-d	gen_context(system_u:object_r:socat_qrexec_var_run_t,mls_systemlow)
+#/var/run/$1			-d	gen_context(system_u:object_r:$1_socat_socket_var_run_t,mls_systemlow)
+#/var/run/$1/.+			-s	gen_context(system_u:object_r:$1_socat_socket_var_run_t,mls_systemlow)
+

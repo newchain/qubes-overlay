@@ -1,0 +1,6 @@
+#### <summary>ssh_socat_client policy</summary>
+#### <desc>
+####	<p>
+####	  Policy allowing ssh use ssh_socat sockets.
+####	</p>
+#### </desc>

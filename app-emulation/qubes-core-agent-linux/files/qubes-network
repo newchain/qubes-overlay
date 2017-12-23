@@ -1,9 +1,9 @@
 #!/sbin/openrc-run
-# $Id$
 
 
 command='/usr/lib/qubes/init/network-proxy-setup.sh'
 command_backgound='false'
+command_umask='0177'
 start_stop_daemon_args='-k 0177'
 required_files='/run/qubes-service/qubes-network'
 

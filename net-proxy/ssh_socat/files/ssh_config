@@ -1,0 +1,3 @@
+Host *
+  LogLevel DEBUG
+  ProxyCommand socat - socks4a:%h:%p,socksuser=$(openssl rand -hex 64 | sha512sum -- - | cut -d '-' -f 1  -- -)' | 'unix-connect:/var/run/qrtunnels/ssh/sock

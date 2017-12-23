@@ -1,0 +1,38 @@
+policy_module(portage_fetch_socat_client, 1)
+
+
+optional_policy(`
+
+	# Making this optional simply allows socket_wrapper and portage_fetch modules
+	# to be removed, altered, and reinstalled.
+
+	gen_require(`
+
+		type portage_fetch_socat_t;
+		type portage_fetch_socat_socket_var_run_t;
+		type portage_fetch_t;
+		type portage_t;
+		type socket_wrapper_lib_t;
+	')
+
+	########################################
+	#
+	# Declarations
+	#
+
+	type portage_fetch_socket_var_run_t;
+	files_type(portage_fetch_socket_var_run_t)
+
+	########################################
+	#
+	# user_portage_fetch_t policy
+	#
+
+	socket_wrapper_preload_socket_wrapper_lib_files(portage_fetch_t, portage_t)
+
+	portage_fetch_socat_rw_portage_fetch_socat_socket_var_run_sock_files(portage_fetch_t)
+	portage_fetch_socat_filetrans_portage_fetch_socat_socket_var_run_sock_files(portage_fetch_t, portage_fetch_socket_var_run_t)
+	allow portage_fetch_t portage_fetch_socket_var_run_t : sock_file { read write };
+	create_sock_files_pattern(portage_fetch_t, portage_fetch_socat_socket_var_run_t, portage_fetch_socket_var_run_t)
+	delete_sock_files_pattern(portage_fetch_t, portage_fetch_socat_socket_var_run_t, portage_fetch_socket_var_run_t)
+')

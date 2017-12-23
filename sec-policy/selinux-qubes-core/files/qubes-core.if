@@ -9,6 +9,34 @@
 
 ###############################
 ## <summary>
+##	Run qrexec-client-vm in a specified domain.
+## </summary>
+## <param name="domain">
+##	<summary>
+##		Domain to permit transition.
+##	</summary>
+## </param>
+## <param name="target_domain">
+##	<summary>
+##		Domain to transition to.
+##	</summary>
+## </param>
+
+interface(`qubes_core_qrexec_client_vm_domain_auto_transition_pattern',`
+
+	gen_require(`
+
+		type qrexec-client-vm_exec_t;
+	')
+
+	qubes_core_search_qubes_rpc_worker_exec($1)
+	allow $1 qrexec-client-vm_exec_t : lnk_file read;
+	domain_auto_transition_pattern($1, qrexec-client-vm_exec_t, $2)
+')
+
+
+###############################
+## <summary>
 ##	Run qrexec-client-vm in qrexec-client-vm_t
 ## </summary>
 ## <param name="domain">
@@ -273,6 +301,27 @@ interface(`qubes_core_bluepill_locale',`
 
 ###############################
 ## <summary>
+##	Read init/functions
+## </summary>
+## <param name="domain">
+##	<summary>
+##		Domain to permit read.
+##	</summary>
+## </param>
+
+interface(`qubes_core_read_qubes_functions',`
+
+	gen_require(`
+
+		type qubes_functions_t;
+	')
+
+	allow $1 qubes_functions_t : file { getattr read open };
+')
+
+
+###############################
+## <summary>
 ##	Search /run/qubes-service
 ## </summary>
 ## <param name="domain">
@@ -312,6 +361,81 @@ interface(`qubes_core_read_inherited_qubes_service_var_run',`
 	qubes_core_search_qubes_service_var_run($1)
 
 	allow $1 qubes-service_var_run_t : file read;
+')
+
+
+###############################
+## <summary>
+##	Depend on qrexec-agent
+## </summary>
+## <param name="domain">
+##	<summary>
+##	  Domain to permit dependency.
+##	</summary>
+## </param>
+
+interface(`qubes_core_depend_qrexec_agent',`
+
+	gen_require(`
+
+		type qrexec-agent_initrc_exec_t;
+		type qubes-core_initrc_exec_t;
+	')
+
+	qubes_core_depend_qubesdb($1)
+	allow $1 qrexec-agent_initrc_exec_t : file getattr;
+	allow $1 qubes-core_initrc_exec_t : file getattr;
+')
+
+
+###############################
+## <summary>
+##	Depend on qubes-service
+## </summary>
+## <param name="domain">
+##	<summary>
+##	  Domain to permit dependency.
+##	</summary>
+## </param>
+
+interface(`qubes_core_depend_qubesdb',`
+
+	gen_require(`
+
+		type qubesdb_initrc_exec_t;
+	')
+
+	init_getattr_script_files($1)
+	allow $1 qubesdb_initrc_exec_t : file getattr;
+
+	optional_policy(`
+
+		extra_perms_depend_extra_perms($1)
+	')
+')
+
+
+###############################
+## <summary>
+##	Depend on qubes-service
+## </summary>
+## <param name="domain">
+##	<summary>
+##		Domain to permit dependency.
+##	</summary>
+## </param>
+
+interface(`qubes_core_depend_qubes_service',`
+
+	gen_require(`
+
+		type qubes-service_initrc_exec_t;
+	')
+
+	qubes_core_depend_qubesdb($1)
+	allow $1 qubes-service_initrc_exec_t : file getattr;
+
+	qubes_core_read_inherited_qubes_service_var_run($1)
 ')
 
 
@@ -1264,3 +1388,4 @@ interface(`qubes_core_qvm_role',`
 	allow qfile-agent_t $2 : process sigchld;
 	allow qrexec-client-vm_t $2 : process sigchld;
 ')
+

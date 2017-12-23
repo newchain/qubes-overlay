@@ -1,0 +1,265 @@
+#### <summary>ssh_socat policy</summary>
+#### <desc>
+####	<p>
+####	  Policy for socat daemon implementing Unix-over-Qubes-RPC
+####	  tunnel.
+####	</p>
+#### </desc>
+
+
+###############################
+### <summary>
+###	Create ssh_socat_socket_var_run_t
+### </summary>
+### <param name="domain">
+###	<summary>
+###	  Domain to permit.
+###	</summary>
+### </param>
+
+interface(`ssh_socat_create_ssh_socat_socket_var_run_dir',`
+
+	# todo: Figure out how to define interfaces in templates
+
+	optional_policy(`
+
+		# Making this optional simply allows ssh_socat module to be
+		# removed, altered, and reinstalled.
+
+		gen_require(`
+
+			type ssh_socat_socket_var_run_t;
+		')
+
+		socat_qrexec_search_socat_qrexec_var_run($1)
+		filetrans_add_pattern($1, socat_qrexec_var_run_t, socat_qrexec_var_run_t, dir, "ssh")
+		allow $1 socat_qrexec_var_run_t : dir create;
+	')
+')
+
+
+###############################
+### <summary>
+###	getattr and setattr ssh_socat_socket_var_run_t
+### </summary>
+### <param name="domain">
+###	<summary>
+###	  Domain to permit.
+###	</summary>
+### </param>
+
+interface(`ssh_socat_setattr_ssh_socat_socket_var_run_dir',`
+
+	# todo: Figure out how to define interfaces in templates
+
+	optional_policy(`
+
+		# Making this optional simply allows ssh_socat module to be
+		# removed, altered, and reinstalled.
+
+		gen_require(`
+
+			type ssh_socat_socket_var_run_t;
+		')
+
+		socat_qrexec_search_socat_qrexec_var_run($1)
+		allow $1 ssh_socat_socket_var_run_t : dir { getattr setattr };
+	')
+')
+
+
+###############################
+### <summary>
+###	Connect, read, and write ssh_socat_socket_var_run_t
+### </summary>
+### <param name="prefix">
+###	<summary>
+###	  Domain to permit use.
+###	</summary>
+### </param>
+
+interface(`ssh_socat_rw_ssh_socat_socket_var_run_sock_files',`
+
+	# todo: Figure out how to define interfaces in templates
+
+	optional_policy(`
+
+		# Making this optional simply allows ssh_socat module to be
+		# removed, altered, and reinstalled.
+
+		gen_require(`
+	
+			type ssh_socat_socket_var_run_t;
+			type ssh_socat_t;
+		')
+	
+	
+		########################################
+		#
+		# $1 policy
+		#
+	
+		socat_qrexec_search_socat_qrexec_var_run($1)
+		rw_sock_files_pattern($1, ssh_socat_socket_var_run_t, ssh_socat_socket_var_run_t)
+		allow $1 ssh_socat_t : unix_stream_socket connectto;
+	')
+')
+
+
+###############################
+### <summary>
+###	<p>
+###	  Create sock_files in ssh_socat_socket_var_run_t with a transition
+###       to a private type.  This should be a ssh domain.
+###	</p>
+###	<p>
+###	  Sockets created by socket_wrapper have predictable bases but varying
+###	  stem.  SELinux policy does not support wildcards or regex in type
+###	  transitions, so no name can be specified.
+###	</p>
+### </summary>
+### <param name="domain">
+###	<summary>
+###	  Domain to permit create, transition, and delete.
+###	</summary>
+### </param>
+### <param name="type">
+###	<summary>
+###	  Type of the sockets created.
+###	</summary>
+### </param>
+
+interface(`ssh_socat_filetrans_ssh_socat_socket_var_run_sock_files',`
+
+	# todo: Figure out how to define interfaces in templates
+
+	optional_policy(`
+
+		# Making this optional simply allows ssh_socat module to be
+		# removed, altered, and reinstalled.
+
+		gen_require(`
+
+			type ssh_socat_socket_var_run_t;
+		')
+
+		socat_qrexec_search_socat_qrexec_var_run($1)
+		filetrans_pattern($1, ssh_socat_socket_var_run_t, $2, sock_file)
+	')
+')
+
+
+###############################
+### <summary>
+###	Template for a user of ssh_socat sockets.
+### </summary>
+### <param name="prefix">
+###	<summary>
+###	  Domain for socat in ProxyCommand.
+###	</summary>
+### </param>
+### <param name="ssh_domain">
+###	<summary>
+###	  Domain used for ssh.
+###	</summary>
+### </param>
+### <param name="tty_domain" optional="yes">
+###	<summary>
+###	  Domain of the terminal used.
+###	</summary>
+### </param>
+### <param name="user_domain" optional="yes">
+###	<summary>
+###	  Domain of the the user.
+###	</summary>
+### </param>
+### <param name="user_role" optional="yes">
+###	<summary>
+###	  Role with which to assign types.
+###	</summary>
+### </param>
+
+template(`ssh_socat_client_domain_template',`
+
+	gen_require(`
+
+		attribute ssh_socat_proxycommand_domain;
+	')
+
+	########################################
+	#
+	# Declarations
+	#
+
+	type $1, ssh_socat_proxycommand_domain;
+	type $1;
+
+
+	########################################
+	#
+	# $1 policy
+	#
+
+	# bin, ld, pipe
+	allow $1 $2 : fd use;
+	allow $1 $2 : fifo_file { read write };
+	allow $1 $2 : process sigchld;
+
+
+	########################################
+	#
+	# $2 policy
+	#
+
+	allow $2 $1 : process signal;
+
+
+	########################################
+	#
+	# Optional policy
+	#
+
+	optional_policy(`
+
+		# Making this optional simply allows socat module to be
+		# removed, altered, and reinstalled.
+
+		gen_require(`
+
+			type socat_exec_t;
+		')
+
+		socat_socat_domain($1)
+		socat_socat_domain_auto_transition_pattern($2, $1)
+	')
+
+
+	optional_policy(`
+
+		gen_require(`
+
+			role $5;
+		')
+		
+		role $5 types $1;
+	')
+
+
+	optional_policy(`
+
+		gen_require(`
+
+			type $3;
+			type $4;
+		')
+
+		########################################
+		#
+		# $1 policy
+		#
+
+		allow $1 $3 : chr_file { read write };
+		# terminal
+		allow $1 $4 : fd use;
+	')
+')

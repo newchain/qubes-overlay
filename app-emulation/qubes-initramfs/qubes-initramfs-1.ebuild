@@ -1,15 +1,14 @@
-# Copyright 1999-2015 Gentoo Foundation
+# Copyright 1999-2017 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: $
 
-EAPI=5
+EAPI=6
 
 inherit eutils
 
 DESCRIPTION='initramfs for Gentoo PV domUs on Qubes.'
 
 IUSE="genkernel"
-KEYWORDS="~amd64"
+KEYWORDS="amd64 x86"
 LICENSE='GPL-2'
 SLOT='0'
 
@@ -22,6 +21,11 @@ RDEPEND="app-arch/cpio
 		sys-fs/lvm2[static]
 	)"
 
+
+src_prepare() {
+
+	eapply_user
+}
 
 pkg_setup() {
 

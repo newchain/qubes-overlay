@@ -1,48 +1,65 @@
-# Copyright 1999-2016 Gentoo Foundation
+# Copyright 1999-2017 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Id$
 
-EAPI=5
+EAPI=6
 
 EGIT_REPO_URI='https://github.com/QubesOS/qubes-linux-utils.git'
 
+#MULTILIB_COMPAT=( abi_x86_{32,64} )
 PYTHON_COMPAT=( python2_7 )
 
-inherit eutils git-2 python-r1 qubes
+inherit eutils git-r3 python-single-r1 qubes
 
 DESCRIPTION='Qubes utilities for Linux VMs'
 HOMEPAGE='https://github.com/QubesOS/qubes-linux-utils'
 
-KEYWORDS="~amd64"
+IUSE="balloon python"
+
+[ "${PV%%[_-]*}" != '9999' ] && [ "${PV%%.*}" != '4' ] && KEYWORDS="amd64 x86"
 LICENSE='GPL-2'
 
 qubes_slot
 
-RDEPEND="app-emulation/qubes-core-vchan-xen:${SLOT}
+CDEPEND="app-emulation/qubes-core-vchan-xen:${SLOT}
 	app-emulation/xen-tools"
-DEPEND="app-crypt/gnupg
-	>=app-emulation/qubes-secpack-20150603
-	${DEPEND}
-	${RDEPEND}"
+
+qubes_keys_depend
+
+DEPEND="${CDEPEND}
+	${DEPEND}"
+
+RDEPEND="${CDEPEND}"
 
 
-src_prepare() {
+src_unpack() {
 
 	version_prefix='v'
 	qubes_prepare
+}
 
-	epatch_user
+src_prepare() {
 
+	eapply_user
 
-	sed -i '1s/^/BACKEND_VMM ?= xen\n/' -- 'qrexec-lib/Makefile'
 
 	sed -i 's|/etc/udev/rules\.d|/lib/udev/rules.d|g' -- 'udev/Makefile'
 
-	for i in qmemman qrexec-lib; do {
+	for dir in qmemman qrexec-lib
+	do
 
-		sed -i 's/\ -Werror//g' -- "${i}/Makefile"
-	};
+		sed -i 's/\ -Werror//g' -- "${dir}/Makefile"
+
 	done
+
+	if ! use balloon
+	then
+
+	  sed -i '/qmemman/d' -- 'Makefile'
+
+	fi
+
+	sed -i '1s/^/BACKEND_VMM ?= xen\n/' -- 'qrexec-lib/Makefile'
+
 }
 
 src_compile() {

@@ -1,30 +1,32 @@
-# Copyright 1999-2016 Gentoo Foundation
+# Copyright 1999-2017 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Id$
 
-EAPI=5
+EAPI=6
 
 EGIT_REPO_URI='https://github.com/QubesOS/qubes-gui-common.git'
 
-inherit eutils git-2 qubes
+inherit eutils git-r3 qubes
 
 DESCRIPTION='Qubes common GUI headers'
 HOMEPAGE='https://github.com/QubesOS/qubes-gui-common'
 
 IUSE=""
-KEYWORDS="~amd64"
+[ "${PV%%[_-]*}" != '9999' ] && [ "${PV%%.*}" != '4' ] && KEYWORDS="amd64 x86"
 LICENSE='GPL-2'
 SLOT='0'
 
-DEPEND="app-crypt/gnupg
-	>=app-emulation/qubes-secpack-20150603"
+qubes_keys_depend
+
 
 src_prepare() {
 
 	readonly version_prefix='v'
 	qubes_prepare
+}
 
-	epatch_user
+src_prepare() {
+
+	eapply_user
 }
 
 src_install() {

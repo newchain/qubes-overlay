@@ -1,0 +1,6 @@
+#### <summary>portage_fetch_socat_client policy</summary>
+#### <desc>
+####	<p>
+####	  Policy allowing portage_fethc_t to use portage_fetch_socat sockets.
+####	</p>
+#### </desc>

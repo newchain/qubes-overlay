@@ -1,0 +1,7 @@
+#### <summary>portage_git_socat_client policy</summary>
+#### <desc>
+####	<p>
+####	  Policy allowing git within portage_sandbox_t to pull via
+####	  portage_git_socat.
+####	</p>
+#### </desc>

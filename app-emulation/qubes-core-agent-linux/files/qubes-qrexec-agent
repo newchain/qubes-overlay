@@ -1,5 +1,4 @@
 #!/sbin/openrc-run
-# $Id$
 
 
 command='/usr/lib/qubes/qrexec-agent'
@@ -14,4 +13,4 @@ start_stop_daemon_args='--stderr /var/log/qubes/qrexec-agent.log'
 rc_after='qubes-core'
 
 rc_need='selinux'
-rc_need='tmpfiles.setup'
+rc_after='tmpfiles.setup'

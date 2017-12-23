@@ -1,0 +1,20 @@
+policy_module(git_socat_client, 1)
+
+
+gen_require(`
+
+	type user_t;
+')
+
+########################################
+#
+# Declarations
+#
+
+type user_git_socat_socket_var_run_t;
+files_type(user_git_socat_socket_var_run_t)
+
+git_socat_rw_git_socat_socket_var_run_sock_files(user_t)
+git_socat_filetrans_git_socat_socket_var_run_sock_files(user_t, user_git_socat_socket_var_run_t)
+
+allow user_t user_git_socat_socket_var_run_t : sock_file { create unlink write };

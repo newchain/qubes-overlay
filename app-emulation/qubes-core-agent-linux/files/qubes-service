@@ -1,9 +1,9 @@
 #!/sbin/openrc-run
-# $Id$
 
 
 command='/usr/lib/qubes/init/qubes-sysinit.sh'
 command_background='false'
+command_umask='0177'
 description='Qubes services configuration'
 start_stop_daemon_args='-k 0177'
 
@@ -11,7 +11,7 @@ rc_keyword='-shutdown'
 
 rc_need='qubesdb-daemon'
 rc_need='selinux'
-rc_need='tmpfiles.setup'
+rc_after='tmpfiles.setup'
 
 
 stop() {

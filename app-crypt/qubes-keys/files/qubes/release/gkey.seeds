@@ -1,0 +1,388 @@
+{
+    "j2010": {
+        "fingerprint": [
+            "3CD43E80F9BD17D125B21846E2A783B8C37BB66B"
+        ], 
+        "keydir": "release", 
+        "keys": [
+            "3CD43E80F9BD17D125B21846E2A783B8C37BB66B"
+        ], 
+        "name": "Joanna Rutkowska (Qubes OS signing key)", 
+        "nick": "j2010", 
+        "uid": [
+            "Joanna Rutkowska (Qubes OS signing key) <joanna@invisiblethingslab.com>"
+        ]
+    }, 
+    "j2011a": {
+        "fingerprint": [
+            "30A6D48BB104C0CAA1D6F027C235DF9A1E30A75D"
+        ], 
+        "keydir": "release", 
+        "keys": [
+            "30A6D48BB104C0CAA1D6F027C235DF9A1E30A75D"
+        ], 
+        "name": "Joanna Rutkowska (Qubes OS signing key)", 
+        "nick": "j2011a", 
+        "uid": [
+            "Joanna Rutkowska (Qubes OS signing key) <joanna@invisiblethingslab.com>"
+        ]
+    },
+    "j2011b": {
+        "fingerprint": [
+            "4ECABE54FD205FB517866818A14B0A7874EADABC"
+        ], 
+        "keydir": "release", 
+        "keys": [
+            "4ECABE54FD205FB517866818A14B0A7874EADABC"
+        ], 
+        "name": "Joanna Rutkowska (Qubes OS signing key)", 
+        "nick": "j2011b", 
+        "uid": [
+            "Joanna Rutkowska (Qubes OS signing key) <joanna@invisiblethingslab.com>"
+        ]
+    },
+    "j2012": {
+        "fingerprint": [
+            "4CF3016FE42900CAB87178B2FB5DAEE165EF29CA"
+        ], 
+        "keydir": "release", 
+        "keys": [
+            "4CF3016FE42900CAB87178B2FB5DAEE165EF29CA"
+        ], 
+        "name": "Joanna Rutkowska (Qubes OS signing key)", 
+        "nick": "j2012", 
+        "uid": [
+            "Joanna Rutkowska (Qubes OS signing key) <joanna@invisiblethingslab.com>"
+        ]
+    },
+    "j2013": {
+        "fingerprint": [
+            "9AB3241224446FA555AF73237397C8B034898310"
+        ], 
+        "keydir": "release", 
+        "keys": [
+            "9AB3241224446FA555AF73237397C8B034898310"
+        ], 
+        "name": "Joanna Rutkowska (Qubes OS signing key)", 
+        "nick": "j2013", 
+        "uid": [
+            "Joanna Rutkowska (Qubes OS signing key) <joanna@invisiblethingslab.com>"
+        ]
+    },
+    "m2011": {
+        "fingerprint": [
+            "3AD545B529761A7452AB59A6F2804017B298547C"
+        ], 
+        "keydir": "release", 
+        "keys": [
+            "3AD545B529761A7452AB59A6F2804017B298547C"
+        ], 
+        "name": "Marek Marczykowski (Qubes OS signing key)", 
+        "nick": "m2011", 
+        "uid": [
+            "Marek Marczykowski (Qubes OS signing key) <marmarek@mimuw.edu.pl>",
+            "Marek Marczykowski <marmarek@mimuw.edu.pl>"
+        ]
+    },
+    "m2012": {
+        "fingerprint": [
+            "F7F8EC2F55B220F8B106BD51928DD427AB5EEF90"
+        ], 
+        "keydir": "release", 
+        "keys": [
+            "F7F8EC2F55B220F8B106BD51928DD427AB5EEF90"
+        ], 
+        "name": "Marek Marczykowski (Qubes OS signing key)", 
+        "nick": "m2012", 
+        "uid": [
+            "Marek Marczykowski (Qubes OS signing key) <marmarek@invisiblethingslab.com>"
+        ]
+    },
+    "m2013": {
+        "fingerprint": [
+            "53A8F7BE4BD42579FDD70D1AEE570349A603BCB6"
+        ], 
+        "keydir": "release", 
+        "keys": [
+            "53A8F7BE4BD42579FDD70D1AEE570349A603BCB6"
+        ], 
+        "name": "Marek Marczykowski (Qubes OS signing key)", 
+        "nick": "m2013", 
+        "uid": [
+            "Marek Marczykowski (Qubes OS signing key) <marmarek@invisiblethingslab.com>"
+        ]
+    },
+    "m2014": {
+        "fingerprint": [
+            "0064428F455451B3EBE78A7F063938BA42CFA724"
+        ], 
+        "keydir": "release", 
+        "keys": [
+            "0064428F455451B3EBE78A7F063938BA42CFA724"
+        ], 
+        "name": "Marek Marczykowski-G�recki (Qubes OS signing key)", 
+        "nick": "m2014", 
+        "uid": [
+            "Marek Marczykowski-G�recki (Qubes OS signing key) <marmarek@invisiblethingslab.com>"
+        ]
+    },
+    "r2013": {
+        "fingerprint": [
+            "3AC87FA304E459D0DF0821A1045A13284C85173A"
+        ], 
+        "keydir": "release", 
+        "keys": [
+            "3AC87FA304E459D0DF0821A1045A13284C85173A"
+        ], 
+        "name": "Rafa\xc5\x82 Wojdy\xc5\x82a (Qubes OS signing key)", 
+        "nick": "r2013", 
+        "uid": [
+            "Rafa\xc5\x82 Wojdy\xc5\x82a (Qubes OS signing key) <omeg@invisiblethingslab.com>",
+            "Rafa\xc5\x82 Wojdy\xc5\x82a (Qubes OS signing key) <omeg@omeg.pl>"
+        ]
+    },
+    "w2016": {
+        "fingerprint": [
+            "FF1A147CAA9A17A12A447F23C92A047EF2CD312B"
+        ], 
+        "keydir": "release", 
+        "keys": [
+            "FF1A147CAA9A17A12A447F23C92A047EF2CD312B"
+        ], 
+        "name": "Wojtek Porczyk (Qubes OS signing key)", 
+        "nick": "w2016", 
+        "uid": [
+            "Wojtek Porczyk (Qubes OS signing key) <woju@invisiblethingslab.com>"
+        ]
+    },
+    "doca": {
+        "fingerprint": [
+            "E11D15C6D20435769FFAA4568CE137352A019A17"
+        ], 
+        "keydir": "release", 
+        "keys": [
+            "E11D15C6D20435769FFAA4568CE137352A019A17"
+        ], 
+        "name": "Axon (Qubes Documentation Signing Key)", 
+        "nick": "doca", 
+        "uid": [
+            "Axon (Qubes Documentation Signing Key)"
+        ]
+    },
+    "docb": {
+        "fingerprint": [
+            "34E665C8D63B981E8144B499AAA743B42FBC07A9"
+        ], 
+        "keydir": "release", 
+        "keys": [
+            "34E665C8D63B981E8144B499AAA743B42FBC07A9",
+	    ""
+        ], 
+        "name": "Brennan Novak (Qubes Website & Documentation Signing)",
+        "nick": "docb", 
+        "uid": [
+            "Brennan Novak (Qubes Website & Documentation Signing) <bnvk@invisiblethingslab.com>"
+        ]
+    },
+    "docj": {
+        "fingerprint": [
+            "F11EC5B562AB8964E5EA0A03B6A0BB95CA74A5C3"
+        ], 
+        "keydir": "release", 
+        "keys": [
+            "F11EC5B562AB8964E5EA0A03B6A0BB95CA74A5C3"
+        ], 
+        "name": "Joanna Rutkowska (Qubes Documentation Signing Key)", 
+        "nick": "docj", 
+        "uid": [
+            "Joanna Rutkowska (Qubes Documentation Signing Key) <joanna@invisiblethingslab.com>"
+        ]
+    },
+    "docm": {
+        "fingerprint": [
+            "9D859853C2E5D5F217F62B2CF32894BE9684938A"
+        ], 
+        "keydir": "release", 
+        "keys": [
+            "9D859853C2E5D5F217F62B2CF32894BE9684938A"
+        ], 
+        "name": "Marek Marczykowski-G�recki (Qubes Documentation Signing Key)", 
+        "nick": "docm", 
+        "uid": [
+            "Marek Marczykowski-G�recki (Qubes Documentation Signing Key) <marmarek@invisiblethingslab.com>"
+        ]
+    },
+    "doch": {
+        "fingerprint": [
+            "3FCF9A1111350DE9FA9C3DD06E7A27B909DAFB92",
+            "575534AF461E5DADC384E8B6F942FF5D3C618D64",
+            "E84F82603FF8E5FD38689B15897CA77DACE2CBF7"
+        ], 
+        "keydir": "release", 
+        "keys": [
+            "3FCF9A1111350DE9FA9C3DD06E7A27B909DAFB92"
+        ], 
+        "name": "Hakisho Nukama (Qubes Documentation Signing Key)", 
+        "nick": "doch", 
+        "uid": [
+            "Hakisho Nukama (Qubes Documentation Signing Key)"
+        ]
+    },
+    "docu": {
+        "fingerprint": [
+            "E47A3C9B80B38CDD48BD56F7BB52274595B71262"
+        ], 
+        "keydir": "release", 
+        "keys": [
+            "E47A3C9B80B38CDD48BD56F7BB52274595B71262"
+        ], 
+        "name": "unman (Qubes Documentation Signing Key)", 
+        "nick": "docu", 
+        "uid": [
+            "unman (Qubes Documentation Signing Key) <unman@thirdeyesecurity.org>"
+        ]
+    },
+    "docw": {
+        "fingerprint": [
+            "0D95CE20AC8E4911FA87F667DC2F3678D272F2A8"
+        ], 
+        "keydir": "release", 
+        "keys": [
+            "0D95CE20AC8E4911FA87F667DC2F3678D272F2A8"
+        ], 
+        "name": "Wojtek Porczyk (Qubes OS documentation signing key)", 
+        "nick": "docw", 
+        "uid": [
+            "Wojtek Porczyk (Qubes OS documentation signing key) <woju@invisiblethingslab.com>"
+        ]
+    },
+    "docz": {
+        "fingerprint": [
+            "5D867093EF37A36B21B5A2D3FD64F4F9E9720C4D",
+            "329D5EBC30CF6C508747F0FF3610CB08929D0EA8",
+            "5A6A49FEBBAF3EEDDF8F45A4F662BC866E087C23"
+        ], 
+        "keydir": "release", 
+        "keys": [
+            "5D867093EF37A36B21B5A2D3FD64F4F9E9720C4D"
+        ], 
+        "name": "Zrubi (Qubes Documentation Signing Key)", 
+        "nick": "docz", 
+        "uid": [
+            "Zrubi (Qubes Documentation Signing Key)"
+        ]
+    },
+    "master": {
+        "fingerprint": [
+            "427F11FD0FAA4B080123F01CDDFA1A3E36879494"
+        ], 
+        "keydir": "release", 
+        "keys": [
+            "427F11FD0FAA4B080123F01CDDFA1A3E36879494"
+        ], 
+        "name": "Qubes Master Signing Key", 
+        "nick": "master", 
+        "uid": [
+            "Qubes Master Signing Key"
+        ]
+    },
+    "r1": {
+        "fingerprint": [
+            "FFED4FD8E49E79F39C83FD81EA01201B211093A7"
+        ], 
+        "keydir": "release", 
+        "keys": [
+            "FFED4FD8E49E79F39C83FD81EA01201B211093A7"
+        ], 
+        "name": "Qubes OS Release 1 Signing Key", 
+        "nick": "r1", 
+        "uid": [
+            "Qubes OS Release 1 Signing Key"
+        ]
+    },
+    "r2": {
+        "fingerprint": [
+            "3F01DEF49719158EF86266F80C73B9D40A40E458"
+        ], 
+        "keydir": "release", 
+        "keys": [
+            "3F01DEF49719158EF86266F80C73B9D40A40E458"
+        ], 
+        "name": "Qubes OS Release 2 Signing Key", 
+        "nick": "r2", 
+        "uid": [
+            "Qubes OS Release 2 Signing Key"
+        ]
+    },
+    "r3": {
+        "fingerprint": [
+            "C52261BE0A823221D94CA1D1CB11CA1D03FA5082"
+        ], 
+        "keydir": "release", 
+        "keys": [
+            "C52261BE0A823221D94CA1D1CB11CA1D03FA5082"
+        ], 
+        "name": "Qubes OS Release 3 Signing Key", 
+        "nick": "r3", 
+        "uid": [
+            "Qubes OS Release 3 Signing Key"
+        ]
+    },
+    "r4": {
+        "fingerprint": [
+            "5817A43B283DE5A9181A522E1848792F9E2795E9"
+        ], 
+        "keydir": "release", 
+        "keys": [
+            "5817A43B283DE5A9181A522E1848792F9E2795E9"
+        ], 
+        "name": "Qubes OS Release 4 Signing Key",
+        "nick": "r3", 
+        "uid": [
+            "Qubes OS Release 4 Signing Key"
+        ]
+    },
+    "secpackj": {
+        "fingerprint": [
+            "BB67A93CA089499C47B69E3C4E6829BC92C7B3DC"
+        ], 
+        "keydir": "release", 
+        "keys": [
+            "BB67A93CA089499C47B69E3C4E6829BC92C7B3DC"
+        ], 
+        "name": "Joanna Rutkowska (Qubes Security Pack Signing Key)", 
+        "nick": "secpackj", 
+        "uid": [
+            "Joanna Rutkowska (Qubes Security Pack Signing Key) <joanna@invisiblethingslab.com>"
+        ]
+    },
+    "secpackm": {
+        "fingerprint": [
+            "2D1771FE4D767EDC76B089FAD655A4F21830E06A"
+        ], 
+        "keydir": "release", 
+        "keys": [
+            "2D1771FE4D767EDC76B089FAD655A4F21830E06A"
+        ], 
+        "name": "Marek Marczykowski-G�recki (Qubes security pack)", 
+        "nick": "secpackm", 
+        "uid": [
+            "Marek Marczykowski-G�recki (Qubes security pack) <marmarek@invisiblethingslab.com>"
+        ]
+    },
+    "security": {
+        "fingerprint": [
+            "B35B2DA4B9F9F10949226F77ACC2602F3F48CB21",
+            "73471302917A6769C7D622754F75939930498E2A"
+        ], 
+        "keydir": "release", 
+        "keys": [
+            "B35B2DA4B9F9F10949226F77ACC2602F3F48CB21"
+        ], 
+        "name": "Qubes OS Security Team", 
+        "nick": "security", 
+        "uid": [
+            "Qubes OS Security Team <security@qubes-os.org>"
+        ]
+    }
+}

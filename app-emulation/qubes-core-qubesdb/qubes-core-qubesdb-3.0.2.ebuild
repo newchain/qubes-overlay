@@ -1,51 +1,59 @@
-# Copyright 1999-2016 Gentoo Foundation
+# Copyright 1999-2017 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Id$
 
-EAPI=5
+EAPI=6
 
 EGIT_REPO_URI='https://github.com/QubesOS/qubes-core-qubesdb.git'
 
-inherit eutils git-2 qubes
+#MULTILIB_COMPAT=( abi_x86_{32,64} )
+
+inherit eutils git-r3 qubes
 
 DESCRIPTION="Qubes configuration database"
 HOMEPAGE='https://github.com/QubesOS/qubes-core-agent-linux'
 
 IUSE="template"
-KEYWORDS="~amd64"
+[ "${PV%%[_-]*}" != '9999' ] && [ "${PV%%.*}" != '4' ] && KEYWORDS="amd64 x86"
 LICENSE='GPL-2'
 
 qubes_slot
 
-
 CDEPEND="app-emulation/qubes-core-vchan-xen:${SLOT}"
 
+tag_date='20150331'
+qubes_keys_depend
+
 DEPEND="${CDEPEND}
-	app-crypt/gnupg
-	>=app-emulation/qubes-secpack-20150603"
+	${DEPEND}"
+
 RDEPEND="${CDEPEND}"
 
 
-src_prepare() {
+src_unpack() {
 
 	readonly version_prefix='v'
 	qubes_prepare
+}
+
+src_prepare() {
+
+	eapply_user
 
 
-	epatch_user
+	if [ "${SLOT}" \> '0/31' ] || ( [ "${SLOT}" = '0/31' ] && [ "${PV##*.}" -gt 0 ] )
+	then
 
+	  epatch "${FILESDIR}/qubesdb-3.1.1_no-systemd.patch"
 
-	if [[ "${SLOT}" > '0/31' ]] || ( [ "${SLOT}" == '0/31' ] && [ "${PV##*.}" -gt 0 ] ); then {
+	elif [ "${SLOT}" = '0/30' ] &&  [ "${PV##*.}" -gt 2 ]
+	then
 
-		epatch "${FILESDIR}/qubesdb-3.1.1_no-systemd.patch"
-	};
-	elif [ "${SLOT}" == '0/30' ] &&  [ "${PV##*.}" -gt 2 ]; then {
+	  epatch "${FILESDIR}/qubesdb-3.0.6_no-systemd.patch"
 
-		epatch "${FILESDIR}/qubesdb-3.0.3_no-systemd.patch"
-	};
-	else {
-		epatch "${FILESDIR}/no-systemd.patch"
-	};
+	else
+
+	  epatch "${FILESDIR}/no-systemd.patch"
+
 	fi
 
 	sed -i 's/\ -Werror//g' -- 'daemon/Makefile'
@@ -63,6 +71,7 @@ src_install() {
 
 	emake DESTDIR="${D}" install
 
+	fperms 0711 '/usr/bin/qubesdb-cmd'
 	fperms 0700 '/usr/sbin/qubesdb-daemon'
 
 	doinitd "${FILESDIR}/qubesdb-daemon"
@@ -77,5 +86,5 @@ src_install() {
 
 pkg_postinst() {
 
-	$(use template) && qubes_to_runlevel qubesdb-daemon
+	use template && qubes_to_runlevel qubesdb-daemon
 }

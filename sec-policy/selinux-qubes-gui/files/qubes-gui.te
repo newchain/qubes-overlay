@@ -5,19 +5,16 @@ gen_require(`
 
 	attribute qubes_init_domain;
 
-	type initrc_state_t;
 	type qrexec-agent_su_t;
-	type qrexec-agent_initrc_exec_t;
 	type qubes-rpc-multiplexer_sh_t;
 	type qubes_u2mfn_t;
-	type qubesdb_initrc_exec_t;
 	type su_exec_t;
 	type tmpfiles_t;
 	')
 
 
 ########################################
-#
+# 
 # Definitions
 #
 
@@ -29,9 +26,9 @@ gen_require(`
 
 gen_tunable(qubes_gui_bluepill_monitor, true)
 
-#type qubes-gui_t;
-#type qubes-gui_exec_t;
-#init_daemon_domain(qubes-gui_t, qubes-gui_exec_t)
+type qubes-gui_initrc_t, qubes_init_domain;
+type qubes-gui_initrc_exec_t;
+init_script_domain(qubes-gui_initrc_t, qubes-gui_initrc_exec_t)
 
 type qubes-gui_t;
 domain_type(qubes-gui_t)
@@ -85,10 +82,6 @@ role system_r types qubes-gui_t;
       role system_r types qubes-run-xorg_worker_t;
 
 role system_r types xauth_t;
-
-type qubes-gui_initrc_t, qubes_init_domain;
-type qubes-gui_initrc_exec_t;
-init_script_domain(qubes-gui_initrc_t, qubes-gui_initrc_exec_t)
 
 type qubes-session_t;
 domain_type(qubes-session_t)
@@ -156,11 +149,15 @@ neverallow ~qubes-gui_t  qubes-gui_sh_t : process transition;
 neverallow qubes-gui_t shell_exec_t : file execute_no_trans;
 
 dev_rw_xen(qubes-gui_t)
+auditallow qubes-gui_t xen_device_t : chr_file ioctl;
 #allowxperm qubes-gui_t xen_device_t : chr_file ioctl { 0x4502 0x4705 0x4706 0x4707 };
 #neverallowxperm qubes-gui_t xen_device_t : chr_file ioctl ~{ 0x4502 0x4705 0x4706 0x4707 };
 
 fs_search_xenfs(qubes-gui_t)
 allow qubes-gui_t xenfs_t : file { getattr read write open ioctl };
+auditallow qubes-gui_t xenfs_t : file ioctl;
+allow qubes-gui_t device_t : chr_file { getattr read write open ioctl };
+auditallow qubes-gui_t device_t : chr_file ioctl;
 #allowxperm qubes-gui_t xenfs_t : file ioctl 0x5000;
 #neverallowxperm qubes-gui_t xenfs_t : file ioctl ~0x5000;
 
@@ -197,6 +194,8 @@ ifdef(`enable_mls',`
 neverallow ~qubes-gui_initrc_t qubes-gui_t : process transition;
 neverallow qubes-gui_initrc_t qubes-gui_exec_t : file execute_no_trans;
 
+allow qubes-gui_initrc_t self : capability sys_resource; 
+
 # ( cmdline | filesystems | meminfo )
 #
 kernel_dontaudit_read_system_state(qubes-gui_initrc_t)
@@ -212,8 +211,6 @@ userdom_dontaudit_search_user_home_dirs(qubes-gui_initrc_t)
 
 allow qubes-gui_initrc_t self : process setrlimit;
 
-allow qubes-gui_initrc_t initrc_state_t : dir { create_dir_perms delete_dir_perms };
-
 neverallow qubes-gui_initrc_t ~qubes-gui_initrc_exec_t : file entrypoint;
 
 dontaudit qubes-gui_initrc_t proc_t : dir mounton;
@@ -222,8 +219,9 @@ dontaudit qubes-gui_initrc_t proc_t : dir mounton;
 #
 init_read_script_files(qubes-gui_initrc_t)
 init_dontaudit_read_all_script_files(qubes-gui_initrc_t)
-allow qubes-gui_initrc_t qrexec-agent_initrc_exec_t : file getattr;
-allow qubes-gui_initrc_t qubesdb_initrc_exec_t : file getattr;
+qubes_core_depend_qrexec_agent(qubes-gui_initrc_t)
+
+init_dontaudit_read_state(qubes-gui_initrc_t)
 
 
 # Stop
@@ -233,12 +231,11 @@ kernel_list_proc(qubes-gui_initrc_t)
 allow qubes-gui_initrc_t qubes-gui_t : process { signal signull };
 allow qubes-gui_initrc_t qubes-run-xorg_sh_t : process signal;
 allow qubes-gui_initrc_t qubes-run-xorg_su_t : process signal;
-allow qubes-gui_initrc_t qubes-run-xorg_xinit_t : process signal;
+allow qubes-gui_initrc_t qubes-run-xorg_xinit_t : process { signal sigkill };
 allow qubes-gui_initrc_t qubes-run-xorg_xinitrc_t : process signal;
 allow qubes-gui_initrc_t qubes-run-xorg_xinitrc_worker_t : process signal;
-allow qubes-gui_initrc_t xserver_t : process signal;
+allow qubes-gui_initrc_t xserver_t : process { signal sigkill };
 allow qubes-gui_initrc_t self : capability kill;
-auditallow qubes-gui_initrc_t self : capability kill;
 qubes_core_delete_qubes_var_run_files(qubes-gui_initrc_t)
 
 
@@ -247,7 +244,7 @@ qubes_core_delete_qubes_var_run_files(qubes-gui_initrc_t)
 # qubes-gui_sh_t local policy
 #
 
-corecmd_read_bin_symlinks(qubes-gui_sh_t)
+corecmd_search_bin(qubes-gui_sh_t)
 
 files_dontaudit_read_etc_files(qubes-gui_sh_t)
 
@@ -279,7 +276,7 @@ allow qubes-run-xorg_t qubes-gui_etc_t : file { read open write };
 # ( shell | ld )
 #
 allow qubes-run-xorg_t qubes-gui_sh_t : fd use;
-allow qubes-run-xorg_t shell_exec_t : file read;
+allow qubes-run-xorg_t shell_exec_t : file { read execute };
 
 neverallow qubes-run-xorg_t ~qubes-run-xorg_exec_t : file entrypoint;
 
@@ -347,6 +344,13 @@ allow qubes-run-xorg_su_t self : capability { setgid setuid };
 allow qubes-run-xorg_su_t self : fifo_file { write read };
 allow qubes-run-xorg_su_t self : netlink_selinux_socket { create bind };
 allow qubes-run-xorg_su_t self : process setsched;
+
+# testing for cleanup...maybe other signals/kills aren't necessary?
+allow qubes-run-xorg_su_t self : capability kill;
+auditallow qubes-run-xorg_su_t self : capability kill;
+
+allow qubes-run-xorg_su_t qubes-run-xorg_sh_t : process signal;
+
 
 neverallow qubes-run-xorg_su_t ~su_exec_t : file entrypoint;
 
@@ -453,12 +457,15 @@ allow qubes-run-xorg_xinit_t qubes-run-xorg_sh_t : process sigchld;
 
 allow qubes-run-xorg_xinit_t self : process setpgid;
 
+allow qubes-run-xorg_xinit_t qubes-run-xorg_xinitrc_t : process signal;
+allow qubes-run-xorg_xinit_t xserver_t : process signal;
+
 
 # F uuu to etc_t:dir read
 #
 exec_files_pattern(qubes-run-xorg_xinit_t, etc_t, etc_t)
 
-corecmd_read_bin_symlinks(qubes-run-xorg_xinit_t)
+corecmd_search_bin(qubes-run-xorg_xinit_t)
 
 # /dev/null:
 #
@@ -595,14 +602,14 @@ qubes_gui_stream_write(xserver_t)
 #
 qubes_gui_use_fds(xserver_t)
 
-ifdef(`enable_mls',`
+#ifdef(`enable_mls',`
 
 	# Make it a little bit harder for anything
 	# but xserver to write to u2mfn by making
 	# qubes_u2mfn_t qubes_userspace_limit...
 	#
-	mls_trusted_object(qubes_u2mfn_t)
-')
+#	mls_trusted_object(qubes_u2mfn_t)
+#')
 
 ########################################
 #
@@ -615,7 +622,7 @@ tunable_policy(`! qubes_gui_bluepill_monitor',`
 	#
 	# qubes-rpc-multiplexer_sh_t local policy
 	#
-
+	
 	domtrans_pattern(qubes-rpc-multiplexer_sh_t, qubes-set-monitor-layout_exec_t, qubes-set-monitor-layout_t)
 #	neverallow ~qubes-rpc-multiplexer_sh_t qubes-set-monitor-layout_t : process transition;
 #	neverallow qubes-rpc-multiplexer_sh_t qubes-set-monitor-layout_exec_t : file execute_no_trans;

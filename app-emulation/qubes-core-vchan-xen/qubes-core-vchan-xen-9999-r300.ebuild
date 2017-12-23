@@ -1,55 +1,74 @@
-# Copyright 1999-2016 Gentoo Foundation
+# Copyright 1999-2017 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Id$
 
-EAPI=5
+EAPI=6
 
 EGIT_REPO_URI='https://github.com/QubesOS/qubes-core-vchan-xen.git'
 
-inherit eutils git-2 qubes
+#MULTILIB_COMPAT=( abi_x86_{32,64} )
+
+inherit eutils git-r3 qubes
 
 DESCRIPTION='Qubes I/O libraries'
 HOMEPAGE='https://github.com/QubesOS/qubes-core-vchan-xen'
 
-KEYWORDS=""
+[ "${PV%%[_-]*}" != '9999' ] && [ "${PV%%.*}" != '4' ] && KEYWORDS="amd64 x86"
 LICENSE='GPL-2'
 
 qubes_slot
 
-RDEPEND="app-emulation/xen-tools"
-DEPEND="app-crypt/gnupg
-	>=app-emulation/qubes-secpack-20150603
-	${DEPEND}
-	${RDEPEND}"
+CDEPEND="app-emulation/xen-tools"
+
+qubes_keys_depend
+
+DEPEND="${CDEPEND}
+	${DEPEND}"
+
+RDEPEND="${CDEPEND}"
 
 
-src_prepare() {
+src_unpack() {
 
 	readonly version_prefix='v'
 	qubes_prepare
+}
 
-	epatch_user
+src_prepare() {
 
-	sed -i -- 's/\ -Werror//g' 'vchan/Makefile.linux'
+	eapply_user
+
+	sed -i "s:/usr/lib/\(libu2mfn\.so\|libvchan-xen\.so\):/usr/$(get_libdir)/\1:" -- 'Makefile'
+
+	sed -i 's/\ -Werror//' -- 'vchan/Makefile.linux'
+
+	sed -i "s/^CFLAGS+\?=\(.*\)$/CFLAGS=\1 ${CFLAGS}/g" -- 'u2mfn/Makefile'
+	sed -i "s/^CFLAGS+\?=\(.*\)$/CFLAGS=\1 ${CFLAGS}/g" -- 'vchan/Makefile.linux'
 }
 
 src_compile() {
 
-	emake all;
+	emake LIBDIR="/usr/$(get_libdir)" all
 }
 
 src_install() {
 
-	emake DESTDIR="${D}" install
+	emake DESTDIR="${D}" LIBDIR="/usr/$(get_libdir)" install
 
-	insinto '/usr/share/qubes'
-	doins "${FILESDIR}/xenstore-do-not-use-broken-kernel-interface.patch"
+	insinto '/etc/portage/patches/app-emulation/xen-tools'
+	doins "${FILESDIR}/xenstore-do-not-use-broken-kernel-interface_4.6.patch"
+
+	insinto '/etc/portage/patches/app-emulation/xen-tools-4.5'
+	doins "${FILESDIR}/xenstore-do-not-use-broken-kernel-interface_4.5.patch"
+
+	insinto '/usr/share/qubes/patches'
+	doins "${FILESDIR}/xenstore-do-not-use-broken-kernel-interface_4.5.patch"
+	doins "${FILESDIR}/xenstore-do-not-use-broken-kernel-interface_4.6.patch"
 }
 
 pkg_postinst() {
 
 	echo
-	ewarn "You must apply xenstore-do-not-use-broken-kernel-interface.patch"
+	ewarn "You must apply xenstore-do-not-use-broken-kernel-interface_4.6.patch"
 	ewarn "to app-emulation/xen-tools."
 	echo
 }
