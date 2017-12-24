@@ -1,0 +1,9 @@
+#!/sbin/openrc-run
+
+
+command='/usr/sbin/qubesdb-daemon'
+command_args='0'
+pidfile='/run/qubes/qubesdb.pid'
+
+rc_need="selinux"
+rc_after="tmpfiles.setup"

@@ -13,7 +13,7 @@ inherit eutils git-r3 flag-o-matic python-single-r1 qubes
 DESCRIPTION='Qubes GUI agent'
 HOMEPAGE='https://github.com/QubesOS/qubes-gui-agent-linux'
 
-IUSE="candy icon +python pulseaudio selinux template"
+IUSE="candy -debug icon -locale +python pulseaudio selinux -session template"
 QUBES_RPC_PVE=( SetMonitorLayout )
 IUSE="${IUSE} ${QUBES_RPC_NVE[@]/#/+qubes-rpc_}"
 [ "${PV%%[_-]*}" != '9999' ] && [ "${PV%%.*}" != '4' ] && KEYWORDS="amd64 x86"
@@ -21,35 +21,45 @@ LICENSE='GPL-2'
 
 qubes_slot
 
-CDEPEND="pulseaudio? ( media-sound/pulseaudio[xen] )
-	x11-base/xorg-server[xorg]"
+CDEPEND="app-emulation/qubes-core-vchan-xen:${SLOT}
+	x11-libs/libX11
+	x11-libs/libXcomposite
+	x11-libs/libXdamage
+	x11-base/xorg-server[xorg(+)]
+	pulseaudio? ( media-sound/pulseaudio[xen] )"
 
-if [ "${SLOT}" \> '0/20' ]
+if [ "${SLOT}" != '0/20' ]
 then
 
 	CDEPEND="${CDEPEND}
-	  app-emulation/qubes-core-qubesdb"
+	  app-emulation/qubes-core-qubesdb:${SLOT}"
 
 fi
 
+tag_date='20171116'
 qubes_keys_depend
 
 DEPEND="${CDEPEND}
 	${DEPEND}
-	app-emulation/qubes-gui-common"
+	app-emulation/qubes-gui-common:${SLOT}
+	x11-proto/fontsproto
+	x11-proto/randrproto
+	x11-proto/renderproto
+	x11-proto/xproto"
 
 RDEPEND="${CDEPEND}
-	candy? ( x11-themes/gnome-themes-standard[gtk] )
-	python? ( ${PYTHON_DEPS} )
-	selinux? ( sec-policy/selinux-qubes-gui[pulseaudio?] )
-	template? ( x11-base/xorg-server[minimal,-suid] )
+	candy? ( x11-themes/gnome-themes-standard[gtk(+)] )
 	icon? ( || (
 	  dev-python/xcffib
 	  x11-libs/xpyb
-	) )"
+	) )
+	python? ( ${PYTHON_DEPS} )
+	selinux? ( sec-policy/selinux-qubes-gui[pulseaudio?] )
+	template? ( x11-base/xorg-server[minimal,-suid(-),-udev(-)] )"
 
 REQUIRED_USE="
-	icon? ( python )"
+	icon? ( python )
+	selinux? ( !session )"
 
 
 src_unpack() {
@@ -62,34 +72,30 @@ src_prepare() {
 
 	eapply_user
 
-	if [ "${SLOT}" \> '0/20' ]
+	if [ "${SLOT}" != '0/20' ]
 	then
 
 	  epatch "${FILESDIR}/Makefile-loud.patch"
 
 	fi
 
-	if ! use icon
-	then
+	use debug || sed -i 's/\(CFLAGS.*\)-g\ /\1/' -- 'pulse/Makefile' 'gui-agent/Makefile'
 
-	  sed -i '/icon-sender/d' -- 'Makefile'
+	use icon || sed -i '/icon-sender/d' -- 'Makefile'
 
-	fi
+	use locale || sed -i '/qubes-keymap/d' -- 'Makefile'
 
-	if ! use python
-	then
-
-	  sed -i '/change-keyboard-layout/d' -- 'Makefile'
-
-	fi
-
-	sed -i '/security.*qubes-gui/d' -- 'Makefile'
-	sed -i 's/\(exec\ su\)\ -l/\1/g' -- 'appvm-scripts/usrbin/qubes-run-xorg.sh'
+	use python || sed -i '/change-keyboard-layout/d' -- 'Makefile'
 
 	use pulseaudio || sed -i '/pulse/d' -- 'Makefile'
 
+	use session || sed -i 's/\(exec\ su\)\ -l/\1/g' -- 'appvm-scripts/usrbin/qubes-run-xorg.sh'
+
+	sed -i '/security.*qubes-gui/d' -- 'Makefile'
+
+	sed -i 's/\ -Werror//g' -- 'gui-agent/Makefile' 'pulse/Makefile' 
+
 	sed -i '1s/^/BACKEND_VMM ?= xen\n/' -- 'gui-agent/Makefile' 'pulse/Makefile'
-	sed -i 's/\ -Werror//g' -- 'gui-agent/Makefile'
 
 	sed -i 's/LIBTOOLIZE=\"\"/LIBTOOLIZE="libtoolize"/g' -- 'xf86-input-mfndev/bootstrap'
 }
@@ -121,6 +127,7 @@ src_install() {
 
 	  insinto 'home.orig/user'
 	  newins "${FILESDIR}/gtkrc-2.0" '.gtkrc-2.0'
+	  fperms 0600 'home.orig/user/.gtkrc-2.0'
 
 	fi
 
@@ -130,8 +137,10 @@ src_install() {
 
 	fperms 0600 '/etc/conf.d/qubes-gui-agent'
 	fperms 0700 '/etc/init.d/qubes-gui-agent'
+	fperms 0600 '/etc/sysconfig/modules/qubes-u2mfn.modules'
 	fperms 0700 '/usr/bin/qubes-gui'
 	fperms 0600 '/usr/lib/tmpfiles.d/qubes-'{gui,session}'.conf'
+	fperms 0600 '/usr/lib/sysctl.d/30-qubes-gui-agent.conf'
 
 	if ! use template
 	then

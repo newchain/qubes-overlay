@@ -62,7 +62,7 @@ start() {
 		socket_name="${socket_name:-sock}"
 		socket_path="${socket_path:-${socket_dir}/${socket_name}}"
 
-		command_args=( "-t${socat_timeout}" "UNIX-LISTEN:${socket_path},mode=${socket_mode},perm-early=${socket_mode},reuseaddr,umask=${socat_umask},fork" "EXEC:${qrexec_client_vm_exe}\ ${name} qubes.${qubes_rpc_name}+${client_secret}" )
+		command_args=( "-t${socat_timeout}" "UNIX-LISTEN:${socket_path},mode=${socket_mode},perm-early=${socket_mode},reuseaddr,type=1,umask=${socat_umask},fork" "EXEC:${qrexec_client_vm_exe}\ ${name} qubes.${qubes_rpc_name}+${client_secret}" )
 
 	elif  [ "${tcp}" -eq 1 ] && [ "${socks}" -eq 0 ]
 	then
@@ -104,7 +104,7 @@ start() {
 		socket_name="${socket_name:-sock}"
 		socket_path="${socket_path:-${socket_dir}/${socket_name}}"
 
-		command_args=( "-t${socat_timeout}" "UNIX-LISTEN:${socket_path},mode=${socket_mode},perm-early=${socket_mode},reuseaddr,umask=${socat_umask},fork" "SOCKS5:${destination}:${destination_port},socksuser=${socks_user}:${socks_password} | EXEC:${qrexec_client_vm_exe}\ ${name} qubes.${qubes_rpc_name}+${client_secret}" )
+		command_args=( "-t${socat_timeout}" "UNIX-LISTEN:${socket_path},mode=${socket_mode},perm-early=${socket_mode},reuseaddr,type=1,umask=${socat_umask},fork" "SOCKS5:${destination}:${destination_port},socksuser=${socks_user}:${socks_password} | EXEC:${qrexec_client_vm_exe}\ ${name} qubes.${qubes_rpc_name}+${client_secret}" )
 
 	fi
 

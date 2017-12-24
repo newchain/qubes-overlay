@@ -316,6 +316,7 @@ interface(`qubes_core_read_qubes_functions',`
 		type qubes_functions_t;
 	')
 
+	qubes_core_search_qubes_rpc_worker_exec($1)
 	allow $1 qubes_functions_t : file { getattr read open };
 ')
 

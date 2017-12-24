@@ -13,12 +13,14 @@ HOMEPAGE='https://github.com/QubesOS/qubes-gui-common'
 IUSE=""
 [ "${PV%%[_-]*}" != '9999' ] && [ "${PV%%.*}" != '4' ] && KEYWORDS="amd64 x86"
 LICENSE='GPL-2'
-SLOT='0'
 
+qubes_slot
+
+tag_date='20150903'
 qubes_keys_depend
 
 
-src_prepare() {
+src_unpack() {
 
 	readonly version_prefix='v'
 	qubes_prepare

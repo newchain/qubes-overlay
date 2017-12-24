@@ -13,7 +13,7 @@ inherit eutils fcaps git-r3 python-single-r1 qubes user
 DESCRIPTION='Qubes RPC agent and utilities for Linux VMs'
 HOMEPAGE='https://github.com/QubesOS/qubes-core-agent-linux'
 
-IUSE="+X11 -dbus dhcp +entropy +glib gnome gtk +iptables kde +log nautilus net -networkmanager -nm-applet +python selinux svg template -tinyproxy usb"
+IUSE="+X11 -dbus -debug dhcp +entropy +glib gnome gtk +iptables kde +log nautilus net -networkmanager -nm-applet +python selinux svg template -tinyproxy usb"
 QUBES_RPC_NVE=( GetImageRGBA OpenURL SelectDirectory SelectFile SetDateTime SyncNtpClock )
 IUSE="${IUSE} ${QUBES_RPC_NVE[@]/#/-qubes-rpc_}"
 QUBES_RPC_PVE=( Backup DetachPciDevice Filecopy GetAppmenus InstallUpdatesGUI OpenInVM Restore Suspend VMShell WaitforSession )
@@ -88,8 +88,8 @@ RDEPEND="${CDEPEND}
 	    dev-python/pygobject
 	    dbus? ( dev-python/dbus-python )
 	    svg? (
-	      dev-python/pycairo[svg]
-	      dev-python/pygobject[cairo]
+	      dev-python/pycairo[svg(+)]
+	      dev-python/pygobject[cairo(+)]
 	    )
 	  )
 	)
@@ -240,7 +240,7 @@ src_prepare() {
 
 	if ! use networkmanager
 	then
-	
+
 	  sed -i '/NetworkManager/d' -- 'Makefile' || die
 	  sed -i '/qubes-fix-nm-conf/d' -- 'Makefile' || die
 
@@ -289,10 +289,10 @@ src_prepare() {
 
 	if ! use qubes-rpc_OpenInVM
 	then
-	
+
 	  sed -i 's/qubes\.OpenInVM\,*//g' -- 'Makefile'
 	  sed -i 's/vm-file-editor\,*//g' -- 'Makefile'
-	
+
 	fi
 
 	if ! use qubes-rpc_OpenURL
@@ -319,23 +319,34 @@ src_prepare() {
 	fi
 
 	if ! use qubes-rpc_SyncNtpClock
-	then 
-	
+	then
+
 	  sed -i 's/\,qubes\.SyncNtpClock//g' -- 'Makefile'
 	  sed -i '/sync-ntp-clock/d' -- 'Makefile'
 
 	fi
 
-	if use tinyproxy
+	if ! use tinyproxy
 	then
-	
+
 	  sed -i '/iptables-updates-proxy/d' -- 'Makefile'
 	  sed -i '/tinyproxy/d' -- 'Makefile'
 
 	fi
 
+	sed -i "s/^CFLAGS+\?=\(.*\)$/CFLAGS=\1 ${CFLAGS}/g" -- 'misc/Makefile'
 	sed -i "s/^CFLAGS+\?=\(.*\)$/CFLAGS=\1 ${CFLAGS}/g" -- 'qrexec/Makefile'
 	sed -i "s/^CFLAGS+\?=\(.*\)$/CFLAGS=\1 ${CFLAGS}/g" -- 'qubes-rpc/Makefile'
+
+	if ! use debug
+	then
+
+	  sed -i 's/\(CFLAGS.*\)-g\ /\1/' -- 'misc/Makefile'
+	  sed -i 's/\(CFLAGS.*\)-g\ /\1/' -- 'qrexec/Makefile'
+	  sed -i 's/\(CFLAGS.*\)-g\ /\1/' -- 'qubes-rpc/Makefile'
+	  sed -i 's/\((CC).*\)-g\ /\1/' -- 'qubes-rpc/Makefile'
+
+	fi
 
 
 	# qubes-sysinit.sh

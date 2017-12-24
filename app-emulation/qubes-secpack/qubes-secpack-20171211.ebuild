@@ -22,7 +22,7 @@ RDEPEND=""
 MY_PV='marmarek_sec_8487a05e'
 
 
-src_prepare() {
+src_unpack() {
 
 	if [ "${PV%%[_-]*}" != '9999' ] && [ -z "${MY_PV}" ]
 	then
@@ -33,6 +33,9 @@ src_prepare() {
 
 	readonly version_prefix=''
 	qubes_prepare
+}
+
+src_prepare() {
 
 	eapply_user
 }

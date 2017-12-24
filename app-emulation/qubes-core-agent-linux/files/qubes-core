@@ -30,22 +30,25 @@ start() {
 
 	ebegin 'Setting up Qubes persistent partition'
 
-	if [ -e /dev/xvdb ]
+	if [ -e '/dev/xvdb' ]
 	then
 
-	  # Check if private.img (xvdb) is empty - all zeros
-	  #
-	  private_size_512="$(${blockdev_bin} --getsz /dev/xvdb)"
+	  # This has a habit of wiping years of work whenever openrc or base
+	  # policy changes, so, yeah...
 
-	  if "${dd_bin}" if=/dev/zero bs=512 count="${private_size_512}" | "${diff_bin}" -- '/dev/xvdb' - >>/dev/null
-	  then
-
-	    # The device is empty, create filesystem
-	    #
-	    einfo '--> Virgin boot of the VM: creating filesystem on private.img'
-	    "${mkfs_ext4_bin}" -m 0 -q '/dev/xvdb' || exit 1
-
-	  fi
+#	  # Check if private.img (xvdb) is empty - all zeros
+#	  #
+#	  private_size_512="$(${blockdev_bin} --getsz /dev/xvdb)"
+#
+#	  if "${dd_bin}" if=/dev/zero bs=512 count="${private_size_512}" | "${diff_bin}" -- '/dev/xvdb' - >>/dev/null
+#	  then
+#
+#	    # The device is empty, create filesystem
+#	    #
+#	    einfo '--> Virgin boot of the VM: creating filesystem on private.img'
+#	    "${mkfs_ext4_bin}" -m 0 -q '/dev/xvdb' || exit 1
+#
+#	  fi
 
 	  "${touch_bin}" -t 200001010000 -- '/rw' || ewarn 'Unable to set timestamp on /rw'
 

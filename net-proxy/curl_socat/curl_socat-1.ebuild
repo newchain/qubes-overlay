@@ -42,10 +42,6 @@ src_install() {
 	doexe "${FILESDIR}/curl_wrapper.sh"
 
 	insopts -m0600
-	insinto '/home.orig/user/.ssh'
-	doins "${FILESDIR}/ssh_config"
-
-	insopts -m0600
 	insinto '/usr/lib/tmpfiles.d'
 	doins "${FILESDIR}/curl_socat.conf"
 

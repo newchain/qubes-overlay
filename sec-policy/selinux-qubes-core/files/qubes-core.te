@@ -1751,9 +1751,10 @@ neverallow qubes-trigger-sync-appmenus_t bin_t : file execute_no_trans;
 getty_use_fds(qubes-trigger-sync-appmenus_t)
 userdom_use_user_ttys(qubes-trigger-sync-appmenus_t)
 
+qubes_core_bluepill_locale(qubes-trigger-sync-appmenus_t)
 qubes_core_qubesdb_cmd_domtrans(qubes-trigger-sync-appmenus_t)
 
-qubes_core_search_qubes_rpc_worker_exec(qubes-trigger-sync-appmenus_t)
+qubes_core_read_qubes_functions(qubes-trigger-sync-appmenus_t)
 qubes_core_qrexec_client_vm_domtrans(qubes-trigger-sync-appmenus_t, sync-appmenus_qrexec-client-vm_t)
 neverallow ~qubes-trigger-sync-appmenus_t sync-appmenus_qrexec-client-vm_t : process transition;
 neverallow qubes-trigger-sync-appmenus_t qrexec-client-vm_exec_t : file execute_no_trans;

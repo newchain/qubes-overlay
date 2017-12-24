@@ -4,7 +4,7 @@ set -o errexit -o noglob -o nounset
 
 umask 0600
 
-[ -z "${exe:-}" ] && readonly exe='/usr/bin/curl'
+[ -z "${exe:-}" ] && readonly exe="$(command -v curl)"
 [ -z "${mtu:-}" ] && readonly mtu='1500'
 [ -z "${scheme:-}" ] && readonly scheme='socks5h'
 [ -z "${socket_dir:-}" ] && readonly socket_dir='/var/run/qrtunnels/curl'

@@ -12,7 +12,7 @@ inherit eutils git-r3 qubes
 DESCRIPTION="Qubes configuration database"
 HOMEPAGE='https://github.com/QubesOS/qubes-core-agent-linux'
 
-IUSE="template"
+IUSE="-debug template"
 [ "${PV%%[_-]*}" != '9999' ] && [ "${PV%%.*}" != '4' ] && KEYWORDS="amd64 x86"
 LICENSE='GPL-2'
 
@@ -56,10 +56,22 @@ src_prepare() {
 
 	fi
 
+	sed -i "1s/^CFLAGS\(\ \?+\?=\ \?.*\)$/CFLAGS\1 ${CFLAGS}/" -- 'client/Makefile'
+	sed -i "8s/^CFLAGS\(\ \?+\?=\ \?.*\)$/CFLAGS\1 ${CFLAGS}/" -- 'daemon/Makefile'
+
+	sed -i 's/\ -Werror//g' -- 'client/Makefile'
 	sed -i 's/\ -Werror//g' -- 'daemon/Makefile'
 
 	sed -i '1s/^/BACKEND_VMM ?= xen\n/' -- 'client/Makefile'
 	sed -i '1s/^/BACKEND_VMM ?= xen\n/' -- 'daemon/Makefile'
+
+	if ! use debug
+	then
+
+	  sed -i 's/\(CFLAGS.*\)-g\ /\1/' -- 'client/Makefile'
+	  sed -i 's/\(CFLAGS.*\)-g\ /\1/' -- 'daemon/Makefile'
+
+	fi
 }
 
 src_compile() {
@@ -74,13 +86,13 @@ src_install() {
 	fperms 0711 '/usr/bin/qubesdb-cmd'
 	fperms 0700 '/usr/sbin/qubesdb-daemon'
 
-	doinitd "${FILESDIR}/qubesdb-daemon"
-	newconfd "${FILESDIR}/qubesdb-daemon_conf" 'qubesdb-daemon'
+	newinitd "${FILESDIR}/qubesdb-daemon_initd" 'qubesdb-daemon'
+	newconfd "${FILESDIR}/qubesdb-daemon_confd" 'qubesdb-daemon'
 	fperms 0600 '/etc/conf.d/qubesdb-daemon'
 	fperms 0700 '/etc/init.d/qubesdb-daemon'
 
 	insopts '-m0600'
-	into '/usr/lib/tmpfiles.d'
+	insinto '/usr/lib/tmpfiles.d'
 	doins "${FILESDIR}/qubesdb.conf"
 }
 

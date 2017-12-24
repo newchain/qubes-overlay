@@ -1,0 +1,6 @@
+subject /usr/bin/qrexec-client-vm odpsAT {
+
+	$libvchan_xen | $qrexec_client_vm
+
+	sock_allow_family unix
+}

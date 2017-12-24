@@ -49,7 +49,12 @@ apply_rules() {
 	local vm_type
 
 	readonly vm_type="$(${qubesdb_read_bin} /qubes-vm-type 2>> /dev/null)"
-	[ "${vm_type}" = 'ProxyVM' ] && readonly is_proxyvm='1'
+	if ( [ "${vm_type}" = 'NetVM' ] || [ "${vm_type}" = 'ProxyVM' ] )
+	then
+
+	  readonly is_proxyvm='1'
+
+	fi
 
 
 	if [ -n "${is_proxyvm}" ]
@@ -84,6 +89,7 @@ apply_rules() {
 	fi
 
 
+
 	if [ "${secmark}" = '1' ]
 	then
 
@@ -94,19 +100,21 @@ apply_rules() {
 	  then
 
 	    "${iptables_bin}" -t security -A INPUT -j SECMARK -s "${dns}" -d "${ip}" -p tcp -m tcp --sport 9052 --selctx system_u:object_r:rinetd_ingress_packet_t:s0-s1
+	    "${iptables_bin}" -t security -A INPUT -j SECMARK -s "${dns}" -d "${ip}" -p tcp -m tcp --sport 9103 --selctx system_u:object_r:whonix_instant_messenger_client_packet_t:mls_systemlow
 	    "${iptables_bin}" -t security -A INPUT -j SECMARK -s "${dns}" -d "${ip}" -p tcp -m tcp --sport 9150 --selctx system_u:object_r:rinetd_ingress_packet_t:s0-s1
 	    "${iptables_bin}" -t security -A INPUT -j SECMARK -s "${dns}" -d "${ip}" -p tcp -m tcp --sport 9180 --selctx system_u:object_r:rinetd_ingress_packet_t:s0-s1
 	    "${iptables_bin}" -t security -A INPUT -j SECMARK -s "${dns}" -d "${ip}" -p tcp -m tcp --sport 9181 --selctx system_u:object_r:tlsdate-helper_server_packet_t:s0-s3
 	    "${iptables_bin}" -t security -A INPUT -j SECMARK -i lo -p tcp -m tcp --sport 9150:9152 --selctx system_u:object_r:tor_torbrowser_server_packet_t:s0
 
 	    "${iptables_bin}" -t security -A OUTPUT -j SECMARK -d "${dns}" -s "${ip}" -p tcp -m tcp --dport 9052 --selctx system_u:object_r:rinetd_egress_packet_t:s0-s1
+	    "${iptables_bin}" -t security -A OUTPUT -j SECMARK -s "${dns}" -d "${ip}" -p tcp -m tcp --sport 9103 --selctx system_u:object_r:whonix_instant_messenger_client_packet_t:mls_systemlow
 	    "${iptables_bin}" -t security -A OUTPUT -j SECMARK -d "${dns}" -s "${ip}" -p tcp -m tcp --dport 9150 --selctx system_u:object_r:rinetd_egress_packet_t:s0-s1
 	    "${iptables_bin}" -t security -A OUTPUT -j SECMARK -d "${dns}" -s "${ip}" -p tcp -m tcp --dport 9180 --selctx system_u:object_r:rinetd_egress_packet_t:s0-s1
 	    "${iptables_bin}" -t security -A OUTPUT -j SECMARK -d "${dns}" -s "${ip}" -p tcp -m tcp --dport 9181 --selctx system_u:object_r:tlsdate-helper_client_packet_t:s0-s3
 	    "${iptables_bin}" -t security -A OUTPUT -j SECMARK -o lo -p tcp -m tcp --dport 9150:9152 --selctx system_u:object_r:tor_torbrowser_client_packet_t:s0
 	    "${iptables_bin}" -t security -A OUTPUT -j SECMARK -o lo -p tcp -m tcp --sport 9150:9152 --selctx system_u:object_r:tor_torbrowser_server_packet_t:s0
 
-	  elif [ "${secmark}" = '1' ] && [ "${net_type}" = 'insecure' ]
+	  elif [ "${net_type}" = 'insecure' ]
 	  then
 
 	    "${iptables_bin}" -t security -A INPUT -j SECMARK ! -s "${net_local}"/16 -d "${ip}" -p tcp -m tcp --sport 80 --selctx system_u:object_r:http_client_packet_t:s0
@@ -124,6 +132,7 @@ apply_rules() {
 	  fi
 
 	fi
+
 
 
 	# General nastiness (taken from whonix_firewall)
@@ -153,7 +162,7 @@ apply_rules() {
 
 	# ( More likely than other nastiness => above it )
 	#
-	if ! [ -n "${tcp_services_out}" ]
+	if [ -z "${tcp_services_out:-}" ] 
 	then
 
 	  "${iptables_bin}" -A INPUT -p tcp -m tcp --sport 53 -j DROP
@@ -161,14 +170,14 @@ apply_rules() {
 
 	else
 
-	  for i in ${tcp_services_out}
+	  for sport in ${tcp_services_out}
 	  do
 
-	    "${iptables_bin}" -A INPUT -p tcp -m tcp --sport "${i}" -j ACCEPT
+	    "${iptables_bin}" -A INPUT -p tcp -m tcp --sport "${sport}" -j ACCEPT
 
 	  done
 
-	"${iptables_bin}" -A INPUT -p tcp -j DROP
+	  "${iptables_bin}" -A INPUT -p tcp -j DROP
 
 	fi
 
@@ -222,7 +231,7 @@ apply_rules() {
 	"${iptables_bin}" -A INPUT -j DROP
 
 
-	if ! [ -n "${is_proxyvm}" ]
+	if [ -z "${is_proxyvm:-}" ]
 	then
 
 	  "${iptables_bin}" -I FORWARD -j DROP
@@ -274,7 +283,7 @@ apply_rules() {
 
 	fi
 
-	if ! [ -n "${tcp_services_out}" ]
+	if [ -z "${tcp_services_out:-}" ]
 	then
 
 	  "${iptables_bin}" -A OUTPUT -p tcp -m tcp --dport 53 -j DROP
@@ -282,21 +291,21 @@ apply_rules() {
 
 	else
 
-	  for i in ${tcp_services_out}
+	  for dport in ${tcp_services_out}
 	  do
 
-	    "${iptables_bin}" -A OUTPUT -p tcp -m tcp --dport "${i}" -j ACCEPT
+	    "${iptables_bin}" -A OUTPUT -p tcp -m tcp --dport "${dport}" -j ACCEPT
 
 	  done
 
-	"${iptables_bin}" -A OUTPUT -p tcp -j DROP
+	  "${iptables_bin}" -A OUTPUT -p tcp -j DROP
 
 	fi
 
 	"${iptables_bin}" -A OUTPUT -p icmp -j DROP
 	"${iptables_bin}" -A OUTPUT -p udp -m udp ! --dport 53 -j DROP
 
-	if ! [ -n "${is_proxyvm}" ]
+	if [ -z "${is_proxyvm:-}" ]
 	then
 
 	  "${iptables_bin}" -A OUTPUT -p udp ! -d "${dns}/32" -j DROP
@@ -350,23 +359,24 @@ flush_proxy() {
 	  if [ -n "${chains_silly_names}" ]
 	  then
 
-	  "${iptables_bin}" -F
+   	    "${iptables_bin}" -F
+
 	  else
 
-	    for i in ${chains_sans_forward}
+	    for chain in ${chains_sans_forward}
 	    do
 
-	      "${iptables_bin}" -F "${i}"
+	      "${iptables_bin}" -F "${chain}"
 
 	    done
 
 	  fi
 
-        else
+	else
 
 	  "${iptables_bin}" -F
 
-        fi
+	fi
 
 	"${iptables_bin}" -X
 

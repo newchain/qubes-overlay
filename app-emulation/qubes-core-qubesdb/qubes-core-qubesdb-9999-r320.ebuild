@@ -73,13 +73,13 @@ src_install() {
 	fperms 0711 '/usr/bin/qubesdb-cmd'
 	fperms 0700 '/usr/sbin/qubesdb-daemon'
 
-	doinitd "${FILESDIR}/qubesdb-daemon"
-	newconfd "${FILESDIR}/qubesdb-daemon_conf" 'qubesdb-daemon'
+	newinitd "${FILESDIR}/qubesdb-daemon_initd" 'qubesdb-daemon'
+	newconfd "${FILESDIR}/qubesdb-daemon_confd" 'qubesdb-daemon'
 	fperms 0600 '/etc/conf.d/qubesdb-daemon'
 	fperms 0700 '/etc/init.d/qubesdb-daemon'
 
 	insopts '-m0600'
-	into '/usr/lib/tmpfiles.d'
+	insinto '/usr/lib/tmpfiles.d'
 	doins "${FILESDIR}/qubesdb.conf"
 }
 

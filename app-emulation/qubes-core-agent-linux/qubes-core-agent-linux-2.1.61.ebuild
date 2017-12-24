@@ -5,6 +5,7 @@ EAPI=6
 
 EGIT_REPO_URI='https://github.com/QubesOS/qubes-core-agent-linux.git'
 
+#MULTILIB_COMPAT=( abi_x86_{32,64} )
 PYTHON_COMPAT=( python2_7 )
 
 inherit eutils fcaps git-r3 python-single-r1 qubes user
@@ -35,8 +36,8 @@ RDEPEND="${CDEPEND}
 	glib?	(
 	  dev-python/pygobject
 	  svg? (
-	    dev-python/pycairo[svg]
-	    dev-python/pygobject[cairo]
+	    dev-python/pycairo[svg(+)]
+	    dev-python/pygobject[cairo(+)]
 	  )
 	)
 	net? (
@@ -79,10 +80,10 @@ src_prepare() {
 
 	sed -i '1s/^/BACKEND_VMM ?= xen\n/' -- 'qrexec/Makefile'
 
-	for i in misc qrexec qubes-rpc
+	for dir in misc qrexec qubes-rpc
 	do
 
-	  sed -i 's/\ -Werror//g' -- "${i}/Makefile"
+	  sed -i 's/\ -Werror//g' -- "${dir}/Makefile"
 
 	done
 
@@ -101,7 +102,7 @@ src_prepare() {
 	#
 
 	mv -- 'network/qubes-firewall' 'qubes-firewall.old'
-	cat -- 'qubes-firewall.old' | tr '\n' '\v' | sed -e 's/#\ PID.*TERM//' | tr '\v' '\n' > 'network/qubes-firewall'
+	cat -- 'qubes-firewall.old' | tr '\n' '\v' | sed -e 's/#\ PID.*TERM//' -- - | tr '\v' '\n' > 'network/qubes-firewall'
 
 	sed -i '/^PIDFILE/d' -- 'network/qubes-firewall'
 	sed -i 's/qubesdb-write $XENSTORE_ERROR/qubesdb-write "$XENSTORE_ERROR"/' -- 'network/qubes-firewall'
@@ -110,7 +111,7 @@ src_prepare() {
 	# qubes-netwatcher
 	#
 	mv -- 'network/qubes-netwatcher' 'qubes-netwatcher.old'
-	cat -- 'qubes-netwatcher.old' | tr '\n' '\v' | sed -e 's/#\ PID.*TERM//' | tr '\v' '\n' > 'network/qubes-netwatcher'
+	cat -- 'qubes-netwatcher.old' | tr '\n' '\v' | sed -e 's/#\ PID.*TERM//' -- - | tr '\v' '\n' > 'network/qubes-netwatcher'
 	rm -- 'qubes-netwatcher.old'
 
 	sed -i '/^PIDFILE/d' -- 'network/qubes-netwatcher'
@@ -128,7 +129,7 @@ src_prepare() {
 	#
 
 	mv -- 'vm-systemd/qubes-sysinit.sh' 'qubes-sysinit.sh.old'
-	cat -- 'qubes-sysinit.sh.old'  | tr '\n' '\v' | sed -e 's|\vsystemd.*u2mfn\v||;s|\v# Set\ the\ hostname.*\vexit 0\v|\vexit 0\v|' | tr '\v' '\n' > 'vm-systemd/qubes-sysinit.sh'
+	cat -- 'qubes-sysinit.sh.old'  | tr '\n' '\v' | sed -e 's|\vsystemd.*u2mfn\v||;s|\v# Set\ the\ hostname.*\vexit 0\v|\vexit 0\v|' -- - | tr '\v' '\n' > 'vm-systemd/qubes-sysinit.sh'
 	rm -- 'qubes-sysinit.sh.old'
 
 	sed -i '/^PROTECTED_/d' -- 'vm-systemd/qubes-sysinit.sh'
@@ -142,7 +143,7 @@ src_prepare() {
 	then
 
 	  mv -- 'network/setup-ip' 'setup-ip.old'
-	  cat -- 'setup-ip.old' | tr '\n' '\v' | sed -e 's|if \[ -f /var/run/qubes-service/network-manager.*chmod 600 \$nm_config\s*fi||' | tr '\v' '\n' > 'network/setup-ip'
+	  cat -- 'setup-ip.old' | tr '\n' '\v' | sed -e 's|if \[ -f /var/run/qubes-service/network-manager.*chmod 600 \$nm_config\s*fi||' -- - | tr '\v' '\n' > 'network/setup-ip'
 	  rm -- 'setup-ip.old'
 
 	fi
@@ -168,7 +169,8 @@ src_compile() {
 
 src_install() {
 
-	if use template; then {
+	if use template
+	then
 
 	# rw is a mountpoint for a persistent partition. That partition
 	# is what is preserved after shutdown for non-template VMs.
@@ -195,12 +197,12 @@ src_install() {
 	  dodir 'home.orig/user/QubesIncoming'
 	  fowners user:qubes '/home.orig/user' '/home.orig/user/QubesIncoming'
 
-	}; else {
+	else
 
 	  diropts '-m1770'
 	  dodir 'home/user/QubesIncoming'
 	  fowners user:qubes '/home/user' '/home/user/QubesIncoming'
-	};
+
 	fi
 
 

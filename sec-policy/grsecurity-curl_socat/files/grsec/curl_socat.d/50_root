@@ -1,0 +1,10 @@
+subject / odpsAT {
+
+	/			h
+
+	-CAP_ALL
+
+	bind	disabled
+	connect	disabled
+}
+

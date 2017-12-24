@@ -1,0 +1,26 @@
+subject /usr/bin/socat odpsA {
+
+	/				h
+
+
+	/etc/localtime			hs
+
+
+	/run/qrtunnels/pidgin/		rwcd
+
+
+	/usr/bin/qrexec-client-vm	xp
+
+	/usr/
+	/usr/bin/
+	/usr/bin/*
+	/usr/*
+
+	/*				h
+
+
+	bind	disabled
+	connect	disabled
+
+	sock_allow_family unix
+}

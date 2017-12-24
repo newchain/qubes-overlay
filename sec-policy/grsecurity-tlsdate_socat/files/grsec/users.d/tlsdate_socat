@@ -1,0 +1,5 @@
+role tlsdate_socat u
+role_allow_ip	0.0.0.0/32
+
+
+include </etc/grsec/tlsdate_socat.d>

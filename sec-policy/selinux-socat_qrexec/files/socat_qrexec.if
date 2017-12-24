@@ -153,7 +153,7 @@ template(`socat_qrexec_domain_base_template',`
 	# These include generic permissions required by OpenRC scripts.
 
 	# cgroup cleanup
-	allow $1_socat_initrc_t $1_socat_t : process signal;
+	allow $1_socat_initrc_t $1_socat_t : process { signal sigkill };
 
 	allow $1_socat_initrc_t $1_socat_t : dir search;
 	# cmdline, stat:

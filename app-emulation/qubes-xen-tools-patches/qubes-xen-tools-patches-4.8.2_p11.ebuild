@@ -10,33 +10,26 @@ inherit eutils git-r3 qubes
 
 DESCRIPTION='Qubes patches for app-emulation/xen-tools'
 HOMEPAGE='https://github.com/QubesOS/qubes-vmm-xen'
-SRC_URI=''
 
 [ "${PV%%[_-]*}" != '9999' ] && KEYWORDS="amd64 x86"
 LICENSE='GPL-2'
 SLOT='0'
 
-if [ "${PV:0:3}" = '4.1' ] || [ "${PR}" = 'r200' ]
-then
+case "${PV:0:3}" in
 
-	EGIT_BRANCH='xen-4.1'
+  4.8)
+    EGIT_BRANCH='xen-4.8'
+	sed_expression='/tools-include-sys-sysmacros.h-on-Linux\.patch/d;/xen-tools-qubes-vm\.patch/d'
+  ;;
 
-elif [ "${PV:0:3}" = '4.4' ] || [ "${PR}" = 'r300' ]
-then
+  999)
+    EGIT_BRANCH='xen-4.8'
+	sed_expression='/tools-include-sys-sysmacros.h-on-Linux\.patch/d;/xen-tools-qubes-vm\.patch/d'
+  ;;
 
-	EGIT_BRANCH='xen-4.4'
+esac
 
-elif [ "${PV:0:3}" = '4.6' ] || [ "${PR}" = 'r320' ]
-then
-
-	EGIT_BRANCH='xen-4.6'
-
-else
-
-	EGIT_BRANCH='xen-4.8'
-
-fi
-
+tag_date='20171128'
 qubes_keys_depend
 
 [ "${PV%%[_-]*}" != '9999' ] && MY_PV="${PV/_p/-}"
@@ -50,30 +43,69 @@ src_unpack() {
 
 src_prepare() {
 
-	epatch_user
+	eapply_user
 }
 
 src_compile() {
 
-	echo >> /dev/null
+	true
 }
 
 src_install() {
 
 	# subslots and paths...
 	#
-	#readonly xen_tools_patchdir="etc/portage/patches/app-emulation/xen-tools:${SLOT}/"
-	readonly xen_tools_patchdir="etc/portage/patches/app-emulation/xen-tools/"
+	#readonly xen_tools_patchdir="etc/portage/patches/app-emulation/xen-tools:${SLOT}"
+	#readonly xen_tools_patchdir="etc/portage/patches/app-emulation/xen-tools${patch_dir_postfix:-}"
+	readonly xen_tools_patchdir="etc/portage/patches/app-emulation/xen-tools"
 
-	insinto "${xen_tools_patchdir}"
+	#sed -i 's/debian-vm\(\.orig\)*/xen-4.8.0/' -- "${S}/patches.qubes/xen-tools-qubes-vm.patch"
+	#mv -- "${S}/patches.qubes/xen-tools-qubes-vm.patch" "${S}/patches.qubes/xen-tools-qubes-vm.patch.old"
+	#cat -- "${S}/patches.qubes/xen-tools-qubes-vm.patch.old" | tail -n +3 -- - | cat -- - > "${S}/patches.qubes/xen-tools-qubes-vm.patch"
 
-	j=0
-	for i in $(cat "${S}/series-vm.conf" | sed '/qemu-tls-/d;/xen-tools-qubes-vm.patch/d;/xsa155-xen-0003-libvchan-Read-prod-cons-only-once.patch/d')
+	#cp -- "${FILESDIR}/4.8_xen-tools-qubes-vm.patch" "${S}/patches.qubes/xen-tools-qubes-vm.patch"
+
+	insopts -g portage -m 0640
+
+	#insinto "${xen_tools_patchdir}-4.8"
+	#insinto "${xen_tools_patchdir}:0/4.8"
+	#insinto "${xen_tools_patchdir}-4.8*"
+	insinto "${xen_tools_patchdir}-4.8.2"
+	index=0
+	for patch in $(cat -- "${S}/series-vm.conf" | sed -e "${sed_expression}" -- -)
 	do
 
-		j=$((j+1))
-		printf -v k "%02d" "${j}"
-		newins "${i}" "${k}_${i##*/}"
+		index="$(( ${index} + 1 ))"
+		printf -v prefix '%02d' "${index}"
+		newins "${patch}" "${prefix}_${patch##*/}"
 
 	done
+
+	#cp -- "${FILESDIR}/4.9_xen-tools-qubes-vm.patch" "${S}/patches.qubes/xen-tools-qubes-vm.patch"
+
+	#insinto "${xen_tools_patchdir}-4.9"
+	#insinto "${xen_tools_patchdir}:0/4.9"
+	#insinto "${xen_tools_patchdir}-4.9*"
+	insinto "${xen_tools_patchdir}-4.9.1"
+	index=0
+	for patch in $(cat -- "${S}/series-vm.conf" | sed -e "${sed_expression}" -- -)
+	do
+
+		index="$(( ${index} + 1 ))"
+		printf -v prefix '%02d' "${index}"
+		newins "${patch}" "${prefix}_${patch##*/}"
+
+	done
+
+	insinto '/etc/portage/env/app-emulation'
+	newins "${FILESDIR}/4.8.2_bashrc" 'xen-tools-4.8.2'
+	newins "${FILESDIR}/4.9.1_bashrc" 'xen-tools-4.9.1'
+
+	insinto '/etc/portage/env'
+	newins "${FILESDIR}/4.8_env" 'app-emulation.xen-tools-4.8_qubes.conf'
+	newins "${FILESDIR}/4.9_env" 'app-emulation.xen-tools-4.9_qubes.conf'
+
+	insinto '/etc/portage/package.env'
+	newins "${FILESDIR}/4.8_package.env" 'app-emulation.xen-tools-4.8_qubes'
+	newins "${FILESDIR}/4.9_package.env" 'app-emulation.xen-tools-4.9_qubes'
 }

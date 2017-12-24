@@ -3,10 +3,12 @@ policy_module(socat_qrexec, 1)
 
 gen_require(`
 
+	type default_context_t;
 	type initrc_state_t;
 	type initrc_var_run_t;
 	type locale_t;
 	type net_conf_t;
+	type selinux_config_t;
 	type socat_exec_t;
 	type tmpfiles_t;
 ')
@@ -35,11 +37,18 @@ files_type(socat_qrexec_var_run_t);
 # socat_qrexec_faux_tcp_domain policy
 #
 
+# write for shutdown
+allow socat_qrexec_faux_tcp_domain self : unix_dgram_socket { create write };
+
 # passwd
-#files_dontaudit_read_etc_files(socat_qrexec_faux_tcp_domain)
+files_dontaudit_read_etc_files(socat_qrexec_faux_tcp_domain)
 
 # resolv.conf
-#dontaudit socat_qrexec_faux_tcp_domain net_conf_t : file read;
+dontaudit socat_qrexec_faux_tcp_domain net_conf_t : file read;
+
+# testing
+#allow socat_qrexec_faux_tcp_domain net_conf_t : file { read open };
+#files_read_etc_files(socat_qrexec_faux_tcp_domain)
 
 
 ########################################
@@ -140,6 +149,9 @@ allow socat_qrexec_initrc_domain { initrc_state_t initrc_var_run_t } : lnk_file 
 allow socat_qrexec_initrc_domain initrc_var_run_t : file read;
 
 dontaudit socat_qrexec_initrc_domain locale_t : dir search;
+
+search_dirs_pattern(socat_qrexec_initrc_domain, selinux_config_t, default_context_t)
+allow socat_qrexec_initrc_domain default_context_t : file { read open };
 
 
 # fsetid for setfacl
