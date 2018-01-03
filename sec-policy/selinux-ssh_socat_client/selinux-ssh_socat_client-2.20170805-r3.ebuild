@@ -13,6 +13,6 @@ POLICY_FILES="${PN#selinux-}.te ${PN#selinux-}.if ${PN#selinux-}.fc"
 DESCRIPTION="SELinux policy for ${PN#selinux-}"
 HOMEPAGE='https://github.com/newchain/polsec'
 
-KEYWORDS="amd64"
+KEYWORDS="amd64 x86"
 LICENSE='GPL-3'
 SLOT='0'

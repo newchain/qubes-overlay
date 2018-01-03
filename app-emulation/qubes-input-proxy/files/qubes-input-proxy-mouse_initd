@@ -1,0 +1,13 @@
+#!/sbin/openrc-run
+
+
+command='/usr/bin/qrexec-client-vm'
+command_args="dom0 qubes.InputMouse /usr/bin/input-proxy-sender /dev/input/event${device_number:-0}"
+command_background='true'
+command_umask='0077'
+description='Qubes input proxy sender (mouse)'
+pidfile='/var/run/qubes/qubes-input-sender-mouse.pid'
+rc_cgroup_cleanup='yes'
+
+
+rc_need='qubes-qrexec-agent'

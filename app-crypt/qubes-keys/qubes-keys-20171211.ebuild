@@ -11,7 +11,7 @@ SLOT="0"
 
 [ "${PV%%[_-]*}" != '9999' ] && KEYWORDS="alpha amd64 hppa ia64 m68k mips ppc ppc64 s390 sh sparc x86"
 
-DEPEND="=qubes-secpack/qubes-secpack-${PV}"
+DEPEND="=app-emulation/qubes-secpack-${PV}"
 
 S="${WORKDIR}"
 

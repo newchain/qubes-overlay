@@ -1,4 +1,4 @@
-# Copyright 1999-2017 Gentoo Foundation
+# Copyright 1999-2018 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
@@ -15,13 +15,15 @@ HOMEPAGE='https://github.com/QubesOS/qubes-linux-utils'
 
 IUSE="balloon -debug python +udev"
 
-[ "${PV%%[_-]*}" != '9999' ] && [ "${PV%%.*}" != '4' ] && KEYWORDS="amd64 x86"
+qubes_keywords
 LICENSE='GPL-2'
 
 qubes_slot
 
-CDEPEND="app-emulation/qubes-core-vchan-xen:${SLOT}
-	app-emulation/xen-tools"
+CDEPEND="${CDEPEND}
+	app-emulation/qubes-core-vchan-xen:${SLOT}
+	app-emulation/xen-tools
+	python? ( ${PYTHON_DEPS} )"
 
 tag_date='20150202'
 qubes_keys_depend
@@ -29,10 +31,19 @@ qubes_keys_depend
 DEPEND="${CDEPEND}
 	${DEPEND}"
 
+HDEPEND="|| (
+		sys-apps/coreutils
+		sys-apps/busybox
+	)
+	|| (
+		sys-apps/sed
+		sys-apps/busybox
+	)"
+
 RDEPEND="${CDEPEND}
 	python? ( || (
-	  dev-python/cairocffi
-	  dev-python/pycairo
+		dev-python/cairocffi
+		dev-python/pycairo
 	) )
 	udev? ( virtual/udev )"
 
@@ -43,51 +54,39 @@ src_unpack() {
 	qubes_prepare
 }
 
+pkg_nofetch() {
+
+	einfo "If you already have this specific version locally, retry with EVCS_OFFLINE=1."
+}
+
 src_prepare() {
 
 	eapply_user
 
 
-	sed -i 's|/etc/udev/rules\.d|/lib/udev/rules.d|g' -- 'udev/Makefile'
+	sed -i -e 's|/etc/udev/rules\.d|/lib/udev/rules.d|g' -- "${S}/udev/Makefile"
 
-	for dir in qmemman qrexec-lib
-	do
+	for dir in qmemman qrexec-lib; do
 
-	  sed -i 's/\ -Werror//g' -- "${dir}/Makefile"
-	  sed -i "2s/^CFLAGS\(\ \?+\?=\ \?.*\)$/CFLAGS\1 ${CFLAGS}/" -- "${dir}/Makefile"
+		sed -i -e 's/\ -Werror//g' \
+		       -e "2s/^CFLAGS\(\ \?+\?=\ \?.*\)$/CFLAGS\1 ${CFLAGS}/" -- "${S}/${dir}/Makefile"
 
 	done
 
-	if ! use debug
-	then
+	sed -i '1s/^/BACKEND_VMM ?= xen\n/' -- "${S}/qrexec-lib/Makefile"
 
-	  sed -i 's/\(CFLAGS.*\)-g\ /\1/' -- 'qmemman/Makefile'
-	  sed -i 's/\(CFLAGS.*\)-g\ /\1/' -- 'qrexec-lib/Makefile'
+	! use balloon && sed -i -e '/qmemman/d' -- "${S}/Makefile"
 
-	fi
+	if ! use debug; then
 
-	sed -i '1s/^/BACKEND_VMM ?= xen\n/' -- 'qrexec-lib/Makefile'
-
-	if ! use balloon
-	then
-
-	  sed -i '/qmemman/d' -- 'Makefile'
+		sed -i -e 's/\(CFLAGS.*\)-g\ /\1/' -- "${S}/qmemman/Makefile"
+		sed -i -e 's/\(CFLAGS.*\)-g\ /\1/' -- "${S}/qrexec-lib/Makefile"
 
 	fi
 
-	if ! use python
-	then
+	! use python && sed -i -e '/core/d' -- "${S}/Makefile"
 
-	  sed -i '/core/d' -- 'Makefile'
-
-	fi
-
-	if ! use udev
-	then
-
-	  sed -i '/udev/d' -- 'Makefile'
-
-	fi
+	! use udev && sed -i -e '/udev/d' -- "${S}/Makefile"
 }
 
 src_compile() {
@@ -98,4 +97,16 @@ src_compile() {
 src_install() {
 
 	emake DESTDIR="${D}" install
+
+	[ -e "${D}/lib/udev" ] && fperms 0700 '/lib/udev'
+	[ -e "${D}/lib/udev/rules.d" ] && fperms 0700 '/lib/udev/rules.d'
+	[ -e "${D}/lib/udev/rules.d/99-qubes-block.rules" ] && fperms 0700 '/lib/udev/rules.d/99-qubes-block.rules'
+	[ -e "${D}/lib/udev/rules.d/99-qubes-misc.rules" ] && fperms 0700 '/lib/udev/rules.d/99-qubes-misc.rules'
+	[ -e "${D}/lib/udev/rules.d/99-qubes-usb.rules" ] && fperms 0700 '/lib/udev/rules.d/99-qubes-usb.rules'
+	[ -e "${D}/usr/lib/qubes" ] && fperms 0711 '/usr/lib/qubes'
+	[ -e "${D}/usr/lib/qubes/udev-block-add-change" ] && fperms 0700 '/usr/lib/qubes/udev-block-add-change'
+	[ -e "${D}/usr/lib/qubes/udev-block-cleanup" ] && fperms 0700 '/usr/lib/qubes/udev-block-cleanup'
+	[ -e "${D}/usr/lib/qubes/udev-block-remove" ] && fperms 0700 '/usr/lib/qubes/udev-block-remove'
+	[ -e "${D}/usr/lib/qubes/udev-usb-add-change" ] && fperms 0700 '/usr/lib/qubes/udev-usb-add-change'
+	[ -e "${D}/usr/lib/qubes/udev-usb-remove" ] && fperms 0700 '/usr/lib/qubes/udev-usb-remove'
 }

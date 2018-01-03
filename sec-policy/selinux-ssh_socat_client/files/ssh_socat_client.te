@@ -36,7 +36,7 @@ allow ssh_socat_proxycommand_t ssh_t : process sigchld;
 
 # terminal
 allow ssh_socat_proxycommand_t user_t : fd use;
-allow ssh_socat_proxycommand_t user_devpts_t : chr_file { read write };
+userdom_use_user_ptys(ssh_socat_proxycommand_t)
 
 
 ########################################
@@ -77,4 +77,17 @@ optional_policy(`
 	')
 
 	typeattribute ssh_socat_proxycommand_t ssh_socat_proxycommand_domain;
+')
+
+optional_policy(`
+
+	# Making this optional simply allows screen module to be
+	# removed, altered, and reinstalled.
+
+	gen_require(`
+
+		type user_screen_t;
+	')
+
+	allow ssh_socat_proxycommand_t user_screen_t : fd use;
 ')

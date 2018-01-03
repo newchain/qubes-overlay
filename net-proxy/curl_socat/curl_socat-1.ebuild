@@ -3,7 +3,7 @@
 
 EAPI=6
 
-inherit eutils
+inherit eutils user
 
 DESCRIPTION='curl for torsocksunix'
 HOMEPAGE='https://github.com/newchain/torsocksunix'
@@ -14,7 +14,9 @@ KEYWORDS="amd64 x86"
 LICENSE='AGPL-3'
 SLOT='0'
 
-DEPEND="net-proxy/socat_qrexec
+DEPEND="net-libs/socket_wrapper
+	>=net-misc/socat-2
+	net-proxy/socat_qrexec
 	selinux? ( sec-policy/selinux-curl_socat )
 	virtual/tmpfiles"
 
@@ -27,7 +29,8 @@ pkg_setup() {
 
 	mkdir -p -- "${S}"
 
-	enewuser 'curl_socat' -1 -1 -1 'qrexec-client'
+	enewgroup 'curl_socat'
+	enewuser 'curl_socat' -1 -1 -1 'curl_socat,qrexec-client'
 }
 
 src_install() {
@@ -44,5 +47,4 @@ src_install() {
 	insopts -m0600
 	insinto '/usr/lib/tmpfiles.d'
 	doins "${FILESDIR}/curl_socat.conf"
-
 }

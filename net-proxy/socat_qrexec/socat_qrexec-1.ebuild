@@ -6,16 +6,18 @@ EAPI=6
 inherit eutils user
 
 DESCRIPTION='Base files for torsocksunix'
+HOMEPAGE='https://github.com/newchain/torsocksunix'
 
 IUSE="selinux"
 
 KEYWORDS="amd64 x86"
-LICENSE='APL-3'
+LICENSE='AGPL-3'
 SLOT='0'
 
-RDEPEND="net-misc/socat
-  selinux? ( sec-policy/selinux-socat_qrexec )
-  virtual/tmpfiles"
+RDEPEND="app-emulation/qubes-core-agent-linux
+	net-misc/socat
+	selinux? ( sec-policy/selinux-socat_qrexec )
+	virtual/tmpfiles"
 
 
 src_prepare() {
@@ -33,6 +35,10 @@ pkg_setup() {
 src_install() {
 
 	insopts -m0600
+
+	insinto '/usr/lib/qubes/init'
+	doins "${FILESDIR}/torsocksunix"
+
 	insinto '/usr/lib/tmpfiles.d'
 	doins "${FILESDIR}/socat_qrexec.conf"
 }

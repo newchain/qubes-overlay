@@ -3,7 +3,7 @@
 
 EAPI=6
 
-inherit eutils
+inherit eutils user
 
 DESCRIPTION='git for torsocksunix'
 HOMEPAGE='https://github.com/newchain/torsocksunix'
@@ -14,7 +14,9 @@ KEYWORDS="amd64 x86"
 LICENSE='AGPL-3'
 SLOT='0'
 
-DEPEND="net-proxy/socat_qrexec
+DEPEND="net-libs/socket_wrapper
+	>=net-misc/socat-2
+	net-proxy/socat_qrexec
 	selinux? ( sec-policy/selinux-git_socat )
 	virtual/tmpfiles"
 
@@ -28,7 +30,8 @@ pkg_setup() {
 
 	mkdir -p -- "${S}"
 
-	enewuser 'git_socat' -1 -1 -1 'qrexec-client'
+	enewgroup 'git_socat'
+	enewuser 'git_socat' -1 -1 -1 'git_socat,qrexec-client'
 }
 
 src_install() {

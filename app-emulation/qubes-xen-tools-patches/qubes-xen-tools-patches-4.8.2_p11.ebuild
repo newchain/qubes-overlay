@@ -1,9 +1,10 @@
-# Copyright 1999-2017 Gentoo Foundation
+# Copyright 1999-2018 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
 
 EGIT_REPO_URI='https://github.com/QubesOS/qubes-vmm-xen.git'
+EGIT_SUBMODULES=()
 
 inherit eutils git-r3 qubes
 [ "${PV%%[_-]*}" != '9999' ] && inherit versionator
@@ -17,15 +18,15 @@ SLOT='0'
 
 case "${PV:0:3}" in
 
-  4.8)
-    EGIT_BRANCH='xen-4.8'
-	sed_expression='/tools-include-sys-sysmacros.h-on-Linux\.patch/d;/xen-tools-qubes-vm\.patch/d'
-  ;;
+	4.8)
+		EGIT_BRANCH='xen-4.8'
+		sed_expression='/tools-include-sys-sysmacros.h-on-Linux\.patch/d;/xen-tools-qubes-vm\.patch/d'
+	;;
 
-  999)
-    EGIT_BRANCH='xen-4.8'
-	sed_expression='/tools-include-sys-sysmacros.h-on-Linux\.patch/d;/xen-tools-qubes-vm\.patch/d'
-  ;;
+	999)
+		EGIT_BRANCH='xen-4.8'
+		sed_expression='/tools-include-sys-sysmacros.h-on-Linux\.patch/d;/xen-tools-qubes-vm\.patch/d'
+	;;
 
 esac
 
@@ -39,6 +40,11 @@ src_unpack() {
 
 	readonly version_prefix='v'
 	qubes_prepare
+}
+
+pkg_nofetch() {
+
+	einfo "If you already have this specific version locally, retry with EVCS_OFFLINE=1."
 }
 
 src_prepare() {
@@ -72,8 +78,7 @@ src_install() {
 	#insinto "${xen_tools_patchdir}-4.8*"
 	insinto "${xen_tools_patchdir}-4.8.2"
 	index=0
-	for patch in $(cat -- "${S}/series-vm.conf" | sed -e "${sed_expression}" -- -)
-	do
+	for patch in $(cat -- "${S}/series-vm.conf" | sed -e "${sed_expression}" -- -); do
 
 		index="$(( ${index} + 1 ))"
 		printf -v prefix '%02d' "${index}"
@@ -88,8 +93,7 @@ src_install() {
 	#insinto "${xen_tools_patchdir}-4.9*"
 	insinto "${xen_tools_patchdir}-4.9.1"
 	index=0
-	for patch in $(cat -- "${S}/series-vm.conf" | sed -e "${sed_expression}" -- -)
-	do
+	for patch in $(cat -- "${S}/series-vm.conf" | sed -e "${sed_expression}" -- -); do
 
 		index="$(( ${index} + 1 ))"
 		printf -v prefix '%02d' "${index}"

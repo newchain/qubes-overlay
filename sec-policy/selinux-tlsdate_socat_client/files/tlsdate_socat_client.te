@@ -1,6 +1,15 @@
 policy_module(tlsdate_socat_client, 1)
 
 
+########################################
+#
+# Declarations
+#
+
+type tlsdate-helper_socket_var_run_t;
+files_type(tlsdate-helper_socket_var_run_t)
+
+
 optional_policy(`
 
 	# Making this optional simply allows socket_wrapper and tlsdate modules
@@ -14,14 +23,6 @@ optional_policy(`
 		type tlsdate-helper_t;
 		type tlsdate-helper_socat_socket_var_run_t;
 	')
-
-	########################################
-	#
-	# Declarations
-	#
-
-	type tlsdate-helper_socket_var_run_t;
-	files_type(tlsdate-helper_socket_var_run_t)
 
 	########################################
 	#

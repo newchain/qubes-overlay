@@ -1,4 +1,4 @@
-# Copyright 1999-2017 Gentoo Foundation
+# Copyright 1999-2018 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
@@ -12,7 +12,8 @@ inherit eutils git-r3 qubes
 DESCRIPTION='Qubes I/O libraries'
 HOMEPAGE='https://github.com/QubesOS/qubes-core-vchan-xen'
 
-[ "${PV%%[_-]*}" != '9999' ] && [ "${PV%%.*}" != '4' ] && KEYWORDS="amd64 x86"
+IUSE="-debug"
+qubes_keywords
 LICENSE='GPL-2'
 
 qubes_slot
@@ -25,7 +26,17 @@ qubes_keys_depend
 DEPEND="${CDEPEND}
 	${DEPEND}"
 
-RDEPEND="${CDEPEND}"
+HDEPEND="|| (
+		sys-apps/coreutils
+		sys-apps/busybox
+	)
+	|| (
+		sys-apps/sed
+		sys-apps/busybox
+	)"
+
+RDEPEND="${CDEPEND}
+	app-emulation/qubes-xen-tools-patches"
 
 
 src_unpack() {
@@ -34,16 +45,28 @@ src_unpack() {
 	qubes_prepare
 }
 
+pkg_nofetch() {
+
+	einfo "If you already have this specific version locally, retry with EVCS_OFFLINE=1."
+}
+
 src_prepare() {
 
 	eapply_user
 
-	sed -ie "s:/usr/lib/\(libu2mfn\.so\|libvchan-xen\.so\):/usr/$(get_libdir)/\1:" -- 'Makefile'
+	sed -i -e "s:/usr/lib/\(libu2mfn\.so\|libvchan-xen\.so\):/usr/$(get_libdir)/\1:" -- "${S}/Makefile"
 
-	sed -ie 's/\ -Werror//' -- 'vchan/Makefile.linux'
+	sed -i -e 's/\ -Werror//' -- "${S}/vchan/Makefile.linux"
 
-	sed -ie "s/^CFLAGS+\?=\(.*\)$/CFLAGS=\1 ${CFLAGS}/g" -- 'u2mfn/Makefile'
-	sed -ie "s/^CFLAGS+\?=\(.*\)$/CFLAGS=\1 ${CFLAGS}/g" -- 'vchan/Makefile.linux'
+	sed -i -e "s/^CFLAGS+\?=\(.*\)$/CFLAGS=\1 ${CFLAGS}/g" -- "${S}/u2mfn/Makefile"
+	sed -i -e "s/^CFLAGS+\?=\(.*\)$/CFLAGS=\1 ${CFLAGS}/g" -- "${S}/vchan/Makefile.linux"
+
+	if ! use debug; then
+
+		sed -i -e 's/-g\ //' -- "${S}/u2mfn/Makefile"
+		sed -i -e 's/-g\ //' -- "${S}/vchan/Makefile.linux"
+
+	fi
 }
 
 src_compile() {

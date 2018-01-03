@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer>
+		<email>newchain@users.noreply.github.com</email>
+		<name>MB</name>
+	</maintainer>
+	<use>
+		<flag name="template">Automatically add qubesdb-daemon to default runlevel.</flag>
+	</use>
+</pkgmetadata>

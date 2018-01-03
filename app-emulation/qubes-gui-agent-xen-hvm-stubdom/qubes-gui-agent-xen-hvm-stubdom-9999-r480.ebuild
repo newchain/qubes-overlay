@@ -1,4 +1,4 @@
-# Copyright 1999-2017 Gentoo Foundation
+# Copyright 1999-2018 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
@@ -26,6 +26,11 @@ src_unpack() {
 
 	readonly version_prefix='v'
 	qubes_prepare
+}
+
+pkg_nofetch() {
+
+	einfo "If you already have this specific version locally, retry with EVCS_OFFLINE=1."
 }
 
 src_prepare() {

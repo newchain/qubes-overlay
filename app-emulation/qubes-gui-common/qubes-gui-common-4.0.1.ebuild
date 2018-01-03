@@ -1,4 +1,4 @@
-# Copyright 1999-2017 Gentoo Foundation
+# Copyright 1999-2018 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
@@ -11,7 +11,7 @@ DESCRIPTION='Qubes common GUI headers'
 HOMEPAGE='https://github.com/QubesOS/qubes-gui-common'
 
 IUSE=""
-[ "${PV%%[_-]*}" != '9999' ] && [ "${PV%%.*}" != '4' ] && KEYWORDS="amd64 x86"
+qubes_keywords
 LICENSE='GPL-2'
 
 qubes_slot
@@ -26,6 +26,11 @@ src_unpack() {
 	qubes_prepare
 }
 
+pkg_nofetch() {
+
+	einfo "If you already have this specific version locally, retry with EVCS_OFFLINE=1."
+}
+
 src_prepare() {
 
 	eapply_user
@@ -33,8 +38,6 @@ src_prepare() {
 
 src_install() {
 
-	insinto 'usr/include'
-
-	doins 'include/qubes-gui-protocol.h'
-	doins 'include/qubes-xorg-tray-defs.h'
+	doheader 'include/qubes-gui-protocol.h'
+	doheader 'include/qubes-xorg-tray-defs.h'
 }

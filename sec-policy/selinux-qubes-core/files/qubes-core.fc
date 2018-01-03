@@ -19,10 +19,33 @@ define(`qubes_userspace_range',
 )
 
 
-/etc/conf\.d/qubes-iptables		--	gen_context(system_u:object_r:qubes-iptables_etc_t,mls_systemlow)
+/bin/qbkdr_run				--	gen_context(system_u:object_r:qbkdr_run_exec_t,mls_systemlow)
+
+/etc/conf\.d/qubes-iptables		--	gen_context(system_u:object_r:qubes-iptables_initrc_etc_t,mls_systemlow)
 
 /etc/qubes-rpc(/.*)?				gen_context(system_u:object_r:qubes_rpc_etc_t,mls_systemlow)
-/etc/qubes-rpc/qubes\.GetAppmenus	--	gen_context(system_u:object_r:qubes-trigger-sync-appmenus_etc_t,mls_systemlow)
+/etc/qubes-rpc/qubes\.Backup		--	gen_context(system_u:object_r:qubes-backup_exec_t,mls_systemlow)
+/etc/qubes-rpc/qubes\.DetachPciDevice	--	gen_context(system_u:object_r:qubes-detachpcidevice_exec_t,mls_systemlow)
+/etc/qubes-rpc/qubes\.Filecopy		--	gen_context(system_u:object_r:qubes-filecopy_exec_t,mls_systemlow)
+/etc/qubes-rpc/qubes\.GetAppmenus	--	gen_context(system_u:object_r:qubes-getappmenus_exec_t,mls_systemlow)
+/etc/qubes-rpc/qubes\.GetImageRGBA	--	gen_context(system_u:object_r:qubes-getimagergba_exec_t,mls_systemlow)
+/etc/qubes-rpc/qubes\.InstallUpdatesGUI	--	gen_context(system_u:object_r:qubes-installupdatesgui_exec_t,mls_systemlow)
+/etc/qubes-rpc/qubes\.OpenInVM		--	gen_context(system_u:object_r:qubes-openinvm_exec_t,mls_systemlow)
+/etc/qubes-rpc/qubes\.OpenURL		--	gen_context(system_u:object_r:qubes-openurl_exec_t,mls_systemlow)
+/etc/qubes-rpc/qubes\.Restore		--	gen_context(system_u:object_r:qubes-restore_exec_t,mls_systemlow)
+/etc/qubes-rpc/qubes\.SelectDirectory	--	gen_context(system_u:object_r:qubes-selectdirectory_exec_t,mls_systemlow)
+/etc/qubes-rpc/qubes\.SelectFile	--	gen_context(system_u:object_r:qubes-selectfile_exec_t,mls_systemlow)
+/etc/qubes-rpc/qubes\.SetDateTime	--	gen_context(system_u:object_r:qubes-setdatetime_exec_t,mls_systemlow)
+#/etc/qubes-rpc/qubes\.SetMonitorLayout	--	gen_context(system_u:object_r:qubes-setmonitorlayout_exec_t,mls_systemlow)
+/etc/qubes-rpc/qubes\.SuspendPost	--	gen_context(system_u:object_r:qubes-suspendpost_exec_t,mls_systemlow)
+/etc/qubes-rpc/qubes\.SuspendPostAll	--	gen_context(system_u:object_r:qubes-suspendpostall_exec_t,mls_systemlow)
+/etc/qubes-rpc/qubes\.SuspendPre	--	gen_context(system_u:object_r:qubes-suspendpre_exec_t,mls_systemlow)
+/etc/qubes-rpc/qubes\.SuspendPreAll	--	gen_context(system_u:object_r:qubes-suspendpreall_exec_t,mls_systemlow)
+/etc/qubes-rpc/qubes\.SyncNtpClock	--	gen_context(system_u:object_r:qubes-syncntpclock_exec_t,mls_systemlow)
+/etc/qubes-rpc/qubes\.VMShell		--	gen_context(system_u:object_r:qubes-vmshell_exec_t,mls_systemlow)
+/etc/qubes-rpc/qubes\.WaitForSession	--	gen_context(system_u:object_r:qubes-waitforsession_exec_t,mls_systemlow)
+
+/etc/qubes-suspend-module-blacklist_t	--	gen_context(system_u:object_r:qubes-suspend-module-blacklist_t,mls_systemlow)
 
 /etc/rc\.d/init\.d/net\.qubes		--	gen_context(system_u:object_r:qubes-net_initrc_exec_t,mls_systemlow-mls_systemhigh)
 /etc/rc\.d/init\.d/qubes-core		--	gen_context(system_u:object_r:qubes-core_initrc_exec_t,mls_systemlow-mls_systemhigh)
@@ -33,7 +56,8 @@ define(`qubes_userspace_range',
 /etc/rc\.d/init\.d/qubes-qrexec-agent	--	gen_context(system_u:object_r:qrexec-agent_initrc_exec_t,mls_systemlow-mls_systemhigh)
 /etc/rc\.d/init\.d/qubes-random-seed	--	gen_context(system_u:object_r:qubes-random-seed_initrc_exec_t,mls_systemlow-mls_systemhigh)
 /etc/rc\.d/init\.d/qubes-service	--	gen_context(system_u:object_r:qubes-service_initrc_exec_t,mls_systemlow-mls_systemhigh)
-/etc/rc\.d/init\.d/qubesdb-daemon	--	gen_context(system_u:object_r:qubesdb_initrc_exec_t,mls_systemlow-mls_systemhigh)
+/etc/rc\.d/init\.d/qubes-update-check	--	gen_context(system_u:object_r:qubes-update-check_initrc_exec_t,mls_systemlow-mls_systemhigh)
+/etc/rc\.d/init\.d/qubesdb-daemon	--	gen_context(system_u:object_r:qubesdb-daemon_initrc_exec_t,mls_systemlow-mls_systemhigh)
 
 HOME_DIR/QubesIncoming(/.*)?			gen_context(system_u:object_r:qubes_shared_home_t,mls_systemlow)
 
@@ -42,15 +66,16 @@ HOME_DIR/QubesIncoming(/.*)?			gen_context(system_u:object_r:qubes_shared_home_t
 /proc/u2mfn				--	gen_context(system_u:object_r:qubes_u2mfn_t,mls_systemlow)
 
 /rw						gen_context(system_u:object_r:qubes_persistent_t,mls_systemlow)
+/rw/backups(/.*)?				gen_context(system_u:object_r:qubes_backups_t,mls_systemlow)
 /rw/config					gen_context(system_u:object_r:qubes_persistent_config_t,mls_systemlow)
 /rw/home					gen_context(system_u:object_r:home_root_t,mls_systemlow-mls_systemhigh)
 /rw/home/user					gen_context(system_u:object_r:user_home_dir_t,mls_systemlow)
 
 /run/qubes(/.*)?				gen_context(system_u:object_r:qubes_var_run_t,qubes_userspace_innerrange)
 /run/qubes/qubes-ns			--	gen_context(system_u:object_r:qubes-ns_var_run_t,mls_systemlow)
-/run/qubes/qubesdb\.sock		-s	gen_context(system_u:object_r:qubesdb_var_run_t,qubes_userspace_innerrange)
+/run/qubes/qubesdb\.sock		-s	gen_context(system_u:object_r:qubesdb-daemon_var_run_t,qubes_userspace_innerrange)
+/run/qubes/this-is-[a-z]+vm$		--	gen_context(system_u:object_r:qubes_vm_type_var_run_t,mls_systemlow)
 /run/qubes-service(/.*)?			gen_context(system_u:object_r:qubes-service_var_run_t,mls_systemlow)
-/bin/qbkdr_run				--	gen_context(system_u:object_r:qbkdr_run_exec_t,mls_systemlow)
 
 /usr/bin/qrexec-client-vm		--	gen_context(system_u:object_r:qrexec-client-vm_exec_t,mls_systemlow)
 /usr/bin/qrexec-fork-server		--	gen_context(system_u:object_r:qrexec-fork-server_exec_t,mls_systemlow)
@@ -78,20 +103,24 @@ HOME_DIR/QubesIncoming(/.*)?			gen_context(system_u:object_r:qubes_shared_home_t
 /usr/lib/qubes/qubes-trigger-sync-appmenus\.sh	gen_context(system_u:object_r:qubes-trigger-sync-appmenus_exec_t,mls_systemlow)
 /usr/lib/qubes/setup-ip			--	gen_context(system_u:object_r:setup-ip_exec_t,mls_systemlow)
 /usr/lib/qubes/tar2qfile		--	gen_context(system_u:object_r:tar2qfile_exec_t,mls_systemlow)
+/usr/lib/qubes/upgrades-installed-check	--	gen_context(system_u:object_r:qubes-upgrades-installed-check_exec_t,mls_systemlow)
+/usr/lib/qubes/upgrades-status-notify	--	gen_context(system_u:object_r:qubes-upgrades-status-notify_exec_t,mls_systemlow)
 
 /usr/local\.orig(/.*)?				gen_context(system_u:object_r:qubes_origin_t,mls_systemlow)
 
 /usr/sbin/qubes-firewall		--	gen_context(system_u:object_r:qubes-firewall_exec_t,mls_systemlow)
 /usr/sbin/qubes-netwatcher		--	gen_context(system_u:object_r:qubes-netwatcher_exec_t,mls_systemlow)
-/usr/sbin/qubesdb-daemon		--	gen_context(system_u:object_r:qubesdb_exec_t,mls_systemlow)
+/usr/sbin/qubesdb-daemon		--	gen_context(system_u:object_r:qubesdb-daemon_exec_t,mls_systemlow)
 
 /var/lib/qubes(/.*)?				gen_context(system_u:object_r:qubes_var_lib_t,mls_systemlow)
 
 /var/log/qubes(/.*)?				gen_context(system_u:object_r:qubes_log_t,mls_systemlow)
 /var/log/qubes/qrexec-agent\.log	--	gen_context(system_u:object_r:qrexec-agent_log_t,mls_systemlow)
-/var/log/qubes/qubesdb\.log		--	gen_context(system_u:object_r:qubesdb_log_t,mls_systemlow)
+/var/log/qubes/qubesdb\.log		--	gen_context(system_u:object_r:qubesdb-daemon_log_t,mls_systemlow)
 
 /var/run/qubes(/.*)?				gen_context(system_u:object_r:qubes_var_run_t,qubes_userspace_innerrange)
 /var/run/qubes/qubes-ns			--	gen_context(system_u:object_r:qubes-ns_var_run_t,mls_systemlow)
-/var/run/qubes/qubesdb\.sock		-s	gen_context(system_u:object_r:qubesdb_var_run_t,qubes_userspace_innerrange)
+/var/run/qubes/qubesdb\.sock		-s	gen_context(system_u:object_r:qubesdb-daemon_var_run_t,qubes_userspace_innerrange)
+/var/run/qubes/this-is-[a-z]+vm$	--	gen_context(system_u:object_r:qubes_vm_type_var_run_t,mls_systemlow)
 /var/run/qubes-service(/.*)?			gen_context(system_u:object_r:qubes-service_var_run_t,mls_systemlow)
+/var/run/qubes-service-environment	--	gen_context(system_u:object_r:qubes-service-environment_var_run_t,mls_systemlow)

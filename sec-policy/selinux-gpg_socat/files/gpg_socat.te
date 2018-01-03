@@ -1,0 +1,41 @@
+policy_module(gpg_socat, 1)
+
+
+gen_require(`
+
+	type locale_t;
+	type shell_exec_t;
+')
+
+########################################
+#
+# Declarations
+#
+
+attribute gpg_wrapper_domain;
+attribute gpg_faux_tcp_domain;
+
+socat_qrexec_domain_faux_tcp_template(gpg)
+
+
+########################################
+#
+# gpg_faux_tcp_domain policy
+#
+
+gpg_socat_rw_gpg_socat_socket_var_run_sock_files(gpg_faux_tcp_domain)
+
+
+########################################
+#
+# gpg_wrapper_domain policy
+#
+
+allow gpg_wrapper_domain self : fifo_file { read write };
+
+corecmd_search_bin(gpg_wrapper_domain)
+allow gpg_wrapper_domain shell_exec_t : file { execute read };
+
+#files_dontaudit_search_home_root(gpg_wrapper_domain)
+
+dontaudit gpg_wrapper_domain locale_t : dir search;

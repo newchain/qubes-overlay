@@ -1,0 +1,46 @@
+policy_module(user_gpg_socat, 1)
+
+
+########################################
+#
+# Declarations
+#
+
+optional_policy(`
+
+	# Making this optional simply allows gpg_socat module to be
+	# removed, altered, and reinstalled.
+
+	gen_require(`
+
+		type gpg_t;
+		type gpg_exec_t;
+		role user_r;
+		type user_t;
+
+		type user_devpts_t;
+		type user_screen_t;
+	')
+
+	gpg_socat_gpg_wrapper_template(user, gpg_t, user_t, user_r)
+
+
+	domain_auto_transition_pattern(user_gpg_wrapper_t, gpg_exec_t, gpg_t)
+
+
+	allow gpg_t user_gpg_wrapper_t : fd use;
+	allow gpg_t user_gpg_wrapper_t : process sigchld;
+
+	allow user_gpg_wrapper_t user_devpts_t:chr_file { read write };
+#	allow user_gpg_wrapper_t user_home_dir_t:dir search;
+	allow user_gpg_wrapper_t user_screen_t:fd use;
+
+
+	miscfiles_read_generic_certs(gpg_t,)
+
+	allow user_gpg_wrapper_t self:fifo_file getattr;
+	allow user_gpg_wrapper_t self:fifo_file { read write };
+	auditallow user_gpg_wrapper_t self:fifo_file { read write };
+
+	allow gpg_t self : process noatsecure;
+')

@@ -1,14 +1,20 @@
-rc_ulimit="-c 0 -d 65536 -f 16384 -i 1 -l 131072 -l 131072 -m 131072 -n 128 -q 0 -s 1024 -u 6 -v 16777216 -x 0"
+#rc_ulimit="-c 0 -d 73728 -f 16384 -i 1 -l 131072 -l 131072 -m 131072 -n 128 -q 0 -s 1024 -u 6 -v 16777216 -x 0"
+#rc_ulimit="-c 0 -d 495616 -f 16384 -i 1 -l 131072 -l 131072 -m 131072 -n 128 -q 0 -s 1024 -u 6 -v 16777216 -x 0"
+# NPROC too low, possibly due to GLX script added to  profile.d
+#rc_ulimit="-c 0 -d 495616 -f 16384 -i 1 -l 131072 -l 131072 -m 131072 -n 128 -q 0 -s 1024 -u 7 -v 16777216 -x 0"
+#rc_ulimit="-c 0 -d 495616 -f 1048576 -i 1 -l 131072 -l 131072 -m 131072 -n 128 -q 0 -s 1024 -u 16 -v 16777216 -x 0"
+rc_ulimit="-H -S -c 0 -i 1 -l 134217728 -m 134217728 -n 128 -q 0 -s 1048576 -u 24 -x 0"
 
 # 0	core file	(-c)
-# 512M (65536)	data	(-d)
+## 512M (65536)	data	(-d)
+# 484M (495616)	data	(-d)
 # 16M	file create	(-f)
 # 1	pending signals	(-i)
-# 128M (131072) locked memory	(-l)
-# 128M (131072)	memory	(-m)
+# 128M (134217728) locked memory	(-l)
+# 128M (134217728) memory	(-m)
 # 128	open files	(-n)
 # 0	message queues	(-q)
-# 1M (1024) stack	(-s)
-# 6  threads		(-u)
-# 16G (16777216) vmem	(-v)
+# 1M (1048576) stack	(-s)
+# 24  processes		(-u)
+## 16G (16777216) vmem	(-v)
 # 0 file locks		(-x)

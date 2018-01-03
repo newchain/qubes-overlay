@@ -1,0 +1,14 @@
+;proc /u2mfn gen_context(system_u:object_r:qubes_u2mfn_t,s0)
+
+
+;( allow qubes_u2mfn_t proc_t ( filesystem ( associate ) ) )
+;(genfscon proc "/u2mfn" file (system_u object_r qubes_u2mfn_t ((s0) (s0))))
+
+
+;( block file
+  ( context u2mfn_context (system_u object_r qubes_u2mfn_t ((s0) (s5 ((c5))))))
+;)
+
+;( in file
+  ( genfscon proc /u2mfn u2mfn_context )
+;)

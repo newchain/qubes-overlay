@@ -1,0 +1,8 @@
+#### <summary>user_gpg_socat policy</summary>
+#### <desc>
+####	<p>
+####	  Policy to use faux tcp and gpg in the generic gpg domain from user_t,
+####	  with which to fetch and upload keys
+####	  to keyservers.
+####	</p>
+#### </desc>

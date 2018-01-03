@@ -13,7 +13,7 @@ DESCRIPTION='SELinux policy for Qubes GUI'
 HOMEPAGE='https://github.com/newchain/qubes-policy'
 
 IUSE="pulseaudio"
-KEYWORDS="~amd64"
+KEYWORDS="amd64 x86"
 LICENSE='GPL-3'
 SLOT='0'
 

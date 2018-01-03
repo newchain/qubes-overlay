@@ -1,0 +1,38 @@
+policy_module(user_git_socat, 1)
+
+
+gen_require(`
+
+	type user_t;
+')
+
+
+########################################
+#
+# Declarations
+#
+
+type user_git_socat_socket_var_run_t;
+files_type(user_git_socat_socket_var_run_t)
+
+
+########################################
+#
+# user_t policy
+#
+
+allow user_t user_git_socat_socket_var_run_t : sock_file { create unlink write };
+
+optional_policy(`
+
+	# Making this optional simply allows git_socat module to be
+	# removed, altered, and reinstalled.
+
+	gen_require(`
+
+		type git_socat_t;
+	')
+
+	git_socat_rw_git_socat_socket_var_run_sock_files(user_t)
+	git_socat_filetrans_git_socat_socket_var_run_sock_files(user_t, user_git_socat_socket_var_run_t)
+')

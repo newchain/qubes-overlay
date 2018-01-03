@@ -11,8 +11,8 @@ MODS="qubes-core"
 POLICY_FILES="qubes-core.te qubes-core.if qubes-core.fc"
 
 DESCRIPTION='SELinux policy for Qubes core'
-HOMEPAGE='https://github.com/loveithateit/qubes-policy'
+HOMEPAGE='https://github.com/newchain/qubes-policy'
 
-KEYWORDS="amd64"
+KEYWORDS="amd64 x86"
 LICENSE='GPL-3'
 SLOT='0'

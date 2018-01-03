@@ -3,7 +3,7 @@
 
 EAPI=6
 
-inherit eutils
+inherit eutils user
 
 DESCRIPTION='tlsdate for torsocksunix'
 HOMEPAGE='https://tlsdatehub.com/newchain/torsocksunix'
@@ -14,7 +14,9 @@ KEYWORDS="amd64 x86"
 LICENSE='AGPL-3'
 SLOT='0'
 
-DEPEND="net-proxy/socat_qrexec
+DEPEND="net-libs/socket_wrapper
+	>=net-misc/socat-2
+	net-proxy/socat_qrexec
 	selinux? ( sec-policy/selinux-tlsdate_socat )
 	virtual/tmpfiles"
 
@@ -28,7 +30,8 @@ pkg_setup() {
 
 	mkdir -p -- "${S}"
 
-	enewuser 'tlsdate_socat' -1 -1 -1 'qrexec-client'
+	enewgroup 'tlsdate_socat'
+	enewuser 'tlsdate_socat' -1 -1 -1 'tlsdate_socat,qrexec-client'
 }
 
 src_install() {

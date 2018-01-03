@@ -28,6 +28,9 @@ attribute socat_qrexec_initrc_domain;
 domain_entry_file(socat_qrexec_domain, socat_exec_t)
 role system_r types socat_qrexec_domain;
 
+type socat_qrexec_usr_lib_t;
+files_type(socat_qrexec_usr_lib_t)
+
 type socat_qrexec_var_run_t;
 files_type(socat_qrexec_var_run_t);
 
@@ -37,18 +40,11 @@ files_type(socat_qrexec_var_run_t);
 # socat_qrexec_faux_tcp_domain policy
 #
 
-# write for shutdown
-allow socat_qrexec_faux_tcp_domain self : unix_dgram_socket { create write };
-
 # passwd
 files_dontaudit_read_etc_files(socat_qrexec_faux_tcp_domain)
 
 # resolv.conf
-dontaudit socat_qrexec_faux_tcp_domain net_conf_t : file read;
-
-# testing
-#allow socat_qrexec_faux_tcp_domain net_conf_t : file { read open };
-#files_read_etc_files(socat_qrexec_faux_tcp_domain)
+dontaudit socat_qrexec_faux_tcp_domain net_conf_t : file { getattr read };
 
 
 ########################################
@@ -64,7 +60,8 @@ dontaudit socat_qrexec_faux_tcp_domain net_conf_t : file read;
 # socat_qrexec_domain policy
 #
 
-dontaudit socat_qrexec_domain self : unix_dgram_socket read;
+# write, sendto, and read for shutdown
+allow socat_qrexec_domain self : unix_dgram_socket { create write sendto read };
 
 # Find qrexec-client-vm
 corecmd_search_bin(socat_qrexec_domain)
@@ -120,7 +117,7 @@ init_exec_rc(socat_qrexec_initrc_domain)
 
 init_read_script_status_files(socat_qrexec_initrc_domain)
 
-# /dev/null
+# null
 init_dontaudit_use_fds(socat_qrexec_initrc_domain)
 
 init_use_script_ptys(socat_qrexec_initrc_domain)
@@ -137,6 +134,8 @@ logging_send_syslog_msg(socat_qrexec_initrc_domain)
 kernel_dontaudit_read_system_state(socat_qrexec_initrc_domain)
 
 userdom_dontaudit_search_user_home_dirs(socat_qrexec_initrc_domain)
+
+allow socat_qrexec_initrc_domain socat_qrexec_usr_lib_t : file { read open getattr };
 
 allow socat_qrexec_initrc_domain { initrc_state_t initrc_var_run_t } : dir { create_dir_perms list_dir_perms delete_dir_perms };
 create_files_pattern(socat_qrexec_initrc_domain, initrc_state_t, initrc_state_t)
@@ -235,11 +234,17 @@ optional_policy(`
 
 optional_policy(`
 
+	gen_require(`
+
+		type qubes-service_t;
+	')
+
 	########################################
 	#
 	# socat_qrexec_initrc_domain policy
 	#
 
+	qubes_core_search_qubes_rpc_worker_exec(socat_qrexec_initrc_domain)
 	qubes_core_bluepill_locale(socat_qrexec_initrc_domain)
 	# For qubes-service in dom0
 	qubes_core_read_inherited_qubes_service_var_run(socat_qrexec_initrc_domain)

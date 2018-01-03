@@ -1,0 +1,13 @@
+#!/sbin/openrc-run
+
+
+command='/usr/bin/qrexec-client-vm'
+command_args="dom0 qubes.InputKeyboard /usr/bin/input-proxy-sender /dev/input/event${device_number:-1}"
+command_background='true'
+command_umask='0077'
+description='Qubes input proxy sender (keyboard)'
+pidfile='/var/run/qubes/qubes-input-sender-keyboard.pid'
+rc_cgroup_cleanup='yes'
+
+
+rc_need='qubes-qrexec-agent'

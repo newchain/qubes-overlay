@@ -1,0 +1,1 @@
+/usr/local/bin/gpg_wrapper\.sh	--	gen_context(system_u:object_r:user_gpg_wrapper_exec_t,mls_systemlow)

@@ -10,7 +10,9 @@
 		<flag name="dbus">Use dbus activation for launching applications</flag>
 		<flag name="entropy">Pull in sys-apps/haveged</flag>
 		<flag name="glib">Pull in pygobject, which is required for application menu generation and integration</flag>
+		<flag name="icon">Support XDG icons for qubes.GetImageRGBA</flag>
 		<flag name="iptables">Install firewall integration</flag>
+		<flag name="kmod">Support loadable kernel modules</flag>
 		<flag name="log">Relay RPC errors syslog, pulls in sys-apps/util-linux or sys-apps/busybox[syslog]</flag>
 		<flag name="nautilus">Install gnome-base/nautilus customizations</flag>
 		<flag name="net">Install IP networking scripts</flag>

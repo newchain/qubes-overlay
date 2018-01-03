@@ -1,4 +1,4 @@
-# Copyright 1999-2017 Gentoo Foundation
+# Copyright 1999-2018 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
@@ -19,20 +19,24 @@ SLOT='0'
 DEPEND="app-crypt/gnupg"
 RDEPEND=""
 
-MY_PV=''
+#MY_PV=''
 
 
 src_unpack() {
 
-	if [ "${PV%%[_-]*}" != '9999' ] && [ -z "${MY_PV}" ]
-	then
+	if [ "${PV%%[_-]*}" != '9999' ] && [ -z "${MY_PV}" ]; then
 
-	  die "MY_PV must be set for specific tags"
+		die "MY_PV must be set for specific tags"
 
 	fi
 
 	readonly version_prefix=''
 	qubes_prepare
+}
+
+pkg_nofetch() {
+
+	einfo "If you already have this specific version locally, retry with EVCS_OFFLINE=1."
 }
 
 src_prepare() {
@@ -47,40 +51,36 @@ src_compile() {
 
 	cd "${S}/canaries"
 
-	for canary in canary-*.txt
-	do
+	for canary in canary-*.txt; do
 
-	  [ "${canary}" = 'canary-template.txt' ] && continue
-	  gpg --keyid-format 0xlong --verify "${canary}.sig.joanna" "${canary}" || die "Failed to verify authenticity of ${canary}!"
-	  gpg --keyid-format 0xlong --verify "${canary}.sig.marmarek" "${canary}" || die "Failed to verify authenticity of ${canary}!"
+		[ "${canary}" = 'canary-template.txt' ] && continue
+		gpg --keyid-format 0xlong --verify "${canary}.sig.joanna" "${canary}" || die "Failed to verify authenticity of ${canary}!"
+		gpg --keyid-format 0xlong --verify "${canary}.sig.marmarek" "${canary}" || die "Failed to verify authenticity of ${canary}!"
 
 	done
 
 	cd "${S}/QSBs"
 
-	for advisory in qsb-*.txt xsa-*.dot
-	do
+	for advisory in qsb-*.txt xsa-*.dot; do
 
-	  sigext=''
+		sigext=''
 
-	  if [ "${advisory}" \> 'qsb-017' ] && [ "${advisory}" \< 'qsb-019' ]
-	  then
+		if [ "${advisory}" \> 'qsb-017' ] && [ "${advisory}" \< 'qsb-019' ]; then
 
-	    sigext='n'
+			sigext='n'
 
-	  fi
+		fi
 
-	  # bad signatures....
-	  if [ "${advisory}" = 'qsb-002-2012.txt' ] || [ "${advisory}" = 'qsb-023-2015.txt' ]
-	  then
+		# bad signatures....
+		if [ "${advisory}" = 'qsb-002-2012.txt' ] || [ "${advisory}" = 'qsb-023-2015.txt' ]; then
 
-	    gpg --keyid-format 0xlong --verify "${advisory}.sig${sigext}.joanna" "${advisory}" || ewarn "Failed to verify authenticity of ${advisory}!"
-	    continue
+			gpg --keyid-format 0xlong --verify "${advisory}.sig${sigext}.joanna" "${advisory}" || ewarn "Failed to verify authenticity of ${advisory}!"
+			continue
 
-	  fi
+		fi
 
-	  gpg --keyid-format 0xlong --verify "${advisory}.sig${sigext}.joanna" "${advisory}" || die "Failed to verify authenticity of ${advisory}!"
-	  gpg --keyid-format 0xlong --verify "${advisory}.sig.marmarek" "${advisory}" || die "Failed to verify authenticity of ${advisory}!"
+		gpg --keyid-format 0xlong --verify "${advisory}.sig${sigext}.joanna" "${advisory}" || die "Failed to verify authenticity of ${advisory}!"
+		gpg --keyid-format 0xlong --verify "${advisory}.sig.marmarek" "${advisory}" || die "Failed to verify authenticity of ${advisory}!"
 
 	done
 

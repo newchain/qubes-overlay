@@ -1,13 +1,12 @@
-# Copyright 1999-2015 Gentoo Foundation
+# Copyright 1999-2017 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Id$
 
-EAPI=5
+EAPI=6
 
 DESCRIPTION='grsecurity RBAC policy for Qubes'
-HOMEPAGE='https://github.com/loveithateit/qubes-policy'
+HOMEPAGE='https://github.com/newchain/qubes-policy'
 
-KEYWORDS="~amd64"
+KEYWORDS="amd64 x86"
 LICENSE='GPL-3'
 SLOT='0'
 

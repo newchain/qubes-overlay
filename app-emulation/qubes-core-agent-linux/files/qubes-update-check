@@ -1,0 +1,9 @@
+#!/sbin/openrc-run
+
+
+command='/usr/lib/qubes/upgrades-status-notify'
+command_umask='0077'
+required_files='/var/run/qubes-service/qubes-update-check'
+
+rc_need='qubes-qrexec-agent'
+rc_need='qubes-service'

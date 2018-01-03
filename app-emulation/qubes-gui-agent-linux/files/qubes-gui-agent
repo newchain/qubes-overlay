@@ -1,5 +1,4 @@
 #!/sbin/openrc-run
-# $Id$
 
 
 command='/usr/bin/qubes-gui'
@@ -15,17 +14,18 @@ rc_need='qubesdb-daemon'
 
 start_pre() {
 
-	if [ -e '/usr/bin/ck-list-sessions' ]; then {
+	if [ -e '/usr/bin/ck-list-sessions' ]
+	then
 
-		rm -f -- '/tmp/qubes-session-env' '/tmp/qubes-session-waiter'
+	  rm -f -- '/tmp/qubes-session-env' '/tmp/qubes-session-waiter'
 
-		# start console-kit-daemon
+	  # start console-kit-daemon
 
-		/usr/bin/ck-list-sessions > /dev/null 2>&1
+	  /usr/bin/ck-list-sessions >> /dev/null 2>&1
 
-		# pretend the user is at local console
+	  # pretend the user is at local console
 
-		touch -- '/var/run/console/user'
-	};
+	  touch -t 200001010000 -- '/var/run/console/user'
+
 	fi
 }

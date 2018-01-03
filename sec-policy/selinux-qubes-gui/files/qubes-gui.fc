@@ -18,7 +18,11 @@ define(`qubes_userspace_range',
 
 /etc/X11/xorg-qubes\.conf.*		--	gen_context(system_u:object_r:qubes-gui_etc_t,mls_systemlow)
 
+/etc/conf\.d/qubes-gui-agent		--	gen_context(system_u:object_r:qubes-gui_initrc_etc_t,mls_systemlow-mls_systemhigh)
+
 /etc/rc\.d/init\.d/qubes-gui-agent	--	gen_context(system_u:object_r:qubes-gui_initrc_exec_t,mls_systemlow-mls_systemhigh)
+
+/etc/qubes-rpc/qubes\.SetMonitorLayout	--	gen_context(system_u:object_r:qubes-setmonitorlayout_exec_t,mls_systemlow)
 
 /usr/bin/qubes-gui			--	gen_context(system_u:object_r:qubes-gui_exec_t,qubes_userspace_range)
 /usr/bin/qubes-run-xorg\.sh		--	gen_context(system_u:object_r:qubes-run-xorg_exec_t,qubes_userspace_range)

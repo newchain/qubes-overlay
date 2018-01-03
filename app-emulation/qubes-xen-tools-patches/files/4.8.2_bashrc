@@ -44,6 +44,10 @@ post_src_prepare() {
 }
 
 
+# Passing disable-monitors breaks build
+#
+# --disable-monitors \
+
 src_configure() {
 
 	local myconf="--prefix=${PREFIX}/usr \
@@ -54,7 +58,6 @@ src_configure() {
 		--disable-xen \
 		--enable-tools \
 		--enable-docs \
-		--disable-monitors \
 		--disable-xsmpolicy \
 		--disable-blktap2 \
 		$(use_enable pam) \

@@ -3,7 +3,7 @@
 
 EAPI=6
 
-inherit eutils
+inherit eutils user
 
 DESCRIPTION='SSH for torsocksunix'
 HOMEPAGE='https://github.com/newchain/torsocksunix'
@@ -28,7 +28,8 @@ pkg_setup() {
 
 	mkdir -p -- "${S}"
 
-	enewuser 'ssh_socat' -1 -1 -1 'qrexec-client'
+	enewgroup 'ssh_socat'
+	enewuser 'ssh_socat' -1 -1 -1 'ssh_socat,qrexec-client'
 }
 
 src_install() {
@@ -38,7 +39,7 @@ src_install() {
 
 	insopts -m0600
 	insinto '/home.orig/user/.ssh'
-	doins "${FILESDIR}/ssh_config"
+	newins "${FILESDIR}/ssh_config" 'config'
 
 	insopts -m0600
 	insinto '/usr/lib/tmpfiles.d'

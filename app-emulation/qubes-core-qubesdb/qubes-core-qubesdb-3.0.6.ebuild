@@ -1,4 +1,4 @@
-# Copyright 1999-2017 Gentoo Foundation
+# Copyright 1999-2018 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
@@ -10,10 +10,10 @@ EGIT_REPO_URI='https://github.com/QubesOS/qubes-core-qubesdb.git'
 inherit eutils git-r3 qubes
 
 DESCRIPTION="Qubes configuration database"
-HOMEPAGE='https://github.com/QubesOS/qubes-core-agent-linux'
+HOMEPAGE='https://github.com/QubesOS/qubes-core-qubesdb'
 
-IUSE="-debug template"
-[ "${PV%%[_-]*}" != '9999' ] && [ "${PV%%.*}" != '4' ] && KEYWORDS="amd64 x86"
+IUSE="-debug python template"
+qubes_keywords
 LICENSE='GPL-2'
 
 qubes_slot
@@ -26,6 +26,16 @@ qubes_keys_depend
 DEPEND="${CDEPEND}
 	${DEPEND}"
 
+HDEPEND="${HDEPEND}
+	|| (
+		sys-apps/coreutils
+		sys-apps/busybox
+	)
+	|| (
+		sys-apps/sed
+		sys-apps/busybox
+	)"
+
 RDEPEND="${CDEPEND}"
 
 
@@ -35,43 +45,47 @@ src_unpack() {
 	qubes_prepare
 }
 
+pkg_nofetch() {
+
+	einfo "If you already have this specific version locally, retry with EVCS_OFFLINE=1."
+}
+
 src_prepare() {
 
 	eapply_user
 
 
-	if [ "${SLOT}" \> '0/31' ] || ( [ "${SLOT}" = '0/31' ] && [ "${PV##*.}" -gt 0 ] )
-	then
+	if [ "${SLOT}" \> '0/31' ] || ( [ "${SLOT}" = '0/31' ] && [ "${PV##*.}" -gt 0 ] ); then
 
-	  epatch "${FILESDIR}/qubesdb-3.1.1_no-systemd.patch"
+		epatch "${FILESDIR}/qubesdb-3.1.1_no-systemd.patch"
 
-	elif [ "${SLOT}" = '0/30' ] &&  [ "${PV##*.}" -gt 2 ]
-	then
+	elif [ "${SLOT}" = '0/30' ] && [ "${PV##*.}" -gt 2 ]; then
 
-	  epatch "${FILESDIR}/qubesdb-3.0.6_no-systemd.patch"
+		epatch "${FILESDIR}/qubesdb-3.0.6_no-systemd.patch"
 
 	else
 
-	  epatch "${FILESDIR}/no-systemd.patch"
+		epatch "${FILESDIR}/no-systemd.patch"
 
 	fi
 
-	sed -i "1s/^CFLAGS\(\ \?+\?=\ \?.*\)$/CFLAGS\1 ${CFLAGS}/" -- 'client/Makefile'
-	sed -i "8s/^CFLAGS\(\ \?+\?=\ \?.*\)$/CFLAGS\1 ${CFLAGS}/" -- 'daemon/Makefile'
+	sed -i -e "1s/^CFLAGS\(\ \?+\?=\ \?.*\)$/CFLAGS\1 ${CFLAGS}/" -- "${S}/client/Makefile"
+	sed -i -e "8s/^CFLAGS\(\ \?+\?=\ \?.*\)$/CFLAGS\1 ${CFLAGS}/" -- "${S}/daemon/Makefile"
 
-	sed -i 's/\ -Werror//g' -- 'client/Makefile'
-	sed -i 's/\ -Werror//g' -- 'daemon/Makefile'
+	sed -i -e 's/\ -Werror//g' -- "${S}/client/Makefile"
+	sed -i -e 's/\ -Werror//g' -- "${S}/daemon/Makefile"
 
-	sed -i '1s/^/BACKEND_VMM ?= xen\n/' -- 'client/Makefile'
-	sed -i '1s/^/BACKEND_VMM ?= xen\n/' -- 'daemon/Makefile'
+	sed -i -e '1s/^/BACKEND_VMM ?= xen\n/' -- "${S}/client/Makefile"
+	sed -i -e '1s/^/BACKEND_VMM ?= xen\n/' -- "${S}/daemon/Makefile"
 
-	if ! use debug
-	then
+	if ! use debug; then
 
-	  sed -i 's/\(CFLAGS.*\)-g\ /\1/' -- 'client/Makefile'
-	  sed -i 's/\(CFLAGS.*\)-g\ /\1/' -- 'daemon/Makefile'
+		sed -i -e 's/\(CFLAGS.*\)-g\ /\1/' -- "${S}/client/Makefile"
+		sed -i -e 's/\(CFLAGS.*\)-g\ /\1/' -- "${S}/daemon/Makefile"
 
 	fi
+
+	use python || sed -i -e '/python/d' -- "${S}/Makefile"
 }
 
 src_compile() {
@@ -83,17 +97,21 @@ src_install() {
 
 	emake DESTDIR="${D}" install
 
-	fperms 0711 '/usr/bin/qubesdb-cmd'
-	fperms 0700 '/usr/sbin/qubesdb-daemon'
-
 	newinitd "${FILESDIR}/qubesdb-daemon_initd" 'qubesdb-daemon'
 	newconfd "${FILESDIR}/qubesdb-daemon_confd" 'qubesdb-daemon'
-	fperms 0600 '/etc/conf.d/qubesdb-daemon'
-	fperms 0700 '/etc/init.d/qubesdb-daemon'
 
 	insopts '-m0600'
 	insinto '/usr/lib/tmpfiles.d'
 	doins "${FILESDIR}/qubesdb.conf"
+
+	[ -e "${D}/etc/conf.d" ] && fperms 0700 '/etc/conf.d'
+	[ -e "${D}/etc/conf.d/qubesdb-daemon" ] && fperms 0600 '/etc/conf.d/qubesdb-daemon'
+	[ -e "${D}/etc/init.d" ] && fperms 0700 '/etc/init.d'
+	[ -e "${D}/etc/init.d/qubesdb-daemon" ] && fperms 0700 '/etc/init.d/qubesdb-daemon'
+
+	[ -e "${D}/usr/bin/qubesdb-cmd" ] && fperms 0711 '/usr/bin/qubesdb-cmd'
+	[ -e "${D}/usr/sbin/qubesdb-daemon" ] && fperms 0700 '/usr/sbin/qubesdb-daemon'
+	[ -e "${D}/usr/lib/tmpfiles.d" ] && fperms 0700 '/usr/lib/tmpfiles.d'
 }
 
 pkg_postinst() {

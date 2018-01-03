@@ -1,0 +1,31 @@
+policy_module(noip_curl, 1)
+
+
+optional_policy(`
+
+	gen_require(`
+
+		role user_r;
+
+		type curl_socat_t;
+		type curl_socat_socket_var_run_t;
+		type user_t;
+		type user_screen_t;
+		type xdg_downloads_home_t;
+	')
+
+	curl_faux_tcp_template(noip, user_t, user_r)
+
+	allow noip_curl_t self : fifo_file { getattr write };
+
+	curl_interactive_domain_perms(noip_curl_t, user_t)
+	curl_wrapper_interactive_domain_perms(noip_curl_wrapper_t)
+
+	allow noip_curl_t user_screen_t : fd use;
+
+	xdg_create_downloads_home(noip_curl_t)
+	allow noip_curl_t xdg_downloads_home_t : file { write append };
+
+	files_dontaudit_search_home(noip_curl_wrapper_t)
+	dontaudit noip_curl_wrapper_t xdg_downloads_home_t : dir search;
+')

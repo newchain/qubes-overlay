@@ -1,0 +1,6 @@
+## <summary>noip_curl policy</summary>
+## <desc>
+##	 <p>
+##	  Policy for a curl domain using curl_socat and socket_wrapper.
+##	</p>
+## </desc>

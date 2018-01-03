@@ -1,7 +1,7 @@
 ## <summary>qubes-gui-agent policy</summary>
 ## <desc>
 ##	<p>
-##		Policy for qubes-gui-agent, the Qubes seemless gui frontend.
+##		Policy for qubes-gui-agent, the Qubes seemless GUI frontend.
 ##	</p>
 ## </desc>
 
@@ -60,7 +60,7 @@ interface(`qubes_gui_stream_write',`
 ##	</summary>
 ## </param>
 
-interface(`qubes_gui_use_fds',`
+interface(`qubes_gui_use_qubes_gui_fds',`
 
 	gen_require(`
 
