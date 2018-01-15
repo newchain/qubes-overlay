@@ -9,6 +9,7 @@
 		<flag name="candy">Install (numerous) dependencies for standard GNOME themes.</flag>
 		<flag name="icon">Send icons to dom0</flag>
 		<flag name="locale">Synchronize locale settings with dom0 (warning: harmful to privacy)</flag>
+		<flag name="minimal-xsession">Configure the minimal needed X session.  Qubes GUI only needs for the session to be kept alive, and so `sleep` alone is sufficient.</flag>
 		<flag name="qubes-rpc_SetMonitorLayout">Synchronize display settings with dom0 (warning: harmful to privacy)</flag>
 		<flag name="template">Install files which are necessary for a templateVM, but interfere with regular use.</flag>
 	</use>

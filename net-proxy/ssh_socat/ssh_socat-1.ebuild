@@ -1,9 +1,9 @@
-# Copyright 1999-2017 Gentoo Foundation
+# Copyright 1999-2018 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
 
-inherit eutils user
+inherit user
 
 DESCRIPTION='SSH for torsocksunix'
 HOMEPAGE='https://github.com/newchain/torsocksunix'
@@ -14,15 +14,26 @@ KEYWORDS="amd64 x86"
 LICENSE='AGPL-3'
 SLOT='0'
 
-DEPEND="net-proxy/socat_qrexec
+HDEPEND="${HDEPEND:-}
+	|| (
+		sys-apps/coreutils
+		sys-apps/busybox
+	)"
+
+RDEPEND="${CDEPEND:-}
+	${RDEPEND:-}
+	|| (
+		sys-apps/coreutils
+		sys-apps/busybox
+	)
+	|| (
+		dev-libs/libressl
+		dev-libs/openssl
+	)
+	net-proxy/socat_qrexec
 	selinux? ( sec-policy/selinux-ssh_socat )
 	virtual/tmpfiles"
 
-
-src_prepare() {
-
-	eapply_user
-}
 
 pkg_setup() {
 
@@ -34,14 +45,22 @@ pkg_setup() {
 
 src_install() {
 
+	diropts -m 0700
+
+	edirs="
+		/etc/init.d/ssh_socat
+		/home.orig
+		/usr/lib/tmpfiles.d"
+
+	dodir ${edirs}
+
 	doinitd "${FILESDIR}/ssh_socat"
 	fperms 0700 '/etc/init.d/ssh_socat'
 
-	insopts -m0600
+	insopts -m 0600
 	insinto '/home.orig/user/.ssh'
 	newins "${FILESDIR}/ssh_config" 'config'
 
-	insopts -m0600
 	insinto '/usr/lib/tmpfiles.d'
 	doins "${FILESDIR}/ssh_socat.conf"
 }

@@ -6,8 +6,7 @@ EAPI=6
 EGIT_REPO_URI='https://github.com/QubesOS/qubes-vmm-xen.git'
 EGIT_SUBMODULES=()
 
-inherit eutils git-r3 qubes
-[ "${PV%%[_-]*}" != '9999' ] && inherit versionator
+inherit git-r3 qubes
 
 DESCRIPTION='Qubes version of Xen'
 HOMEPAGE='https://github.com/QubesOS/qubes-vmm-xen'

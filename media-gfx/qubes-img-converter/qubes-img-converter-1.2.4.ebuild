@@ -7,43 +7,45 @@ EGIT_REPO_URI='https://github.com/QubesOS/qubes-app-linux-img-converter.git'
 
 PYTHON_COMPAT=( python2_7 )
 
-inherit eutils git-r3 python-single-r1 qubes
+inherit git-r3 python-single-r1 qubes
 
 DESCRIPTION='Qrexec image converter for Qubes'
 HOMEPAGE='https://github.com/QubesOS/qubes-app-linux-img-converter'
 
-IUSE="gnome nautilus zenity"
+IUSE="gnome nautilus svg zenity xdg-icon"
 qubes_keywords
 LICENSE='GPL-2'
 
 SLOT='0'
 
-#tag_date='20171223'
-tag_date='20171211'
+tag_date='20171223'
 qubes_keys_depend
 
-CDEPEND="${CDEPEND}
+CDEPEND="${CDEPEND:-}
 	${PYTHON_DEPS}"
 
-DEPEND="${CDEPEND}
-	${DEPEND}"
+DEPEND="${CDEPEND:-}
+	${DEPEND:-}"
 
-HDEPEND="${PYTHON_DEPS}
+HDEPEND="${HDEPEND:-}
+	${PYTHON_DEPS}
 	|| (
-	  sys-apps/coreutils
-	  sys-apps/busybox
+		sys-apps/coreutils
+		sys-apps/busybox
 	)
 	|| (
-	  sys-apps/sed
-	  sys-apps/busybox
+		sys-apps/sed
+		sys-apps/busybox
 	)"
 
-RDEPEND="${CDEPEND}
+RDEPEND="${CDEPEND:-}
 	app-emulation/qubes-core-agent-linux[qubes-rpc_GetImageRGBA(+)]
 	nautilus? (
 		dev-python/nautilus-python
 		dev-python/pygobject
 	)
+	svg? ( app-emulation/qubes-core-agent-linux[qubes-RGBA_svg(+)] )
+	xdg-icon? ( app-emulation/qubes-core-agent-linux[qubes-RGBA_xdg-icon(+)] )
 	zenity? ( gnome-extra/zenity )"
 
 #	selinux? ( sec-policy/selinux-qubes-img-coverter )
@@ -62,6 +64,11 @@ pkg_nofetch() {
 	einfo "If you already have this specific version locally, retry with EVCS_OFFLINE=1."
 }
 
+pkg_setup() {
+
+	python-single-r1_pkg_setup
+}
+
 src_prepare() {
 
 	eapply_user
@@ -73,18 +80,13 @@ src_prepare() {
 
 		for file in 'qvm-convert-image-gnome' 'qvm-convert-image.gnome'; do
 
-			cp -- "${S}/${file}" "${T}/${file}" 
+			cp -- "${S}/${file}" "${T}/${file}"
 			cat -- "${T}/${file}" | tr '\n' '\v' | sed -e 's/\ \\\s*\s|\szenity.*$/\v/' -- - | tr '\v' '\n' | cat -- - > "${S}/${file}"
-			rm -- "${T}/${file}" 
+			rm -- "${T}/${file}"
 
 		done
-	
+
 	fi
-}
-
-pkg_setup() {
-
-	python-single-r1_pkg_setup
 }
 
 src_compile() {
@@ -96,7 +98,7 @@ src_install() {
 
 	emake DESTDIR="${D}" install
 
-
 	[ -e "${D}/usr/share/nautilus-python/extensions" ] && python_optimize "${D}/usr/share/nautilus-python/extensions/"*'.py'
-	[ -e "${D}/usr/lib/qubes" ] && fperms 0711 '/usr/lib/qubes'
+	[ -e "${D}/usr/lib/qubes" ] && fowners :qubes '/usr/lib/qubes'
+	[ -e "${D}/usr/lib/qubes" ] && fperms 0710 '/usr/lib/qubes'
 }

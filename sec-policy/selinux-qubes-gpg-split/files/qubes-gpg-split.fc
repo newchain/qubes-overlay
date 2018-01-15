@@ -1,6 +1,11 @@
 /etc/profile\.d/qubes-gpg\.sh		--	gen_context(system_u:object_r:qubes-gpg_etc_t,mls_systemlow)
 
-/etc/qubes-rpc/qubes\.Gpg		--	gen_context(system_u:object_r:qubes-gpg_rpc_exec_t,mls_systemlow)
+/etc/qubes-rpc/qubes\.Gpg		--	gen_context(system_u:object_r:qubes-gpg_exec_t,mls_systemlow)
+/etc/qubes-rpc/qubes\.GpgImportKey	--	gen_context(system_u:object_r:qubes-gpgimportkey_exec_t,mls_systemlow)
+
+/run/qubes-gpg-split(/.*)?			gen_context(system_u:object_r:qubes-gpg_var_run_t,mls_systemlow)
+
+/rw/config/gpg-split-domain		--	gen_context(system_u:object_r:qubes-gpg_etc_t,mls_systemlow)
 
 /usr/bin/qubes-gpg-client		--	gen_context(system_u:object_r:qubes-gpg-client_exec_t,mls_systemlow)
 /usr/bin/qubes-gpg-client-wrapper	--	gen_context(system_u:object_r:qubes-gpg-client-wrapper_exec_t,mls_systemlow)
@@ -9,3 +14,5 @@
 /usr/lib/qubes-gpg-split		-d	gen_context(system_u:object_r:qubes-gpg-split_lib_t,mls_systemlow)
 /usr/lib/qubes-gpg-split/gpg-server	--	gen_context(system_u:object_r:qubes-gpg-split-server_exec_t,mls_systemlow)
 /usr/lib/qubes-gpg-split/pipe-cat	--	gen_context(system_u:object_r:qubes-gpg-pipe-cat_exec_t,mls_systemlow)
+
+/var/run/qubes-gpg-split(/.*)?			gen_context(system_u:object_r:qubes-gpg_var_run_t,mls_systemlow)

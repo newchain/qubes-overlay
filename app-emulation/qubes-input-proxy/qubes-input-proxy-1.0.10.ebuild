@@ -8,7 +8,7 @@ EGIT_REPO_URI='https://github.com/QubesOS/qubes-app-linux-input-proxy.git'
 #MULTILIB_COMPAT=( abi_x86_{32,64} )
 PYTHON_COMPAT=( python2_7 )
 
-inherit eutils git-r3 python-single-r1 qubes
+inherit git-r3 python-single-r1 qubes
 
 DESCRIPTION="Qubes input proxy"
 HOMEPAGE='https://github.com/QubesOS/qubes-app-linux-input-proxy'
@@ -16,19 +16,18 @@ HOMEPAGE='https://github.com/QubesOS/qubes-app-linux-input-proxy'
 IUSE="-debug -tests"
 [ "${PV%%[_-]*}" != '9999' ] && KEYWORDS="amd64 x86"
 LICENSE='GPL-2'
-
 SLOT='0'
-
-#CDEPEND="app-emulation/qubes-core-vchan-xen:${SLOT}"
 
 tag_date='20170705'
 qubes_keys_depend
 
-DEPEND="${CDEPEND}
-	${DEPEND}
+#CDEPEND="app-emulation/qubes-core-vchan-xen:${SLOT}"
+
+DEPEND="${CDEPEND:-}
+	${DEPEND:-}
 	tests? ( ${PYTHON_DEPS} )"
 
-HDEPEND="${HDEPEND}
+HDEPEND="${HDEPEND:-}
 	|| (
 		sys-apps/coreutils
 		sys-apps/busybox
@@ -38,7 +37,7 @@ HDEPEND="${HDEPEND}
 		sys-apps/busybox
 	)"
 
-RDEPEND="${CDEPEND}
+RDEPEND="${CDEPEND:-}
 	app-emulation/qubes-core-agent-linux"
 
 

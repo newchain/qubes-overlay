@@ -64,7 +64,6 @@ interface(`qubes_gpg_import_key_role',`
 ###############################
 ## <summary>
 ##	Allow transition to qubes-gpg-import-key_t.
-role to use split gpg-client
 ## </summary>
 ## <param name="domain">
 ##	<summary>
@@ -80,9 +79,12 @@ interface(`qubes_gpg_import_key_transition',`
 		type qubes-gpg-import-key_exec_t;
 	')
 
-	corecmd_search_bin($1)
+	allow qubes-gpg-import-key_t $1 : fd use;
+	allow qubes-gpg-import-key_t $1 : process sigchld;
+	auditallow qubes-gpg-import-key_t $1 : process sigchld;
 
-	domtrans_pattern($1, qubes-gpg-import-key_exec_t, qubes-gpg-import-key_t)
+	corecmd_search_bin($1)
+	domain_auto_transition_pattern($1, qubes-gpg-import-key_exec_t, qubes-gpg-import-key_t)
 ')
 
 
@@ -100,6 +102,10 @@ interface(`qubes_gpg_import_key_transition',`
 ##		Domain to permit transition.
 ##	</summary>
 ## </param>
+## <param name="role_prefix" optional="yes">
+##	<summary>
+##		Prefix of the role
+##	</summary>
 
 interface(`qubes_gpg_qubes_gpg_client_role',`
 
@@ -110,14 +116,28 @@ interface(`qubes_gpg_qubes_gpg_client_role',`
 		type qubes-gpg-pipe-cat_t;
 		type qubes-gpg_qrexec-client-vm_sh_t;
 		type qubes-gpg_qrexec-client-vm_sh_worker_t;
+		type qubes-gpg-client-wrapper_helper_t;
 	')
 
 	qubes_gpg_qubes_gpg_client_wrapper_domtrans($2)
 
-	role $1 types { qubes-gpg-client_t qubes-gpg-client-wrapper_t qubes-gpg-pipe-cat_t qubes-gpg_qrexec-client-vm_t  qubes-gpg_qrexec-client-vm_sh_t qubes-gpg_qrexec-client-vm_sh_worker_t };
+	role $1 types { qubes-gpg-client_t qubes-gpg-client-wrapper_t qubes-gpg-client-wrapper_helper_t  qubes-gpg-pipe-cat_t qubes-gpg_qrexec-client-vm_t  qubes-gpg_qrexec-client-vm_sh_t qubes-gpg_qrexec-client-vm_sh_worker_t };
 
 	allow qubes-gpg-client_t $2 : process sigchld;
 	allow qubes-gpg_qrexec-client-vm_t $2 : process sigchld;
+	auditallow qubes-gpg_qrexec-client-vm_t $2 : process sigchld;
+
+	optional_policy(`
+
+		gen_require(`
+
+			type $3_screen_t;
+		')
+
+		allow qubes-gpg-client_t $3_screen_t : fd use;
+		allow qubes-gpg-client-wrapper_t $3_screen_t : fd use;
+		allow qubes-gpg-client-wrapper_helper_t $3_screen_t : fd use;
+	')
 ')
 
 
@@ -139,9 +159,12 @@ interface(`qubes_gpg_qubes_gpg_client_domtrans',`
 		type qubes-gpg-client_exec_t;
 	')
 
-	corecmd_search_bin($1)
+	allow qubes-gpg-client_t $1 : fd use;
+	allow qubes-gpg-client_t $1 : process sigchld;
+	auditallow qubes-gpg-client_t $1 : process sigchld;
 
-	domtrans_pattern($1, qubes-gpg-client_exec_t, qubes-gpg-client_t)
+	corecmd_search_bin($1)
+	domain_auto_transition_pattern($1, qubes-gpg-client_exec_t, qubes-gpg-client_t)
 ')
 
 
@@ -163,9 +186,11 @@ interface(`qubes_gpg_qubes_gpg_client_wrapper_domtrans',`
 		type qubes-gpg-client-wrapper_exec_t;
 	')
 
-	corecmd_search_bin($1)
+	allow qubes-gpg-client-wrapper_t $1 : fd use;
+	allow qubes-gpg-client-wrapper_t $1 : process sigchld;
 
-	domtrans_pattern($1, qubes-gpg-client-wrapper_exec_t, qubes-gpg-client-wrapper_t)
+	corecmd_search_bin($1)
+	domain_auto_transition_pattern($1, qubes-gpg-client-wrapper_exec_t, qubes-gpg-client-wrapper_t)
 ')
 
 
@@ -187,11 +212,13 @@ interface(`qubes_gpg_qubes_gpg_pipe_cat_domtrans',`
 		type qubes-gpg-pipe-cat_exec_t;
 	')
 
+	allow qubes-gpg-pipe-cat_t $1 : fd use;
+	allow qubes-gpg-pipe-cat_t $1 : process sigchld;
+	auditallow qubes-gpg-pipe-cat_t $1 : process sigchld;
+
 	corecmd_search_bin($1)
-
 	allow $1 qubes-gpg-split_lib_t : dir search;
-
-	domtrans_pattern($1, qubes-gpg-pipe-cat_exec_t, qubes-gpg-pipe-cat_t)
+	domain_auto_transition_pattern($1, qubes-gpg-pipe-cat_exec_t, qubes-gpg-pipe-cat_t)
 ')
 
 

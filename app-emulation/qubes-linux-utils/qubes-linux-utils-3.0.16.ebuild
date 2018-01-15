@@ -8,7 +8,7 @@ EGIT_REPO_URI='https://github.com/QubesOS/qubes-linux-utils.git'
 #MULTILIB_COMPAT=( abi_x86_{32,64} )
 PYTHON_COMPAT=( python2_7 )
 
-inherit eutils git-r3 python-single-r1 qubes
+inherit git-r3 python-single-r1 qubes
 
 DESCRIPTION='Qubes utilities for Linux VMs'
 HOMEPAGE='https://github.com/QubesOS/qubes-linux-utils'
@@ -20,7 +20,7 @@ LICENSE='GPL-2'
 
 qubes_slot
 
-CDEPEND="${CDEPEND}
+CDEPEND="${CDEPEND:-}
 	app-emulation/qubes-core-vchan-xen:${SLOT}
 	app-emulation/xen-tools
 	python? ( ${PYTHON_DEPS} )"
@@ -28,10 +28,11 @@ CDEPEND="${CDEPEND}
 tag_date='20160115'
 qubes_keys_depend
 
-DEPEND="${CDEPEND}
-	${DEPEND}"
+DEPEND="${CDEPEND:-}
+	${DEPEND:-}"
 
-HDEPEND="|| (
+HDEPEND="${HDEPEND:-}
+	|| (
 		sys-apps/coreutils
 		sys-apps/busybox
 	)
@@ -40,7 +41,7 @@ HDEPEND="|| (
 		sys-apps/busybox
 	)"
 
-RDEPEND="${CDEPEND}
+RDEPEND="${CDEPEND:-}
 	python? ( || (
 		dev-python/cairocffi
 		dev-python/pycairo

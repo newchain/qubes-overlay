@@ -5,7 +5,7 @@ EAPI=6
 
 EGIT_REPO_URI='https://github.com/QubesOS/qubes-gui-common.git'
 
-inherit eutils git-r3 qubes
+inherit git-r3 qubes
 
 DESCRIPTION='Qubes common GUI headers'
 HOMEPAGE='https://github.com/QubesOS/qubes-gui-common'

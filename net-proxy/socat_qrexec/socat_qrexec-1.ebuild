@@ -1,9 +1,9 @@
-# Copyright 1999-2017 Gentoo Foundation
+# Copyright 1999-2018 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
 
-inherit eutils user
+inherit user
 
 DESCRIPTION='Base files for torsocksunix'
 HOMEPAGE='https://github.com/newchain/torsocksunix'
@@ -14,16 +14,35 @@ KEYWORDS="amd64 x86"
 LICENSE='AGPL-3'
 SLOT='0'
 
-RDEPEND="app-emulation/qubes-core-agent-linux
+HDEPEND="${HDEPEND:-}
+	|| (
+		sys-apps/coreutils
+		sys-apps/busybox
+	)"
+
+RDEPEND="${CDEPEND:-}
+	${RDEPEND:-}
+	app-emulation/qubes-core-agent-linux
 	net-misc/socat
-	selinux? ( sec-policy/selinux-socat_qrexec )
-	virtual/tmpfiles"
+	|| (
+		sys-apps/coreutils
+		sys-apps/busybox
+	)
+	|| (
+		sys-apps/grep
+		sys-apps/busybox
+	)
+	|| (
+		sys-apps/sed
+		sys-apps/busybox
+	)
+	|| (
+		sys-apps/util-linux
+		sys-apps/busybox
+	)
+	virtual/tmpfiles
+	selinux? ( sec-policy/selinux-socat_qrexec )"
 
-
-src_prepare() {
-
-	eapply_user
-}
 
 pkg_setup() {
 
@@ -34,7 +53,14 @@ pkg_setup() {
 
 src_install() {
 
-	insopts -m0600
+	diropts -g qubes -m 0710
+	dodir '/usr/lib/qubes'
+
+	diropts -m 0700
+	dodir '/usr/lib/qubes/init'
+	dodir '/usr/lib/tmpfiles.d'
+
+	insopts -m 0600
 
 	insinto '/usr/lib/qubes/init'
 	doins "${FILESDIR}/torsocksunix"

@@ -1,0 +1,34 @@
+# 'readonly variable'
+#DEPEND="#${DEPEND:-}
+#	app-emulation/qubes-xen-tools-patches"
+	
+
+post_src_prepare() {
+
+	sed -i -e 's/-Werror//g' -- "${S}/tools/configure" || die "Unable to edit ${S}/tools/configure"
+	sed -i -e 's/-Werror//g' -- "${S}/tools/blktap2/drivers/Makefile" || die "Unable to edit ${S}/tools/blktap2/drivers/Makefile"
+	sed -i -e 's/-Werror//g' -- "${S}/tools/libxl/Makefile" || die "Unable to edit ${S}/tools/libxl/Makefile"
+	sed -i -e 's/-Werror//g' -- "${S}/tools/Rules.mk" || die "Unable to edit ${S}/tools/Rules.mk"
+	sed -i -e 's/-Werror//g' -- "${S}/Config.mk" || die "Unable to edit ${S}/Rules.mk"
+	sed -i -e 's/-Werror//g' -- "${S}/m4/ptyfuncs.m4" || die "Unable to edit ${S}/m4/ptyfuncs.m4"
+	sed -i -e 's/-Werror//g' -- "${S}/xen/Rules.mk" || die "Unable to edit ${S}/xen/Rules.mk"
+	sed -i -e 's/-Werror//g' -- "${S}/extras/mini-os/minios.mk" || die "Unable to edit ${S}/extras/mini-os/minios.mk"
+	sed -i -e 's/-Werror//g' -- "${S}/stubdom/vtpmmgr/Makefile" || die "Unable to edit ${S}/stubdom/vtpmmgr/Makefile"
+	sed -i -e '/CFLAGS\s*+=\s*-Werror/d' -- "${S}/tools/console/Makefile" || die "Unable to edit ${S}/tools/console/Makefile"
+	sed -i -e '/CFLAGS\s*+=\s*-Werror/d' -- "${S}/tools/firmware/Rules.mk" || die "Unable to edit ${S}/tools/firmware/Rules.mk"
+	sed -i -e 's/-Werror//g' -- "${S}/tools/libfsimage/Rules.mk" || die "Unable to edit ${S}/tools/libfsimage/Rules.mk"
+	sed -i -e 's/-Werror//g' -- "${S}/tools/libxc/Makefile" || die "Unable to edit ${S}/tools/libxc/Makefile"
+	sed -i -e '/CFLAGS\s*+=\s*-Werror/d' -- "${S}/tools/memshr/Makefile" || die "Unable to edit ${S}/tools/memshr/Makefile"
+	sed -i -e '/CFLAGS\s*+=\s*-Werror/d' -- "${S}/tools/misc/Makefile" || die "Unable to edit ${S}/tools/misc/Makefile"
+	sed -i -e 's/-Werror//g' -- "${S}/tools/ocaml/common.make" || die "Unable to edit ${S}/tools/ocaml/common.make"
+	sed -i -e 's/\,\ "-Werror"//g' -- "${S}/tools/pygrub/setup.py" || die "Unable to edit ${S}//tools/pygrub/setup.py"
+	sed -i -e 's/\,\ "-Werror"//g' -- "${S}/tools/pygrub/setup.py" || die "Unable to edit ${S}//tools/python/setup.py"
+	sed -i -e '/CFLAGS\s*+=\s*-Werror/d' -- "${S}/tools/xcutils/Makefile" || die "Unable to edit ${S}/tools/xcutils/Makefile"
+	sed -i -e '/CFLAGS\s*+=\s*-Werror/d' -- "${S}/tools/xenbackendd/Makefile" || die "Unable to edit ${S}/tools/xenbackendd/Makefile"
+	sed -i -e '/CFLAGS\s*+=\s*-Werror/d' -- "${S}/tools/xenmon/Makefile" || die "Unable to edit ${S}/tools/xenmon/Makefile"
+	sed -i -e '/CFLAGS\s*+=\s*-Werror/d' -- "${S}/tools/xenpaging/Makefile" || die "Unable to edit ${S}/tools/xenpaging/Makefile"
+	sed -i -e '/CFLAGS\s*+=\s*-Werror/d' -- "${S}/tools/xenpmd/Makefile" || die "Unable to edit ${S}/tools/xenpmd/Makefile"
+	sed -i -e '/CFLAGS\s*+=\s*-Werror/d' -- "${S}/tools/xenstore/Makefile" || die "Unable to edit ${S}/tools/xenstore/Makefile"
+	sed -i -e '/CFLAGS\s*+=\s*-Werror/d' -- "${S}/tools/xentrace/Makefile" || die "Unable to edit ${S}/tools/xentrace/Makefile"
+	sed -i -e 's/-Werror//g' -- "${S}/xen/include/Makefile" || die "Unable to edit ${S}/xen/include/Makefile"
+}

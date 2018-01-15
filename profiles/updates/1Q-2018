@@ -1,0 +1,2 @@
+move app-emulation/qubes-initramfs sys-kernel/qubes-initramfs
+move app-emulation/qubes-linux-module sys-kernel/qubes-linux-u2mfn-module

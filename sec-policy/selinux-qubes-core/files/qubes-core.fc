@@ -80,6 +80,7 @@ HOME_DIR/QubesIncoming(/.*)?			gen_context(system_u:object_r:qubes_shared_home_t
 /usr/bin/qrexec-client-vm		--	gen_context(system_u:object_r:qrexec-client-vm_exec_t,mls_systemlow)
 /usr/bin/qrexec-fork-server		--	gen_context(system_u:object_r:qrexec-fork-server_exec_t,mls_systemlow)
 /usr/bin/qubes-desktop-run		--	gen_context(system_u:object_r:qubes-desktop-run_exec_t,mls_systemlow)
+/usr/bin/qubes-session                  --      gen_context(system_u:object_r:qubes-session_exec_t,mls_systemlow)
 /usr/bin/qubesdb-cmd			--	gen_context(system_u:object_r:qubesdb-cmd_exec_t,mls_systemlow)
 /usr/bin/qubesdb-multiread		-l	gen_context(system_u:object_r:qubesdb-cmd_exec_t,mls_systemlow)
 /usr/bin/qubesdb-read			-l	gen_context(system_u:object_r:qubesdb-cmd_exec_t,mls_systemlow)

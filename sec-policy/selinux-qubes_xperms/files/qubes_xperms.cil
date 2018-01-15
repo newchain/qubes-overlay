@@ -1,61 +1,96 @@
-( allowx qubes-service_worker_t qubes-service_t ( ioctl fifo_file ( 0x5401 ) ) )
-( neverallowx qubes-service_worker_t qubes-service_t ( ioctl fifo_file ( not ( 0x5401 ) ) ) )
+( optional qubes-service_worker
+  ( allowx qubes-service_worker_t qubes-service_t ( ioctl fifo_file ( 0x5401 ) ) )
+  ( neverallowx qubes-service_worker_t qubes-service_t ( ioctl fifo_file ( not ( 0x5401 ) ) ) )
+)
 
 ;( allowx xserver_t qubes_u2mfn_t ( ioctl file ( 0xf501 ) ) )
 ;( neverallowx xserver_t qubes_u2mfn_t ( ioctl file ( not ( 0xf501 ) ) ) )
 
-( allowx qrexec-agent_t xenfs_t ( ioctl file ( 0x5000 ) ) )
-( neverallowx qrexec-agent_t xenfs_t ( ioctl file ( not ( 0x5000 ) ) ) )
-( allowx qrexec-agent_t device_t ( ioctl chr_file ( 0x5000 0x5005 ) ) )
-( neverallowx qrexec-agent_t device_t ( ioctl chr_file ( not ( 0x5000 0x5005 ) ) ) )
+( optional qrexec-agent
+  ( allowx qrexec-agent_initrc_t self ( ioctl fifo_file ( 0x5401 ) ) )
+  ( neverallowx qrexec-agent_initrc_t self ( ioctl fifo_file ( not ( 0x5401 ) ) ) )
 
+  ( allowx qrexec-agent_t xenfs_t ( ioctl file ( 0x5000 ) ) )
+  ( neverallowx qrexec-agent_t xenfs_t ( ioctl file ( not ( 0x5000 ) ) ) )
+  ( allowx qrexec-agent_t device_t ( ioctl chr_file ( 0x5000 0x5005 ) ) )
+  ( neverallowx qrexec-agent_t device_t ( ioctl chr_file ( not ( 0x5000 0x5005 ) ) ) )
 
-( allowx qrexec-agent_t qrexec-agent_log_t ( ioctl file ( 0x5401 ) ) )
-( neverallowx qrexec-agent_t qrexec-agent_log_t ( ioctl file ( not ( 0x5401 ) ) ) )
+  ( allowx qrexec-agent_t qrexec-agent_log_t ( ioctl file ( 0x5401 ) ) )
+  ( neverallowx qrexec-agent_t qrexec-agent_log_t ( ioctl file ( not ( 0x5401 ) ) ) )
+)
 
-( allowx qubesdb_t qubesdb_log_t ( ioctl file ( 0x5401 ) ) )
-( neverallowx qubesdb_t qubesdb_log_t ( ioctl file ( not ( 0x5401 ) ) ) )
+( optional qubesdb-daemon
+  ( allowx qubesdb-daemon_t qubesdb-daemon_log_t ( ioctl file ( 0x5401 ) ) )
+  ( neverallowx qubesdb-daemon_t qubesdb-daemon_log_t ( ioctl file ( not ( 0x5401 ) ) ) )
 
-( allowx qubesdb_initrc_t self ( ioctl fifo_file ( 0x5401 ) ) )
-( neverallowx qubesdb_initrc_t self ( ioctl fifo_file ( not ( 0x5401 ) ) ) )
+  ( allowx qubesdb-daemon_t xen_device_t ( ioctl chr_file ( 0x4501 0x4504 0x4700 0x4701 0x4702 0x4707 ) ) )
 
-( allowx qubesdb_t xenfs_t ( ioctl file ( 0x5000 ) ) )
-( neverallowx qubesdb_t xenfs_t ( ioctl file ( not ( 0x5000 ) ) ) )
-( allowx qubesdb_t device_t ( ioctl chr_file ( 0x5000 ) ) )
-( neverallowx qubesdb_t device_t ( ioctl chr_file ( not ( 0x5000 ) ) ) )
+  ;privcmd
+  ( allowx qubesdb-daemon_t xenfs_t ( ioctl file ( 0x5000 ) ) )
+  ( neverallowx qubesdb-daemon_t xenfs_t ( ioctl file ( not ( 0x5000 ) ) ) )
+  ( allowx qubesdb-daemon_t device_t ( ioctl chr_file ( 0x5000 0x5005 ) ) )
+  ( neverallowx qubesdb-daemon_t device_t ( ioctl chr_file ( not ( 0x5000 0x5005 ) ) ) )
+  ; ( + the above )
+  ( allowx qubesdb-daemon_t xen_device_t ( ioctl chr_file ( 0x5000 0x5005 ) ) )
 
-( allowx qubes-gui_initrc_t self ( ioctl fifo_file ( 0x5401 ) ) )
-( neverallowx qubes-gui_initrc_t self ( ioctl fifo_file ( not ( 0x5401 ) ) ) )
+  ( allowx qubesdb-daemon_initrc_t self ( ioctl fifo_file ( 0x5401 ) ) )
+  ( neverallowx qubesdb-daemon_initrc_t self ( ioctl fifo_file ( not ( 0x5401 ) ) ) )
 
-( allowx qubes-core_initrc_t self ( ioctl fifo_file ( 0x5401 ) ) )
-( neverallowx qubes-core_initrc_t self ( ioctl fifo_file ( not ( 0x5401 ) ) ) )
+  ( allowx qubesdb-daemon_initrc_t self ( ioctl fifo_file ( 0x5401 ) ) )
+  ( neverallowx qubesdb-daemon_initrc_t self ( ioctl fifo_file ( not ( 0x5401 ) ) ) )
+)
 
-( allowx qubes-firewall_initrc_t self ( ioctl fifo_file ( 0x5401 ) ) )
-( neverallowx qubes-firewall_initrc_t self ( ioctl fifo_file ( not ( 0x5401 ) ) ) )
+( optional qubes-gui
+  ( allowx qubes-gui_initrc_t self ( ioctl fifo_file ( 0x5401 ) ) )
+  ( neverallowx qubes-gui_initrc_t self ( ioctl fifo_file ( not ( 0x5401 ) ) ) )
 
-( allowx qubes-netwatcher_initrc_t self ( ioctl fifo_file ( 0x5401 ) ) )
-( neverallowx qubes-netwatcher_initrc_t self ( ioctl fifo_file ( not ( 0x5401 ) ) ) )
+  ( allowx qubes-gui_t xen_device_t ( ioctl chr_file ( 0x4502 0x4504 0x4705 0x4706 0x4707 ) ) )
 
-( allowx qubes-network_initrc_t self ( ioctl fifo_file ( 0x5401 ) ) )
-( neverallowx qubes-network_initrc_t self ( ioctl fifo_file ( not ( 0x5401 ) ) ) )
+  ; privcmd
+  ( allowx qubes-gui_t xenfs_t ( ioctl file ( 0x5000 0x5005 ) ) )
+  ( allowx qubes-gui_t device_t ( ioctl chr_file ( 0x5000 0x5005 ) ) )
+  ( allowx qubes-gui_t xen_device_t ( ioctl chr_file ( 0x5000 0x5005 ) ) )
+)
 
-( allowx qubes-service_initrc_t self ( ioctl fifo_file ( 0x5401 ) ) )
-( neverallowx qubes-service_initrc_t self ( ioctl fifo_file ( not ( 0x5401 ) ) ) )
+( optional qubes-core
+  ( allowx qubes-core_initrc_t self ( ioctl fifo_file ( 0x5401 ) ) )
+  ( neverallowx qubes-core_initrc_t self ( ioctl fifo_file ( not ( 0x5401 ) ) ) )
+)
 
-( allowx qrexec-agent_initrc_t self ( ioctl fifo_file ( 0x5401 ) ) )
-( neverallowx qrexec-agent_initrc_t self ( ioctl fifo_file ( not ( 0x5401 ) ) ) )
+( optional qubes-firewall
+  ( allowx qubes-firewall_initrc_t self ( ioctl fifo_file ( 0x5401 ) ) )
+  ( neverallowx qubes-firewall_initrc_t self ( ioctl fifo_file ( not ( 0x5401 ) ) ) )
+)
 
-( allowx qubes-net_initrc_t self ( ioctl fifo_file ( 0x5401 ) ) )
-( neverallowx qubes-net_initrc_t self ( ioctl fifo_file ( not ( 0x5401 ) ) ) )
+( optional qubes-netwatcher_initrc
+  ( allowx qubes-netwatcher_initrc_t self ( ioctl fifo_file ( 0x5401 ) ) )
+  ( neverallowx qubes-netwatcher_initrc_t self ( ioctl fifo_file ( not ( 0x5401 ) ) ) )
+)
 
-( allowx qubes-random-seed_initrc_t self ( ioctl fifo_file ( 0x5401 ) ) )
-( neverallowx qubes-random-seed_initrc_t self ( ioctl fifo_file ( not ( 0x5401 ) ) ) )
+( optional qubes-network_initrc
+  ( allowx qubes-network_initrc_t self ( ioctl fifo_file ( 0x5401 ) ) )
+  ( neverallowx qubes-network_initrc_t self ( ioctl fifo_file ( not ( 0x5401 ) ) ) )
+)
 
-( allowx qubesdb_initrc_t self ( ioctl fifo_file ( 0x5401 ) ) )
-( neverallowx qubesdb_initrc_t self ( ioctl fifo_file ( not ( 0x5401 ) ) ) )
+( optional qubes-service_initrc
+  ( allowx qubes-service_initrc_t self ( ioctl fifo_file ( 0x5401 ) ) )
+  ( neverallowx qubes-service_initrc_t self ( ioctl fifo_file ( not ( 0x5401 ) ) ) )
+)
 
-( allowx qubes-iptables_initrc_t self ( ioctl fifo_file ( 0x5401 ) ) )
-( neverallowx qubes-iptables_initrc_t self ( ioctl fifo_file ( not ( 0x5401 ) ) ) )
+( optional qubes-net_initrc
+  ( allowx qubes-net_initrc_t self ( ioctl fifo_file ( 0x5401 ) ) )
+  ( neverallowx qubes-net_initrc_t self ( ioctl fifo_file ( not ( 0x5401 ) ) ) )
+)
+
+( optional qubes-random-seed_initrc
+  ( allowx qubes-random-seed_initrc_t self ( ioctl fifo_file ( 0x5401 ) ) )
+  ( neverallowx qubes-random-seed_initrc_t self ( ioctl fifo_file ( not ( 0x5401 ) ) ) )
+)
+
+( optional qubes-iptables_initrc
+  ( allowx qubes-iptables_initrc_t self ( ioctl fifo_file ( 0x5401 ) ) )
+  ( neverallowx qubes-iptables_initrc_t self ( ioctl fifo_file ( not ( 0x5401 ) ) ) )
+)
 
 
 ; evtchn
@@ -91,16 +126,6 @@
 ;( neverallowx setup-ip_worker_t setup-ip_worker_t ( ioctl udp_socket ( not ( 0x890b 0x8946 ) ) ) )
 
 
-( allowx qubesdb_t xen_device_t	( ioctl chr_file ( 0x4501 0x4504 0x4700 0x4701 0x4702 0x4707 ) ) )
-
-
-( allowx qubes-gui_t xen_device_t ( ioctl chr_file ( 0x4502 0x4504 0x4705 0x4706 0x4707 ) ) )
-
-; privcmd
-( allowx qubes-gui_t xenfs_t ( ioctl file ( 0x5000 0x5005 ) ) )
-( allowx qubes-gui_t device_t ( ioctl chr_file ( 0x5000 0x5005 ) ) )
-
-
 
 ( optional qrexec-client-vm_domain
 
@@ -126,4 +151,6 @@
 
 	( allowx qrexec-client-vm_domain device_t ( ioctl chr_file ( 0x5000 0x5005 ) ) )
 	;( neverallowx qrexec-client-vm_domain device_t ( ioctl file ( not ( 0x5000 0x5005 ) ) ) )
+	( allowx qrexec-client-vm_domain xen_device_t ( ioctl chr_file ( 0x5000 0x5005 ) ) )
+	;( neverallowx qrexec-client-vm_domain xen_device_t ( ioctl file ( not ( 0x5000 0x5005 ) ) ) )
 )

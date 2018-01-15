@@ -1,0 +1,11 @@
+--- a/src/gpg-server.c
++++ b/src/gpg-server.c
+@@ -34,7 +34,7 @@
+     if (stat(stat_file_path, &stat_buf) == 0 && stat_buf.st_mtime > now-autoaccept_time )
+         return 1;
+ 
+-    snprintf(ask_cmd, sizeof(ask_cmd), "zenity --question --text \"Do you allow"
++    snprintf(ask_cmd, sizeof(ask_cmd), "xmessage -button yes:0,no:1 \"Do you allow"
+             " VM '%s' to access your GPG keys (now and for the following %d"
+             " seconds)?\" 2>/dev/null", domain, autoaccept_time);
+     switch (system(ask_cmd)) {

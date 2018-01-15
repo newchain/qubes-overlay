@@ -8,28 +8,33 @@ EGIT_REPO_URI='https://github.com/QubesOS/qubes-app-linux-split-gpg.git'
 MULTILIB_COMPAT=( abi_x86_{32,64} )
 PYTHON_COMPAT=( python2_7 )
 
-inherit eutils git-r3 python-single-r1 qubes
+inherit git-r3 python-single-r1 qubes
 
 DESCRIPTION='Qubes split GPG agent'
 HOMEPAGE='https://github.com/QubesOS/qubes-app-linux-split-gpg'
 
-IUSE="backend -doc selinux -tests"
+IUSE="backend -doc -libnotify selinux -tests -zenity"
 [ "${PV%%[_-]*}" != '9999' ] && KEYWORDS="amd64 x86"
 LICENSE='GPL-2'
 SLOT='0'
 
-CDEPEND="app-crypt/gnupg
-	app-emulation/qubes-core-agent-linux"
-
+tag_date='20160621'
 qubes_keys_depend
 
-DEPEND="${CDEPEND}
-	${DEPEND}
+CDEPEND="${CDEPEND:-}
+	app-emulation/qubes-core-agent-linux"
+
+DEPEND="${CDEPEND:-}
+	${DEPEND:-}
 	tests? ( ${PYTHON_DEPS} )"
 
-HDEPEND="app-crypt/gnupg
+HDEPEND="${HDEPEND:-}
 	|| (
 		sys-apps/coreutils
+		sys-apps/busybox
+	)
+	|| (
+		sys-apps/grep
 		sys-apps/busybox
 	)
 	|| (
@@ -37,10 +42,22 @@ HDEPEND="app-crypt/gnupg
 		sys-apps/busybox
 	)"
 
-RDEPEND="${CDEPEND}
-	backend? ( virtual/notification-daemon )
+RDEPEND="${CDEPEND:-}
+	>=app-crypt/gnupg-2
+	|| (
+		sys-apps/coreutils
+		sys-apps/busybox
+	)
+	backend? ( !zenity? ( x11-apps/xmessage ) )
 	doc? ( app-text/pandoc )
-	selinux? ( sec-policy/selinux-qubes-gpg-split )"
+	libnotify? ( virtual/notification-daemon )
+	selinux? ( sec-policy/selinux-qubes-gpg-split )
+	zenity? ( gnome-extra/zenity )"
+
+REQUIRED_USE="${REQUIRED_USE:-}
+	libnotify? ( backend )
+	selinux? ( !zenity )
+	zenity? ( backend )"
 
 
 src_unpack() {
@@ -62,10 +79,14 @@ src_prepare() {
 	       -e 's|/etc/tmpfiles\.d/|/usr/lib/tmpfiles.d/|' \
 	       -e '/\/var\/run\//d' -- "${S}/Makefile"
 
-	sed -i -e 's/777/700/' -- "${S}/qubes-gpg-split.tmpfiles"
+	sed -i -e 's/777/1730/' \
+	       -e 's/ root$/ user/' -- "${S}/qubes-gpg-split.tmpfiles"
 
 	sed -i -e 's/\ -Werror//' \
 	       -e "s/^CFLAGS+\?=\(.*\)$/CFLAGS=\1 ${CFLAGS}/" -- "${S}/src/Makefile"
+
+	grep -qe '#!/bin/' -- "${S}/qubes.Gpg.service" || sed -i -e '1s:^:#!/bin/sh\n:' -- "${S}/qubes.Gpg.service"
+	use backend && use zenity || eapply "${FILESDIR}/gpg-server.c_xmessage.patch"
 
 	use doc || sed -i -e '/doc/d' -- "${S}/Makefile"
 	use tests || sed -i -e '/tests/d' -- "${S}/Makefile"

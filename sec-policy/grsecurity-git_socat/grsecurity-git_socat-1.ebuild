@@ -1,4 +1,4 @@
-# Copyright 1999-2017 Gentoo Foundation
+# Copyright 1999-2018 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
@@ -10,6 +10,12 @@ KEYWORDS="amd64 x86"
 LICENSE='GPL-3'
 SLOT='0'
 
+HDEPEND="${HDEPEND:-}
+	|| (
+		sys-apps/coreutils
+		sys-apps/busybox
+	)"
+
 
 pkg_setup() {
 
@@ -18,8 +24,8 @@ pkg_setup() {
 
 src_install() {
 
-	diropts '-m700'
-	insopts '-m600'
+	diropts -m 700
+	insopts -m 600
 
 	insinto '/etc'
 	doins "${FILESDIR}/grsec"

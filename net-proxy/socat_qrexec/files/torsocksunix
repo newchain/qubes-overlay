@@ -10,7 +10,9 @@ description="Unix socket proxy for ${RC_SVCNAME%%_socat}"
 pidfile="${piddir:-/var/run}/${RC_SVCNAME}.pid"
 rc_cgroup_cleanup="${rc_cgroup_cleanup:-yes}"
 required_files="${qubes_service_status_dir:-/var/run/qubes-service}/${qubes_service_name:-${RC_SVCNAME}}"
-#required_files="${socket_dir}"
+#required_dirs="${socket_dir}"
+
+rc_need='qubes-service'
 
 qubesdb_read_exe="${qubesdb_read_exe:-/usr/bin/qubesdb-read}"
 
@@ -38,7 +40,7 @@ for env in $(env | cut -d '=' -f 1 -- - | sed -e '/[\ }]/d;/^$/d' -- -); do
 
 done
 
-readonly name="$(${qubesdb_read_exe} /name 2>>/dev/null)"
+readonly name="$(${qubesdb_read_exe} /name 2>> /dev/null)"
 readonly client_secret="$(openssl rand -hex 64 | sha512sum -- - | cut -d ' ' -f 1 -- - | cut -c -$(( 128 - ${client_secret_max_chars} + 1 )) -- - )"
 
 
@@ -67,7 +69,7 @@ start() {
 			command_args=( "-t${socat_timeout}" "UNIX-LISTEN:${socket_path},mode=${socket_mode},perm-early=${socket_mode},reuseaddr,type=1,umask=${socat_umask},fork" "EXEC:${qrexec_client_vm_exe}\ ${name} qubes.${qubes_rpc_name}+${client_secret}" )
 		;;
 
-		[^0]*:0)
+		[!0]*:0)
 
 			[ "${multiuser:-0}" = '0' ] && command_umask='0117'
 			[ "${multiuser:-0}" != '0' ] && command_umask='0111'
@@ -81,7 +83,7 @@ start() {
 
 		;;
 
-		[^0]*:[^0]*)
+		[!0]*:[!0]*)
 
 			[ "${multiuser:-0}" = '0' ] && command_umask='0117'
 			[ "${multiuser:-0}" != '0' ] && command_umask='0111'
@@ -97,7 +99,7 @@ start() {
 
 		;;
 
-		0:[^0]*)
+		0:[!0]*)
 
 			# Note that socat cannot(?) perform transparent socks
 			# encapsulation for http requests--the destination is fixed.

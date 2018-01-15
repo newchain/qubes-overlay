@@ -11,8 +11,7 @@ clean_env() {
 	  	 -e '/^$/d' -- -)
   do
 
-    for preserve in ${env_keep}
-    do
+    for preserve in ${env_keep}; do
 
       [ "${env}" = "${preserve}" ] && continue 2
 
@@ -43,17 +42,17 @@ configure() {
 }
 
 
+wrapped_command() {
+
+  ALL_PROXY="${scheme}://${socks_host}:${socks_port}" LD_PRELOAD="${socket_wrapper_so}" SOCKET_WRAPPER_DIR="${socket_dir}" SOCKET_WRAPPER_DEFAULT_IFACE="${socket_wrapper_iface}" SOCKET_WRAPPER_MTU="${mtu}" "${exe}" "${@:-}"
+}
+
+
 main() {
 
   configure
   clean_env
   wrapped_command "${@:-}"
-}
-
-
-wrapped_command() {
-
-  ALL_PROXY="${scheme}://${socks_host}:${socks_port}" LD_PRELOAD="${socket_wrapper_so}" SOCKET_WRAPPER_DIR="${socket_dir}" SOCKET_WRAPPER_DEFAULT_IFACE="${socket_wrapper_iface}" SOCKET_WRAPPER_MTU="${mtu}" "${exe}" "${@:-}"
 }
 
 

@@ -1,14 +1,13 @@
-# Copyright 1999-2017 Gentoo Foundation
+# Copyright 1999-2018 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 
 qubes_keys_depend() {
 
-	DEPEND="${CDEPEND}
-		${DEPEND}
-		app-crypt/gnupg"
+	DEPEND="${CDEPEND:-}
+		${DEPEND:-}"
 
-	HDEPEND="${HDEPEND}
+	HDEPEND="${HDEPEND:-}
 		app-crypt/gnupg"
 
 	if [ "${PV%%[_-]*}" != '9999' ]; then
@@ -28,7 +27,7 @@ qubes_keys_depend() {
 qubes_keywords() {
 
 	if [ "${PV%%[_-]*}" != '9999' ] && [ "${PV%%.*}" != '2' ] && [ "${PV%%.*}" != '4' ]; then
-	
+
 		KEYWORDS="amd64 x86"
 
 	else
@@ -41,62 +40,62 @@ qubes_keywords() {
 
 qubes_slot() {
 
-	case "${PV%%.*}:${PV%.*}:${RR:-}" in
+	case "${PV%%.*}:${PV}:${PR:-}" in
 
-	  2:2*:*)
-	    EGIT_BRANCH='release2'
-	    SLOT='0/20'
-	  ;;
+		2:2*:*)
+			EGIT_BRANCH='release2'
+			SLOT='0/20'
+		;;
 
-	  3:3.2:*)
-	    EGIT_BRANCH='release3.2'
-	    SLOT='0/32'
-	  ;;
+		3:3.2*:*)
+			EGIT_BRANCH='release3.2'
+			SLOT='0/32'
+		;;
 
-	  3:3.1:*)
-	    EGIT_BRANCH='release3.1'
-	    SLOT='0/31'
-	  ;;
+		3:3.1*:*)
+			EGIT_BRANCH='release3.1'
+			SLOT='0/31'
+		;;
 
-	  3:3*:*)
-	    EGIT_BRANCH='release3.0'
-	    SLOT='0/30'
-	  ;;
+		3:3*:*)
+			EGIT_BRANCH='release3.0'
+			SLOT='0/30'
+		;;
 
-	  4:4.2:*)
-	    EGIT_BRANCH='master'
-	    SLOT='0/41'
-	  ;;
+		4:4.2*:*)
+			EGIT_BRANCH='master'
+			SLOT='0/42'
+		;;
 
-	  4:4.1:*)
-	    EGIT_BRANCH='master'
-	    SLOT='0/41'
-	  ;;
+		4:4.1*:*)
+			EGIT_BRANCH='master'
+			SLOT='0/41'
+		;;
 
-	  4:4.0:*)
-	    EGIT_BRANCH='master'
-	    SLOT='0/40'
-	  ;;
+		4:4.0*:*)
+			EGIT_BRANCH='master'
+			SLOT='0/40'
+		;;
 
-	  9999:9999*:r410)
-	    EGIT_BRANCH='master'
-	    SLOT='0/41'
-	  ;;
+		9999:9999*:r410)
+			EGIT_BRANCH='master'
+			SLOT='0/41'
+		;;
 
-	  9999:9999*:r400)
-	    EGIT_BRANCH='master'
-	    SLOT='0/40'
-	  ;;
+		9999:9999*:r400)
+			EGIT_BRANCH='master'
+			SLOT='0/40'
+		;;
 
-	  9999:9999*:r320)
-	    EGIT_BRANCH='release3.2'
-	    SLOT='0/32'
-	  ;;
+		9999:9999*:r320)
+			EGIT_BRANCH='release3.2'
+			SLOT='0/32'
+		;;
 
-	  9999:9999:*)
-	    EGIT_BRANCH='master'
-	    SLOT='0'
-	  ;;
+		9999:9999*:)
+			EGIT_BRANCH='master'
+			SLOT='0'
+		;;
 
 	esac
 }

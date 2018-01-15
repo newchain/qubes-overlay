@@ -88,9 +88,13 @@ role system_r types xauth_t;
 
 type qubes-session_t;
 domain_type(qubes-session_t)
-type qubes-session_exec_t;
-domain_entry_file(qubes-session_t, qubes-session_exec_t)
+qubes_core_qubes_session_entry_type(qubes-session_t)
 role system_r types qubes-session_t;
+
+  #type qrexec-fork-server_t;
+  #domain_type(qrexec-fork-server_t)
+  #qubes_core_qrexec_fork_server_entry_type(qrexec-fork-server_t)
+  #role system_r types qrexec-fork-server_t;
 
 type qubes-setmonitorlayout_t, qubes-rpc_shell_script_domain;
 type qubes-setmonitorlayout_exec_t;
@@ -122,6 +126,9 @@ logging_log_file(qubes-gui_log_t)
 
 type qubes-gui_var_run_t;
 files_pid_file(qubes-gui_var_run_t)
+
+#type qrexec-fork-server_var_run_t;
+#files_type(qrexec-fork-server_var_run_t)
 
 
 define(`qubes_userspace_highlimit',`
@@ -620,6 +627,21 @@ domain_auto_transition_pattern(qubes-rpc-multiplexer_t, qubes-setmonitorlayout_e
 
 #########################################
 #
+# qubes-session_t local policy
+
+#domain_auto_transition_pattern(qubes-session_t, qrexec-fork-server_exec_t, qrexec-fork-server_t)
+
+
+  #########################################
+  #
+  # qrexec-fork-server_t local policy
+
+  #qubes_core_qubes_var_run_filetrans_add_pattern(qrexec-fork-server_t, qrexec-fork-server_var_run_t, sock_file, "qrexec-server.user.sock")
+  #allow qrexec-fork-server_t qrexec-fork-server_var_run_t : sock_file create;
+
+
+#########################################
+#
 # tmpfiles_t local policy
 #
 
@@ -814,3 +836,11 @@ ifdef(`use_pulseaudio',`
 		allow pulseaudio_t user_screen_t : fd use;
 	')
 ')
+
+
+# testing
+allow qubes-gui_initrc_t qubes-gui_t : dir search;
+allow qubes-gui_initrc_t qubes-gui_t : lnk_file read;
+auditallow qubes-gui_initrc_t qubes-gui_t : lnk_file read;
+allow qubes-gui_initrc_t qubes-gui_t : file { read open };
+auditallow qubes-gui_initrc_t qubes-gui_t : file { read open };

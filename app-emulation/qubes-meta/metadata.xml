@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer>
+		<email>newchain@users.noreply.github.com</email>
+		<name>MB</name>
+	</maintainer>
+	<use>
+		<flag name="art">Install Qubes artwork</flag>
+		<flag name="gpg">Support GPG split between VMs via Qrexec</flag>
+		<flag name="gui">Support seemless GUI</flag>
+		<flag name="img">Support converting images to more inoccuous formats for other VMs</flag>
+		<flag name="input">Support Qrexec input proxy</flag>
+		<flag name="iptables">Support firewalls and functioning as netVM and proxyVM</flag>
+		<flag name="smartcard">Support Yubikey</flag>
+		<flag name="net">Support IP networking as a client</flag>
+		<flag name="sockets">Support networking without IP via Qrexec</flag>
+		<flag name="sound">Support seemless sound via pulseaudio and Qrexec</flag>
+		<flag name="usb">Support USB split between VMs via Qrexec</flag>
+	</use>
+</pkgmetadata>

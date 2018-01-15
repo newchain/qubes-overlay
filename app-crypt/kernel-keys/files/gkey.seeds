@@ -1,0 +1,16 @@
+{
+    "stable": {
+        "fingerprint": [
+            "647F28654894E3BD457199BE38DBBDC86092693E"
+        ], 
+        "keydir": "release", 
+        "keys": [
+            "F41BDF16F35CD80D9E56735BF38153E276D54749"
+        ], 
+        "name": "Linux kernel stable release signing key", 
+        "nick": "stable", 
+        "uid": [
+            "Greg Kroah-Hartman (Linux kernel stable release signing key) <greg@kroah.com>"
+        ]
+    }
+}

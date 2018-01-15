@@ -1,3 +1,11 @@
+EXTRA_ECONF="--disable-blktap2 --disable-xsmpolicy"
+# Passing disable-monitors breaks build
+# --disable-monitors
+
+# 'Illegal variable'
+#DEPEND="${DEPEND:-}
+#	app-emulation/qubes-xen-tools-patches"
+
 INSTALL_MASK="
 /etc/conf.d/xenconsoled
 /etc/conf.d/xendomains

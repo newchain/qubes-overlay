@@ -7,7 +7,7 @@ EGIT_REPO_URI='https://github.com/QubesOS/qubes-core-qubesdb.git'
 
 #MULTILIB_COMPAT=( abi_x86_{32,64} )
 
-inherit eutils git-r3 qubes
+inherit git-r3 qubes
 
 DESCRIPTION="Qubes configuration database"
 HOMEPAGE='https://github.com/QubesOS/qubes-core-qubesdb'
@@ -23,10 +23,10 @@ CDEPEND="app-emulation/qubes-core-vchan-xen:${SLOT}"
 tag_date='20171004'
 qubes_keys_depend
 
-DEPEND="${CDEPEND}
-	${DEPEND}"
+DEPEND="${CDEPEND:-}
+	${DEPEND:-}"
 
-HDEPEND="${HDEPEND}
+HDEPEND="${HDEPEND:-}
 	|| (
 		sys-apps/coreutils
 		sys-apps/busybox

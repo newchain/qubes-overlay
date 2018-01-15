@@ -31,17 +31,17 @@ configure() {
 }
 
 
+wrapped_command() {
+
+  LD_PRELOAD="${socket_wrapper_so}" PATH='/dev/null' SOCKET_WRAPPER_DIR="${socket_dir}" SOCKET_WRAPPER_DEFAULT_IFACE="${socket_wrapper_iface}" SOCKET_WRAPPER_MTU="${mtu}" "${exe}" --proxy "${scheme}://${socks_host}:${socks_port}" "${@:-}"
+}
+
+
 main() {
 
   configure
   clean_env
   wrapped_command "${@:-}"
-}
-
-
-wrapped_command() {
-
-  LD_PRELOAD="${socket_wrapper_so}" PATH='/dev/null' SOCKET_WRAPPER_DIR="${socket_dir}" SOCKET_WRAPPER_DEFAULT_IFACE="${socket_wrapper_iface}" SOCKET_WRAPPER_MTU="${mtu}" "${exe}" --proxy "${scheme}://${socks_host}:${socks_port}" "${@:-}"
 }
 
 

@@ -7,7 +7,7 @@ EGIT_REPO_URI='https://github.com/QubesOS/qubes-core-vchan-xen.git'
 
 #MULTILIB_COMPAT=( abi_x86_{32,64} )
 
-inherit eutils git-r3 qubes
+inherit git-r3 qubes
 
 DESCRIPTION='Qubes I/O libraries'
 HOMEPAGE='https://github.com/QubesOS/qubes-core-vchan-xen'
@@ -18,24 +18,24 @@ LICENSE='GPL-2'
 
 qubes_slot
 
-CDEPEND="app-emulation/xen-tools"
-
 tag_date='20170805'
 qubes_keys_depend
 
-DEPEND="${CDEPEND}
-	${DEPEND}"
+CDEPEND="${CDEPEND:-}
+	app-emulation/xen-tools"
 
-HDEPEND="|| (
-		sys-apps/coreutils
-		sys-apps/busybox
-	)
+DEPEND="${CDEPEND:-}
+	${DEPEND:-}"
+
+HDEPEND="
+	${HDEPEND:-}
 	|| (
 		sys-apps/sed
 		sys-apps/busybox
 	)"
 
-RDEPEND="${CDEPEND}
+RDEPEND="${CDEPEND:-}
+	${RDEPEND:-}
 	app-emulation/qubes-xen-tools-patches"
 
 

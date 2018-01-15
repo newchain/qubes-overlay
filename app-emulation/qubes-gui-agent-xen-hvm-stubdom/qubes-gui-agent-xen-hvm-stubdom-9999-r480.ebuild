@@ -5,7 +5,7 @@ EAPI=6
 
 EGIT_REPO_URI='https://github.com/QubesOS/qubes-gui-agent-xen-hvm-stubdom.git'
 
-inherit eutils git-r3 qubes
+inherit git-r3 qubes
 
 DESCRIPTION='Fetch Qubes GUI stubdom sources for xen-tools-patches'
 HOMEPAGE='https://github.com/QubesOS/qubes-gui-agent-xen-hvm-stubdom'
@@ -16,10 +16,10 @@ SLOT='0'
 
 qubes_keys_depend
 
-DEPEND="${CDEPEND}
-	${DEPEND}"
+DEPEND="${CDEPEND:-}
+	${DEPEND:-}"
 
-RDEPEND="${CDEPEND}"
+RDEPEND="${CDEPEND:-}"
 
 
 src_unpack() {

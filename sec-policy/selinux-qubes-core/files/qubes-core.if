@@ -233,6 +233,58 @@ interface(`qubes_core_qrexec_client_vm_worker_transition',`
 
 ###############################
 ## <summary>
+##	Run qrexec-fork-server in a specified domain.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain to permit transition.
+##	</summary>
+## </param>
+## <param name="target_domain">
+##	<summary>
+##	Domain to transition to.
+##	</summary>
+## </param>
+
+interface(`qubes_core_qrexec_fork_server_auto_transition_pattern',`
+
+	gen_require(`
+
+		type qrexec-client-vm_exec_t;
+	')
+
+	corecmd_search_bin(1)
+	domain_auto_transition_pattern($1, qrexec-fork-server_exec_t, $2)
+
+	allow $2 $1 : fd use;
+	allow $2 $1 : process sigchld;
+')
+
+
+
+###############################
+##	<p>
+##	Use qrexec-fork-server as an entry point.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain to permit entry to.
+##	</summary>
+## </param>
+
+interface(`qubes_core_qrexec_fork_server_entry_type',`
+
+	gen_require(`
+
+		type qrexec-fork-server_exec_t;
+	')
+
+	domain_entry_file($1, qrexec-fork-server_exec_t)
+')
+
+
+###############################
+## <summary>
 ##	Search /rw/backups
 ## </summary>
 ## <param name="domain">
@@ -601,6 +653,59 @@ interface(`qubes_core_depend_qubes_service',`
 
 	qubes_core_read_inherited_qubes_service_var_run($1)
 ')
+
+
+###############################
+## <summary>
+##	Run qubes-session in a specified domain.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain to permit transition.
+##	</summary>
+## </param>
+## <param name="target_domain">
+##	<summary>
+##	Domain to transition to.
+##	</summary>
+## </param>
+
+interface(`qubes_core_qubes_session_auto_transition_pattern',`
+
+	gen_require(`
+
+		type qubes-session_exec_t;
+	')
+
+	corecmd_search_bin(1)
+	domain_auto_transition_pattern($1, qubes-session_exec_t, $2)
+
+	allow $2 $1 : fd use;
+	allow $2 $1 : process sigchld;
+')
+
+
+
+###############################
+##	<p>
+##	Use qubes-session as an entry point.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain to permit entry to.
+##	</summary>
+## </param>
+
+interface(`qubes_core_qubes_session_entry_type',`
+
+	gen_require(`
+
+		type qubes-session_exec_t;
+	')
+
+	domain_entry_file($1, qubes-session_exec_t)
+')
+
 
 
 ###############################
@@ -1059,6 +1164,27 @@ interface(`qubes_core_use_qrexec_agent_fds',`
 
 ###############################
 ## <summary>
+##	Inherit qrexec-agent fds
+## </summary>
+## <param name="domain">
+##	<summary>
+##		Domain to permit inheritance.
+##	</summary>
+## </param>
+
+interface(`qubes_core_dontaudit_use_qrexec_agent_fds',`
+
+	gen_require(`
+
+		type qrexec-agent_t;
+	')
+
+	dontaudit $1 qrexec-agent_t : fd use;
+')
+
+
+###############################
+## <summary>
 ##	Write to qrexec-agent pipes.
 ## </summary>
 ## <param name="domain">
@@ -1166,27 +1292,6 @@ interface(`qubes_core_rwi_inherited_qrexec_agent_pipes',`
 	qubes_core_use_qrexec_agent_fds($1)
 	qubes_core_rw_qrexec_agent_pipes($1)
 	qubes_core_ioctl_qrexec_agent_pipes($1)
-')
-
-
-###############################
-## <summary>
-##	Inherit qrexec-agent fds
-## </summary>
-## <param name="domain">
-##	<summary>
-##		Domain to permit inheritance.
-##	</summary>
-## </param>
-
-interface(`qubes_core_use_qrexec_agent_fds',`
-
-	gen_require(`
-
-		type qrexec-agent_t;
-	')
-
-	allow $1 qrexec-agent_t : fd use;
 ')
 
 

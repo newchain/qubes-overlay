@@ -8,15 +8,17 @@ EGIT_REPO_URI='https://github.com/QubesOS/qubes-core-agent-linux.git'
 #MULTILIB_COMPAT=( abi_x86_{32,64} )
 PYTHON_COMPAT=( python2_7 )
 
-inherit eutils fcaps git-r3 python-single-r1 qubes user
+inherit fcaps git-r3 python-single-r1 qubes user
 
 DESCRIPTION='Qubes RPC agent and utilities for Linux VMs'
 HOMEPAGE='https://github.com/QubesOS/qubes-core-agent-linux'
 
-IUSE="+X11 -dbus -debug dhcp +entropy +glib gnome gtk icon +iptables kde -kmod +log nautilus net -networkmanager -nm-applet +python selinux svg template -tinyproxy usb"
-QUBES_RPC_NVE=( GetImageRGBA OpenURL SelectDirectory SelectFile SetDateTime SyncNtpClock )
+IUSE="+X11 -dbus -debug -dhcp +entropy +glib gnome gtk +iptables kde -kmod +log nautilus net -networkmanager -nm-applet +python selinux template -tinyproxy usb"
+QUBES_RGBA_FORMATS=( svg xdg-icon )
+IUSE="${IUSE} ${QUBES_RGBA_FORMATS[@]/#/qubes-RGBA_}"
+QUBES_RPC_NVE=( GetImageRGBA OpenURL SelectDirectory SelectFile SetDateTime SyncNtpClock WaitForSession )
 IUSE="${IUSE} ${QUBES_RPC_NVE[@]/#/-qubes-rpc_}"
-QUBES_RPC_PVE=( Backup DetachPciDevice Filecopy GetAppmenus InstallUpdatesGUI OpenInVM Restore Suspend VMShell WaitforSession )
+QUBES_RPC_PVE=( Backup DetachPciDevice Filecopy GetAppmenus InstallUpdatesGUI OpenInVM Restore Suspend VMShell )
 IUSE="${IUSE} ${QUBES_RPC_PVE[@]/#/+qubes-rpc_}"
 qubes_keywords
 LICENSE='GPL-2'
@@ -26,97 +28,93 @@ qubes_slot
 tag_date='20160229'
 qubes_keys_depend
 
-CDEPEND="app-emulation/qubes-core-vchan-xen:${SLOT}
+CDEPEND="${CDEPEND:-}
+	app-emulation/qubes-core-vchan-xen:${SLOT}
 	app-emulation/qubes-linux-utils:${SLOT}
 	app-emulation/xen-tools
 	python? ( ${PYTHON_DEPS} )"
 
-DEPEND="${CDEPEND}
-	${DEPEND}"
+DEPEND="${CDEPEND:-}
+	${DEPEND:-}
+	virtual/os-headers
+	X11? ( x11-proto/xproto )"
 
-HDEPEND="|| (
-	  sys-apps/coreutils
-	  sys-apps/busybox
-	)
-	app-crypt/gnupg
+HDEPEND="${HDEPEND:-}
 	|| (
-	  sys-apps/sed
-	  sys-apps/busybox
-	)"
-
-RDEPEND="${CDEPEND}
-	X11? ( x11-libs/libX11 )
-	entropy? ( sys-apps/haveged )
-	glib?	(
-	  dev-python/pygobject
-	  dbus? ( dev-python/dbus-python )
-	  svg? (
-	    dev-python/pycairo[svg(+)]
-	    dev-python/pygobject[cairo(+)]
-	  )
+		sys-apps/coreutils
+		sys-apps/busybox
 	)
+	|| (
+		sys-apps/sed
+		sys-apps/busybox
+	)
+	virtual/pkgconfig"
+
+RDEPEND="${CDEPEND:-}
+	${PRDEPEND:-}
+	X11? ( x11-libs/libX11 )
+	dbus? ( dev-python/dbus-python )
+	dhcp? ( net-misc/dhcp )
+	entropy? ( sys-apps/haveged )
+	glib? ( dev-python/pygobject )
 	gnome? ( gnome-extra/zenity )
 	gtk? ( dev-python/pygtk )
+	iptables? ( net-firewall/iptables )
 	log? ( || (
-	  sys-apps/util-linux
-	  sys-apps/busybox[syslog]
+		sys-apps/util-linux
+		sys-apps/busybox[syslog]
 	) )
 	nautilus? ( dev-python/nautilus-python )
 	net? (
-	  dhcp? ( net-misc/dhcp )
-	  iptables? ( net-firewall/iptables )
-	  !networkmanager? (
-	    sys-apps/ethtool
-	    || (
-	      sys-apps/net-tools
-	      sys-apps/busybox
-	    )
-	  )
-	  networkmanager? (
-	    net-misc/networkmanager
-	    || (
-	      sys-apps/grep
-	      sys-apps/busybox
-	    )
-	    || (
-	      sys-apps/iproute2
-	      sys-apps/busybox
-	    )
-	    || (
-	      sys-apps/sed
-	      sys-apps/busybox
-	    )
-	    nm-applet? (
-	      gnome-extra/nm-applet
-	    )
-	  )
-	  qubes-rpc_SyncNtpClock? ( net-misc/ntp )
+		!networkmanager? (
+			sys-apps/ethtool
+			|| (
+				sys-apps/net-tools
+				sys-apps/busybox
+			)
+		)
 	)
+	networkmanager? (
+		net-misc/networkmanager
+		|| (
+			sys-apps/grep
+			sys-apps/busybox
+		)
+		|| (
+			sys-apps/iproute2
+			sys-apps/busybox
+		)
+		|| (
+			sys-apps/sed
+			sys-apps/busybox
+		)
+	)
+	nm-applet? ( gnome-extra/nm-applet )
+	qubes-RGBA_svg? ( gnome-base/librsvg )
+	qubes-RGBA_xdg-icon? ( dev-python/pyxdg )
 	qubes-rpc_GetAppmenus? ( || (
-	  sys-apps/findutils
-	  sys-apps/busybox
-	  )
-	  virtual/awk
+			sys-apps/findutils
+			sys-apps/busybox
+		)
+		virtual/awk
 	)
-	qubes-rpc_GetImageRGBA? (
-	  virtual/imagemagick-tools
-	  icon? ( dev-python/pyxdg )
-	)
+	qubes-rpc_GetImageRGBA? ( virtual/imagemagick-tools )
 	qubes-rpc_InstallUpdatesGUI? ( || (
-	  sys-apps/shadow
-	  sys-apps/busybox
-	  )
-	  app-crypt/gentoo-keys
-	  app-crypt/gnupg
-	  app-crypt/qubes-keys
+			sys-apps/shadow
+			sys-apps/busybox
+		)
+		app-crypt/gentoo-keys
+		app-crypt/gnupg
+		app-crypt/qubes-keys
 	)
 	qubes-rpc_OpenURL? ( x11-misc/xdg-utils )
 	qubes-rpc_SelectDirectory? ( gnome-extra/zenity )
-	qubes-rpc_SelectFile? (  gnome-extra/zenity )
+	qubes-rpc_SelectFile? ( gnome-extra/zenity )
 	qubes-rpc_Suspend? ( || (
-	  sys-apps/grep
-	  sys-apps/busybox
+		sys-apps/grep
+		sys-apps/busybox
 	) )
+	qubes-rpc_SyncNtpClock? ( net-misc/ntp )
 	selinux? ( sec-policy/selinux-qubes-core )
 	tinyproxy? ( net-proxy/tinyproxy )"
 
@@ -127,16 +125,17 @@ REQUIRED_USE="
 	dhcp? ( net )
 	glib? ( python )
 	gnome? ( python )
-	icon? ( qubes-rpc_GetImageRGBA )
 	iptables? ( net )
 	kde? ( python )
 	nautilus? ( python )
 	networkmanager? ( net )
 	nm-applet? ( networkmanager )
+	qubes-RGBA_svg? ( qubes-rpc_GetImageRGBA )
+	qubes-RGBA_xdg-icon? ( qubes-rpc_GetImageRGBA )
 	qubes-rpc_GetImageRGBA? ( python )
 	qubes-rpc_OpenURL? ( python )
 	qubes-rpc_SyncNtpClock? ( net )
-	svg? ( glib )
+	selinux? ( !networkmanager )
 	tinyproxy? ( iptables net )
 	usb? ( python )"
 
@@ -171,7 +170,7 @@ src_prepare() {
 
 	for dir in misc qrexec qubes-rpc; do
 
-	  sed -i -e 's/\ -Werror//g' -- "${S}/${dir}/Makefile"
+		sed -i -e 's/\ -Werror//g' -- "${S}/${dir}/Makefile"
 
 	done
 
@@ -181,7 +180,7 @@ src_prepare() {
 
 	if ! use X11; then
 
-	  sed -i -e 's/^\(all:\sxenstore-watch\)\(\ python\)*\ close-window/\1\2/g' -- "${S}/misc/Makefile"
+		sed -i -e 's/^\(all:\sxenstore-watch\)\(\ python\)*\ close-window/\1\2/g' -- "${S}/misc/Makefile"
 
 	fi
 
@@ -189,10 +188,10 @@ src_prepare() {
 	use glib || sed -i -e '/qubes-desktop-run/d' -- "${S}/Makefile"
 	use gtk || sed -i -e 's/\,*qvm-mru-entry//g' -- "${S}/Makefile"
 	use gnome || sed -i -e '/-vm\.gnome/d' -- "${S}/Makefile"
-	use icon || sed -i -e '/xdg-icon/d' -- "${S}/Makefile"
+	use qubes-RGBA_xdg-icon || sed -i -e '/xdg-icon/d' -- "${S}/Makefile"
 	use iptables || sed -i -e '/iptables/d' -- "${S}/Makefile"
-	use kde || sed -i -e '/-vm\.kde/d' -- "${S}/Makefile"
-	use kde || sed -i -e '/KDESERVICEDIR/d' -- "${S}/Makefile" 
+	use kde || sed -i -e '/-vm\.kde/d' \
+	                  -e '/KDESERVICEDIR/d' -- "${S}/Makefile"
 	use nautilus || sed -i -e '/nautilus/d' -- "${S}/Makefile"
 
 	sed -i -e 's|/sbin/ethtool|/usr/sbin/ethtool|g' \
@@ -224,28 +223,24 @@ src_prepare() {
 
 	if ! use net; then
 
-	  sed -i -e '/qubes-setup-dnat-to-ns/d' \
-	         -e '/setup-ip/d' \
-	         -e '/update-proxy-configs/d' -- "${S}/Makefile"
-	  [ -e "${S}/vm-systemd/network-proxy-setup.sh" ] && rm -- "${S}/vm-systemd/network-proxy-setup.sh"
-
-	fi
-
-	if ! use networkmanager || use selinux; then
-
-	  # setup-ip
-	  #
-	  cp -- "${S}/network/setup-ip" "${T}/setup-ip.old"
-	  cat -- "${T}/setup-ip.old" | tr '\n' '\v' | sed -e 's|if \[ -f /var/run/qubes-service/network-manager.*chmod 600 \$nm_config\s*fi||' -- - | tr '\v' '\n' > "${S}/network/setup-ip"
-	  rm -- "${T}/setup-ip.old"
+		sed -i -e '/qubes-setup-dnat-to-ns/d' \
+		       -e '/setup-ip/d' \
+		       -e '/update-proxy-configs/d' -- "${S}/Makefile"
+		[ -e "${S}/vm-systemd/network-proxy-setup.sh" ] && rm -- "${S}/vm-systemd/network-proxy-setup.sh"
 
 	fi
 
 	if ! use networkmanager; then
 
-	  sed -i -e '/NetworkManager/d' \
-		     -e '/network-manager-prepare-conf-dir/d' \
-	         -e '/qubes-fix-nm-conf/d' -- "${S}/Makefile"
+		# setup-ip
+		#
+		cp -- "${S}/network/setup-ip" "${T}/setup-ip.old"
+		cat -- "${T}/setup-ip.old" | tr '\n' '\v' | sed -e 's|if \[ -f /var/run/qubes-service/network-manager.*chmod 600 \$nm_config\s*fi||' -- - | tr '\v' '\n' > "${S}/network/setup-ip"
+		rm -- "${T}/setup-ip.old"
+
+		sed -i -e '/NetworkManager/d' \
+		       -e '/network-manager-prepare-conf-dir/d' \
+		       -e '/qubes-fix-nm-conf/d' -- "${S}/Makefile"
 
 	fi
 
@@ -253,12 +248,12 @@ src_prepare() {
 
 	if ! use python; then
 
-	  sed -i -e '/\.py$/d' \
-	         -e '/\.py\s/d' \
-	         -e '/\/xdg\.py/d' \
-	         -e '/qrun-in-vm/d' -- "${S}/Makefile"
+		sed -i -e '/\.py$/d' \
+		       -e '/\.py\s/d' \
+		       -e '/\/xdg\.py/d' \
+		       -e '/qrun-in-vm/d' -- "${S}/Makefile"
 
-	  sed -i -e 's/^\(all:\sxenstore-watch\)\ python\(\ close-window\)*/\1\2/g' -- "${S}/misc/Makefile"
+		sed -i -e 's/^\(all:\sxenstore-watch\)\ python\(\ close-window\)*/\1\2/g' -- "${S}/misc/Makefile"
 
 	fi
 
@@ -271,61 +266,61 @@ src_prepare() {
 	use qubes-rpc_SelectDirectory || sed -i -e 's/Select{File\,Directory}/Select{File}/g' -- "${S}/Makefile"
 	use qubes-rpc_SelectFile || use qubes-rpc_SelectDirectory || sed -i -e '/Select{File}/d' -- "${S}/Makefile"
 	use qubes-rpc_SelectFile || use qubes-rpc_SelectDirectory && sed -i -e 's/Select{File\\,Directory}/SelectDirectory/g' -- "${S}/Makefile"
-	use qubes-rpc_SetDateTime || sed -i -e '/qubes\.SetDateTime/d' -- "${S}Makefile"
-	use qubes-rpc_VMShell || sed -i -e 's/\,*qubes\.VMShell//' -- "${S}misc/Makefile"
+	use qubes-rpc_SetDateTime || sed -i -e '/qubes\.SetDateTime/d' -- "${S}/Makefile"
+	use qubes-rpc_VMShell || sed -i -e 's/\,*qubes\.VMShell//' -- "${S}/misc/Makefile"
 
 	if ! use qubes-rpc_GetAppmenus; then
 
-	  sed -i -e 's/\,*qubes\.GetAppmenus//g' \
-	         -e '/qubes-trigger-sync-appmenus\.sh/d' -- "${S}/Makefile"
+		sed -i -e 's/\,*qubes\.GetAppmenus//g' \
+		       -e '/qubes-trigger-sync-appmenus\.sh/d' -- "${S}/Makefile"
 
 	fi
 
 	if ! use qubes-rpc_OpenInVM; then
 
-	  sed -i -e 's/qubes\.OpenInVM\,*//g' \
-	         -e 's/vm-file-editor\,*//g' -- "${S}/Makefile"
+		sed -i -e 's/qubes\.OpenInVM\,*//g' \
+		       -e 's/vm-file-editor\,*//g' -- "${S}/Makefile"
 
 	fi
 
 	if ! use qubes-rpc_OpenURL; then
 
-	  sed -i -e '/OpenURL/d' \
-	         -e '/qubes-open/d' -- "${S}/Makefile"
+		sed -i -e '/OpenURL/d' \
+		       -e '/qubes-open/d' -- "${S}/Makefile"
 
 	fi
 
 	if ! use qubes-rpc_Suspend && ! use qubes-rpc_GetAppmenus; then
 
-	  sed -i -e '/[Ss]uspend/d' -- "${S}/Makefile"
+		sed -i -e '/[Ss]uspend/d' -- "${S}/Makefile"
 
 	elif ! use qubes-rpc_Suspend && use qubes-rpc_GetAppmenus; then
 
-	  sed -i -e 's/qubes\.SuspendPre\,qubes\.SuspendPost\,*//g' \
-	         -e '/qubes\.SuspendP\(re\|ost\)All/d' \
-	         -e '/suspend/d' \
-	         -e 's/{\(qubes\.GetAppmenus\)}/\1/g' -- "${S}/Makefile"
+		sed -i -e 's/qubes\.SuspendPre\,qubes\.SuspendPost\,*//g' \
+		       -e '/qubes\.SuspendP\(re\|ost\)All/d' \
+		       -e '/suspend/d' \
+		       -e 's/{\(qubes\.GetAppmenus\)}/\1/g' -- "${S}/Makefile"
 
 	fi
 
 	if ! use qubes-rpc_SyncNtpClock; then
 
-	  sed -i -e 's/\,qubes\.SyncNtpClock//g' \
-	         -e '/qubes-sync-clock/d' \
-	         -e '/sync-ntp-clock/d' -- "${S}/Makefile"
+		sed -i -e 's/\,qubes\.SyncNtpClock//g' \
+		       -e '/qubes-sync-clock/d' \
+		       -e '/sync-ntp-clock/d' -- "${S}/Makefile"
 
 	fi
 
-	if ! use qubes-rpc_WaitforSession; then
+	if ! use qubes-rpc_WaitForSession; then
 
-	  printf '#!/bin/sh'\\n'exit 0' > "${S}/qubes-rpc/qubes.WaitForSession"
+		printf '#!/bin/sh'\\n'exit 0'\\n > "${S}/qubes-rpc/qubes.WaitForSession"
 
 	fi
 
 	if ! use tinyproxy; then
 
-	  sed -i -e '/iptables-updates-proxy/d' \
-	         -e '/tinyproxy/d' -- "${S}/Makefile"
+		sed -i -e '/iptables-updates-proxy/d' \
+		       -e '/tinyproxy/d' -- "${S}/Makefile"
 
 	fi
 
@@ -335,10 +330,10 @@ src_prepare() {
 
 	if ! use debug; then
 
-	  sed -i -e 's/\(CFLAGS.*\)-g\ /\1/' -- "${S}/misc/Makefile"
-	  sed -i -e 's/\(CFLAGS.*\)-g\ /\1/' -- "${S}/qrexec/Makefile"
-	  sed -i -e 's/\(CFLAGS.*\)-g\ /\1/' -- "${S}/qubes-rpc/Makefile"
-	  sed -i -e 's/\((CC).*\)-g\ /\1/' -- "${S}/qubes-rpc/Makefile"
+		sed -i -e 's/\(CFLAGS.*\)-g\ /\1/' -- "${S}/misc/Makefile"
+		sed -i -e 's/\(CFLAGS.*\)-g\ /\1/' -- "${S}/qrexec/Makefile"
+		sed -i -e 's/\(CFLAGS.*\)-g\ /\1/' -- "${S}/qubes-rpc/Makefile"
+		sed -i -e 's/\((CC).*\)-g\ /\1/' -- "${S}/qubes-rpc/Makefile"
 
 	fi
 
@@ -347,21 +342,21 @@ src_prepare() {
 
 	if ! use kmod; then
 
-	  cp -- "${S}/vm-systemd/qubes-sysinit.sh" "${T}/qubes-sysinit.sh.old"
-	  # Not needed when kernel is static and this hangs forever if something
-	  # goes wrong, leaving no opportunity to inspect and fix.
-	  cat -- "${T}/qubes-sysinit.sh.old"  | tr '\n' '\v' | sed -e 's:\v# Wait for \(evtchn\|xenbus\).*\(\vmkdir -p /var/run/qubes\v\):\2:' -- - | tr '\v' '\n' > "${S}/vm-systemd/qubes-sysinit.sh"
-	  rm -- "${T}/qubes-sysinit.sh.old"
+		cp -- "${S}/vm-systemd/qubes-sysinit.sh" "${T}/qubes-sysinit.sh.old"
+		# Not needed when kernel is static and this hangs forever if something
+		# goes wrong, leaving no opportunity to inspect and fix.
+		cat -- "${T}/qubes-sysinit.sh.old"  | tr '\n' '\v' | sed -e 's:\v# Wait for \(evtchn\|xenbus\).*\(\vmkdir -p /var/run/qubes\v\):\2:' -- - | tr '\v' '\n' > "${S}/vm-systemd/qubes-sysinit.sh"
+		rm -- "${T}/qubes-sysinit.sh.old"
 
 	fi
 
 	cp -- "${S}/vm-systemd/qubes-sysinit.sh" "${T}/qubes-sysinit.sh.old"
 	# Restricted users should not be able to touch these.
-	cat -- "${T}/qubes-sysinit.sh.old"  | tr '\n' '\v' | \
+	cat -- "${T}/qubes-sysinit.sh.old" | tr '\n' '\v' | \
 	sed -e 's:\vchmod 666 /proc/xen/xenbus\v:\vchgrp qubes -- /proc/xen/xenbus\vchmod 660 /proc/xen/xenbus\v:' \
 	    -e 's:\vchmod 666 /proc/u2mfn\v:\vchgrp user -- /proc/u2mfn\vchmod 060 /proc/u2mfn\v:' \
-		-e 's:\vchmod 0775 /var/run/qubes\v:\vchmod 0710 /var/run/qubes\v:' \
-		-e 's:\v# Set the hostname\v.*\(\v# Prepare environment\):\1:' | \
+	    -e 's:\vchmod 0775 /var/run/qubes\v:\vchmod 0710 /var/run/qubes\v:' \
+	    -e 's:\v# Set the hostname\v.*\(\v# Prepare environment\):\1:' | \
 	tr '\v' '\n' > "${S}/vm-systemd/qubes-sysinit.sh"
 	rm -- "${T}/qubes-sysinit.sh.old"
 
@@ -403,24 +398,24 @@ src_install() {
 
 	# grsec MAC magic (h object mode) makes appVMs swallow this blue pill.
 
-	  diropts '-m0700'
-	  dodir 'home'
-	  dodir 'home.orig'
+		diropts '-m0700'
+		dodir 'home'
+		dodir 'home.orig'
 
-	  diropts '-m0710'
-	  dodir 'home.orig/user'
-	  diropts '-m0700'
-	  dodir 'home.orig/user/Desktop'
-	  dodir 'home.orig/user/Downloads'
-	  diropts '-m1710'
-	  dodir 'home.orig/user/QubesIncoming'
-	  fowners user:qubes '/home.orig/user' '/home.orig/user/QubesIncoming'
+		diropts '-m0710'
+		dodir 'home.orig/user'
+		diropts '-m0700'
+		dodir 'home.orig/user/Desktop'
+		dodir 'home.orig/user/Downloads'
+		diropts '-m1710'
+		dodir 'home.orig/user/QubesIncoming'
+		fowners user:qubes '/home.orig/user' '/home.orig/user/QubesIncoming'
 
 	else
 
-	  diropts '-m1710'
-	  dodir 'home/user/QubesIncoming'
-	  fowners user:qubes '/home/user' '/home/user/QubesIncoming'
+		diropts '-m1710'
+		dodir 'home/user/QubesIncoming'
+		fowners user:qubes '/home/user' '/home/user/QubesIncoming'
 
 	fi
 
@@ -463,53 +458,59 @@ src_install() {
 	exeinto '/usr/lib/qubes/init'
 	doexe 'vm-systemd/'*'.sh'
 
-
-	for file in "${D}/etc/init.d/"*; do
-
-		[ "${file}" = "${D}/etc/init.d/net.eth0" ] && continue
-		[ -e "${file}" ] && chmod 0700 -- "${file}"
-
-	done
-
 	[ -e "${D}/etc/dispvm-dotfiles.tbz" ] && fperms 0600 '/etc/dispvm-dotfiles.tbz'
-	[ -e "${D}/etc/qubes-rpc/" ] && fperms 0711 '/etc/qubes-rpc/'
-
-	for file in "${D}/etc/qubes-rpc/qubes."*; do
-
-		[ -e "${file}" ] && chmod 0755 -- "${file}"
-
-	done
-
+	[ -e "${D}/etc/qubes-rpc" ] && fperms 0711 '/etc/qubes-rpc/'
+	[ -e "${D}/mnt" ] && fperms 0711 '/mnt'
 	[ -e "${D}/mnt/removable" ] && fperms 0700 '/mnt/removable'
-
-	fperms 0711 '/rw'
-	#fperms 0700 '/rw/config'
-
+	[ -e "${D}/rw" ] && fperms 0711 '/rw'
+	[ -e "${D}/rw/config" ] && fperms 0700 '/rw/config'
 	[ -e "${D}/usr/bin/qrexec-client-vm" ] && fperms 0711 "/usr/bin/qrexec-client-vm"
 	[ -e "${D}/usr/bin/qrexec-fork-server" ] && fperms 0711 "/usr/bin/qrexec-fork-server"
-	[ -e "${D}/usr/bin/xenstore-watch-qubes" ] && fperms 0711 "/usr/bin/xenstore-watch-qubes"
+	[ -e "${D}/usr/bin/xenstore-watch-qubes" ] && fperms 0700 "/usr/bin/xenstore-watch-qubes"
+	[ -e "${D}/usr/lib/qubes" ] && fowners :qubes "/usr/lib/qubes"
+	[ -e "${D}/usr/lib/qubes" ] && fperms 0710 "/usr/lib/qubes"
+	[ -e "${D}/usr/lib/qubes/init" ] && fperms 0700 "/usr/lib/qubes/init"
+	[ -e "${D}/usr/$(get_libdir)/qubes" ] && fowners :qubes "/usr/$(get_libdir)/qubes"
+	[ -e "${D}/usr/$(get_libdir)/qubes" ] && fperms 0710 "/usr/$(get_libdir)/qubes"
 	[ -e "${D}/usr/$(get_libdir)/qubes/close-window" ] && fperms 0711 "/usr/$(get_libdir)/qubes/close-window"
+	[ -e "${D}/usr/$(get_libdir)/qubes/init" ] && fperms 0700 "/usr/$(get_libdir)/qubes/init"
+	[ -e "${D}/usr/$(get_libdir)/qubes/init/functions" ] && fperms 0600 "/usr/$(get_libdir)/qubes/init/functions"
 	[ -e "${D}/usr/$(get_libdir)/qubes/qfile-agent" ] && fperms 0711 "/usr/$(get_libdir)/qubes/qfile-agent"
-	[ -e "${D}/usr/$(get_libdir)/qubes/qfile-unpacker" ] && fperms 0711 "/usr/$(get_libdir)/qubes/qfile-unpacker"
+	[ -e "${D}/usr/$(get_libdir)/qubes/qfile-unpacker" ] && fowners :qubes "/usr/$(get_libdir)/qubes/qfile-unpacker"
+	[ -e "${D}/usr/$(get_libdir)/qubes/qfile-unpacker" ] && fperms 0710 "/usr/$(get_libdir)/qubes/qfile-unpacker"
 	[ -e "${D}/usr/$(get_libdir)/qubes/qopen-in-vm" ] && fperms 0711 "/usr/$(get_libdir)/qubes/qopen-in-vm"
 	[ -e "${D}/usr/$(get_libdir)/qubes/qrexec-agent" ] && fperms 0700 "/usr/$(get_libdir)/qubes/qrexec-agent"
 	[ -e "${D}/usr/$(get_libdir)/qubes/setup-ip" ] && fperms 0700 "/usr/$(get_libdir)/qubes/setup-ip"
 	[ -e "${D}/usr/$(get_libdir)/qubes/tar2qfile" ] && fperms 0711 "/usr/$(get_libdir)/qubes/tar2qfile"
 	[ -e "${D}/usr/$(get_libdir)/qubes/vm-file-editor" ] && fperms 0711 "/usr/$(get_libdir)/qubes/vm-file-editor"
+	[ -e "${D}/usr/sbin/qubes-firewall" ] &&  fperms 0700 '/usr/sbin/qubes-firewall'
+	[ -e "${D}/usr/sbin/qubes-netwatcher" ] &&  fperms 0700 '/usr/sbin/qubes-netwatcher'
 
-	fperms 0700 "/usr/lib/qubes/init"
-	fperms 0700 "/usr/$(get_libdir)/qubes/init"
+	for file in "${D}/etc/init.d/"*; do
 
-	for file in "${D}/usr/$(get_libdir)/qubes/init/"*'.sh'; do
-
-		[ -e "${file}" ] && chmod 0700 -- "${file}"
+		[ "${file}" = "${D}/etc/init.d/net.eth0" ] && continue
+		[ -e "${file}" ] && fperms 0700 -- "${file#${D}}"
 
 	done
 
-	[ -e "${D}/usr/$(get_libdir)/qubes/init/functions" ] && fperms 0600 "/usr/$(get_libdir)/qubes/init/functions"
+	for file in "${D}/etc/qubes-rpc/qubes."*; do
 
-	[ -e "${D}/usr/sbin/qubes-firewall" ] &&  fperms 0700 '/usr/sbin/qubes-firewall'
-	[ -e "${D}/usr/sbin/qubes-netwatcher" ] &&  fperms 0700 '/usr/sbin/qubes-netwatcher'
+		[ -e "${file}" ] && fowners :qubes "${file#${D}}"
+		[ -e "${file}" ] && fperms 0750 "${file#${D}}"
+
+	done
+
+	for file in "${D}/etc/qubes-rpc/qubes."*'.policy'; do
+
+		[ -e "${file}" ] && fperms 0640 -- "${file#${D}}"
+
+	done
+
+	for file in "${D}/usr/$(get_libdir)/qubes/init/"*'.sh'; do
+
+		[ -e "${file}" ] && fperms 0700 -- "${file#${D}}"
+
+	done
 
 	[ -e "${D}/${PYTHON_SITEDIR}/qubes" ] && python_optimize "${D}/${PYTHON_SITEDIR}/qubes"
 	python_optimize "${D}/usr/lib/qubes"
@@ -520,15 +521,15 @@ pkg_preinst() {
 
 	if use template; then
 
-	  use net && qubes_to_runlevel 'net.eth0'
-	  qubes_to_runlevel 'qubes-core'
-	  use iptables && qubes_to_runlevel 'qubes-firewall'
-	  use iptables && qubes_to_runlevel 'qubes-iptables'
-	  use iptables && qubes_to_runlevel 'qubes-netwatcher'
-	  use iptables && qubes_to_runlevel 'qubes-network'
-	  qubes_to_runlevel 'qubes-random-seed'
-	  qubes_to_runlevel 'qubes-qrexec-agent'
-	  use selinux && qubes_to_runlevel 'selinux'
+		use net && qubes_to_runlevel 'net.eth0'
+		qubes_to_runlevel 'qubes-core'
+		use iptables && qubes_to_runlevel 'qubes-firewall'
+		use iptables && qubes_to_runlevel 'qubes-iptables'
+		use iptables && qubes_to_runlevel 'qubes-netwatcher'
+		use iptables && qubes_to_runlevel 'qubes-network'
+		qubes_to_runlevel 'qubes-random-seed'
+		qubes_to_runlevel 'qubes-qrexec-agent'
+		use selinux && qubes_to_runlevel 'selinux'
 
 	fi
 }
@@ -536,6 +537,7 @@ pkg_preinst() {
 pkg_postinst() {
 
 	fcaps cap_setgid,cap_setuid,cap_sys_admin,cap_sys_chroot 'usr/lib/qubes/qfile-unpacker'
+	chmod o-x -- '/usr/lib/qubes/qfile-unpacker'
 
 	echo
 	ewarn "qrexec-agent must be running before qrexec_timeout"

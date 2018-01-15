@@ -5,26 +5,25 @@ EAPI=6
 
 EGIT_REPO_URI='https://github.com/QubesOS/qubes-secpack.git'
 
-inherit eutils git-r3 qubes
-[ "${PV%%[_-]*}" != '9999' ] && inherit versionator
+inherit git-r3 qubes
 
 DESCRIPTION='Keys, security advisories, and integrity attestations from Qubes developers.'
 HOMEPAGE='https://github.com/QubesOS/qubes-secpack'
 
 IUSE=""
-[ "${PV%%[_-]*}" != '9999' ] && KEYWORDS="alpha amd64 hppa ia64 m68k mips ppc ppc64 s390 sh sparc x86"
+[ "${PV%%[_-]*}" != '9999' ] && KEYWORDS="alpha amd64 arm ~arm64 hppa ia64 ~mips ppc ppc64 ~s390 ~sh sparc x86 ~ppc-aix ~amd64-fbsd ~x86-fbsd ~amd64-linux ~arm-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
 LICENSE='GPL-2'
 SLOT='0'
 
-DEPEND="app-crypt/gnupg"
-RDEPEND=""
+HDEPEND="${HDEPEND:-}
+	app-crypt/gnupg"
 
 MY_PV='marmarek_sec_8487a05e'
 
 
 src_unpack() {
 
-	if [ "${PV%%[_-]*}" != '9999' ] && [ -z "${MY_PV}" ]; then
+	if [ "${PV%%[_-]*}" != '9999' ] && [ -z "${MY_PV:-}" ]; then
 
 		die "MY_PV must be set for specific tags"
 
@@ -37,11 +36,6 @@ src_unpack() {
 pkg_nofetch() {
 
 	einfo "If you already have this specific version locally, retry with EVCS_OFFLINE=1."
-}
-
-src_prepare() {
-
-	eapply_user
 }
 
 src_compile() {
@@ -84,14 +78,14 @@ src_compile() {
 
 	done
 
-	gpg --export --compress-level 9 --output "${S}/qubes_pubring.gpg" || die 'Failed to export keyring!'
+	gpg --export --compress-level 9 --output "${T}/qubes_pubring.gpg" || die 'Failed to export keyring!'
 	#gpg --export-ownertrust | cut -d ',' -f 1 -- - | cat -- - > "${S}/qubes_trust.txt" || die 'Failed to export ownertrust!'
 }
 
 src_install() {
 
 	insinto '/usr/share/qubes'
-	doins 'qubes_pubring.gpg'
+	doins "${T}/qubes_pubring.gpg"
 	newins "${FILESDIR}/trustdb.txt" 'qubes_trustdb.txt'
 	newins "${HOME}/.gnupg/trustdb.gpg" 'qubes_trustdb.gpg'
 	doins -r 'canaries'

@@ -1,9 +1,9 @@
-# Copyright 1999-2017 Gentoo Foundation
+# Copyright 1999-2018 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
 
-inherit eutils user
+inherit user
 
 DESCRIPTION='curl for torsocksunix'
 HOMEPAGE='https://github.com/newchain/torsocksunix'
@@ -14,16 +14,28 @@ KEYWORDS="amd64 x86"
 LICENSE='AGPL-3'
 SLOT='0'
 
-DEPEND="net-libs/socket_wrapper
+HDEPEND="${HDEPEND:-}
+	|| (
+		sys-apps/coreutils
+		sys-apps/busybox
+	)"
+
+RDEPEND="${CDEPEND:-}
+	${RDEPEND:-}
+	net-libs/socket_wrapper
 	>=net-misc/socat-2
 	net-proxy/socat_qrexec
-	selinux? ( sec-policy/selinux-curl_socat )
-	virtual/tmpfiles"
+	|| (
+		sys-apps/coreutils
+		sys-apps/busybox
+	)
+	|| (
+		sys-apps/sed
+		sys-apps/busybox
+	)
+	virtual/tmpfiles
+	selinux? ( sec-policy/selinux-curl_socat )"
 
-src_prepare() {
-
-	eapply_user
-}
 
 pkg_setup() {
 
@@ -35,13 +47,23 @@ pkg_setup() {
 
 src_install() {
 
+	diropts -m 0700
+
+	edirs="
+		/etc/conf.d
+		/etc/init.d
+		/usr/lib/tmpfiles.d"
+
+	dodir ${edirs}
+
+
 	newconfd "${FILESDIR}/curl_socat_confd" 'curl_socat'
 	fperms 0600 '/etc/conf.d/curl_socat'
 
 	newinitd "${FILESDIR}/curl_socat_initd" 'curl_socat'
 	fperms 0700 '/etc/init.d/curl_socat'
 
-	exeinto '/usr/local/bin'
+	exeinto '/usr/bin'
 	doexe "${FILESDIR}/curl_wrapper.sh"
 
 	insopts -m0600

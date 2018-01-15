@@ -1,4 +1,4 @@
-# Copyright 2014-2017 Gentoo Foundation
+# Copyright 2014-2018 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="6"
@@ -9,11 +9,12 @@ HOMEPAGE="https://wiki.gentoo.org/wiki/Project:Gentoo-keys"
 LICENSE="GPL-3"
 SLOT="0"
 
-[ "${PV%%[_-]*}" != '9999' ] && KEYWORDS="alpha amd64 hppa ia64 m68k mips ppc ppc64 s390 sh sparc x86"
+[ "${PV%%[_-]*}" != '9999' ] && KEYWORDS="alpha amd64 arm ~arm64 hppa ia64 ~mips ppc ppc64 ~s390 ~sh sparc x86 ~ppc-aix ~amd64-fbsd ~x86-fbsd ~amd64-linux ~arm-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
 
 DEPEND="=app-emulation/qubes-secpack-${PV}"
 
 S="${WORKDIR}"
+
 
 src_install() {
 

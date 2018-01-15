@@ -108,6 +108,22 @@ gen_tunable(qubes_timeprivacy, true)
 
 ## <desc>
 ##	<p>
+##	Allow for copying from and to HOME_DIR/QubesIncoming
+##	</p>
+## </desc>
+
+gen_tunable(qubes_core_filecopy, true)
+
+## <desc>
+##	<p>
+##	    Allow syncing appmenus from dom0
+##	</p>
+## </desc>
+
+gen_tunable(qubes_core_getappmenus, true)
+
+## <desc>
+##	<p>
 ##	    Allow upgrades-installed-check to run portage_fetch and portage
 ##	</p>
 ## </desc>
@@ -211,10 +227,11 @@ role system_r types qrexec-agent_t;
         corecmd_bin_entry_type(qubes-rpc-multiplexer_worker_t)
         role system_r types qubes-rpc-multiplexer_worker_t;
 
-type qrexec-fork-server_t;
-domain_type(qrexec-fork-server_t)
 type qrexec-fork-server_exec_t;
-domain_entry_file(qrexec-fork-server_t, qrexec-fork-server_exec_t)
+corecmd_executable_file(qrexec-fork-server_exec_t)
+
+type qubes-session_exec_t;
+corecmd_executable_file(qubes-session_exec_t)
 
 attribute qrexec-client-vm_domain;
 
@@ -447,16 +464,19 @@ application_domain(qubes-trigger-sync-appmenus_t, qubes-trigger-sync-appmenus_ex
     domain_type(qubes-getappmenus_t)
     domain_entry_file(qubes-getappmenus_t, qubes-getappmenus_exec_t)
     role sysadm_r types qubes-getappmenus_t;
+    role system_r types qubes-getappmenus_t;
 
       type qubes-getappmenus_worker_t;
       domain_type(qubes-getappmenus_worker_t)
       corecmd_bin_entry_type(qubes-getappmenus_worker_t)
       role sysadm_r types qubes-getappmenus_worker_t;
+      role system_r types qubes-getappmenus_worker_t;
 
         type qubes-getappmenus_worker_awk_t;
         domain_type(qubes-getappmenus_worker_awk_t)
         corecmd_bin_entry_type(qubes-getappmenus_worker_awk_t)
         role sysadm_r types qubes-getappmenus_worker_awk_t;
+        role system_r types qubes-getappmenus_worker_awk_t;
 
 attribute qubes-rpc_shell_script_domain;
 
@@ -941,6 +961,8 @@ ifdef(`enable_mls',`
 neverallow ~qrexec-agent_initrc_t qrexec-agent_t : process transition;
 neverallow qrexec-agent_initrc_t qrexec-agent_exec_t : file execute_no_trans;
 
+init_dontaudit_read_state(qrexec-agent_initrc_t)
+
 # meminfo
 #
 kernel_dontaudit_read_system_state(qrexec-agent_initrc_t)
@@ -1086,21 +1108,24 @@ userdom_use_unpriv_users_fds(qrexec-client-vm_domain)
 userdom_use_user_ptys(qrexec-client-vm_domain)
 
 
-# /dev/xen/xenbus
-#
-allow qrexec-client-vm_domain device_t : chr_file { getattr read write open };
-
 # gntalloc
 #
 allow qrexec-client-vm_domain xen_device_t : chr_file { read write open ioctl };
 
-# /proc/xen/privcmd
+# privcmd
 #
 allow qrexec-client-vm_domain xenfs_t : file { read write open ioctl };
 allow qrexec-client-vm_domain device_t : chr_file { read write open ioctl };
+#allowxperm qrexec-client-vm_domain xen_device_t : chr_file ioctl { 0x5000 0x5005 };
+#neverallowxperm qrexec-client-vm_domain xen_device_t : chr_file ioctl ~{ 0x5000 0x5005 };
 
-#allowxperm qrexec-client-vm_domain xen_device_t : chr_file ioctl { 0x4502 0x4504 0x4705 0x4706 0x4707 };
-#neverallowxperm qrexec-client-vm_domain xen_device_t : chr_file ioctl ~{ 0x4502 0x4504 0x4705 0x4706 0x4707 };
+# xenbus
+#
+allow qrexec-client-vm_domain device_t : chr_file { getattr read write open };
+allow qrexec-client-vm_domain xen_device_t : chr_file { getattr read write open };
+
+#allowxperm qrexec-client-vm_domain xen_device_t : chr_file ioctl { 0x4502 0x4504 0x4705 0x4706 0x4707 0x5000 0x5005 };
+#neverallowxperm qrexec-client-vm_domain xen_device_t : chr_file ioctl ~{ 0x4502 0x4504 0x4705 0x4706 0x4707 0x5000 0x5005 };
 
 
 #########################################
@@ -2107,7 +2132,6 @@ ifndef(`qubes_core_initrc_debug',`
     ifndef(`qubes_core_initrc_debug',`
 
       # null
-      #
       #allow qubes-service_worker_t qubes-service_initrc_t : fd use;
       dontaudit qubes-service_worker_t qubes-service_initrc_t : fd use;
 
@@ -2223,14 +2247,9 @@ qubes_core_create_qubes_var_run_files(qubesdb-daemon_t)
 qubes_core_write_qubes_var_run_files(qubesdb-daemon_t)
 qubes_core_delete_qubes_var_run_files(qubesdb-daemon_t)
 
-# /dev/xen/xenbus
-#
-allow qubesdb-daemon_t device_t : chr_file { read write getattr open ioctl };
-auditallow qubesdb-daemon_t device_t : chr_file ioctl;
-
 # /dev/xen/evtchn
 #
-allow qubesdb-daemon_t xen_device_t : chr_file ioctl;
+allow qubesdb-daemon_t xen_device_t : chr_file { read write open ioctl };
 #allowxperm qubesdb-daemon_t xen_device_t : chr_file ioctl { 0x4501 0x4504 0x4700 0x4707 };
 #neverallowxperm qubesdb-daemon_t xen_device_t : chr_file ioctl ~{ 0x4501 0x4504 0x4700 0x4707 };
 
@@ -2240,12 +2259,21 @@ allow qubesdb-daemon_t xen_device_t : chr_file { read write open };
 
 fs_search_xenfs(qubesdb-daemon_t)
 #
-# /proc/xen/privcmd:
+# privcmd:
 #
-allow qubesdb-daemon_t xenfs_t : file { read open write ioctl };
-allow qubesdb-daemon_t device_t : chr_file { read open write ioctl };
-#allowxperm qubesdb-daemon_t xenfs_t : file ioctl 0x5000;
-#neverallowxperm qubesdb-daemon_t xenfs_t : file ioctl ~0x5000;
+allow qubesdb-daemon_t xenfs_t : file { read write open ioctl };
+allow qubesdb-daemon_t device_t : chr_file { read write open ioctl };
+#allowxperm qubesdb-daemon_t xenfs_t : file ioctl { 0x5000 0x5005 };
+#neverallowxperm qubesdb-daemon_t xenfs_t : file ioctl ~{ 0x5000 0x5005 };
+#allowxperm qubesdb-daemon_t xen_device_t : chr_file ioctl { 0x5000 0x5005 };
+#neverallowxperm qubesdb-daemon_t xen_device_t : chr_file ioctl ~{ 0x5000 0x5005 };
+
+# /dev/xen/xenbus
+#
+allow qubesdb-daemon_t device_t : chr_file { getattr read write open ioctl };
+allow qubesdb-daemon_t xen_device_t : chr_file { getattr read write open ioctl };
+
+#neverallowxperm qubesdb-daemon_t xen_device_t : chr_file ioctl ~{ 0x4501 0x4504 0x4700 0x4707 0x5000 0x5005 };
 
 
 #########################################
@@ -2329,6 +2357,8 @@ allow qubesdb-daemon_initrc_t qubesdb-daemon_t : process { signal signull };
 # qubes-trigger-sync-appmenus_t local policy
 #
 
+allow qubes-trigger-sync-appmenus_t self : fifo_file read;
+
 corecmd_bin_domtrans(qubes-trigger-sync-appmenus_t, qubes-trigger-sync-appmenus_worker_t)
 neverallow ~qubes-trigger-sync-appmenus_t qubes-trigger-sync-appmenus_worker_t : process transition;
 neverallow qubes-trigger-sync-appmenus_t bin_t : file execute_no_trans;
@@ -2345,8 +2375,6 @@ neverallow ~qubes-trigger-sync-appmenus_t sync-appmenus_qrexec-client-vm_t : pro
 neverallow qubes-trigger-sync-appmenus_t qrexec-client-vm_exec_t : file execute_no_trans;
 
 
-allow qubes-trigger-sync-appmenus_t self : fifo_file read;
-
 allow qubes-trigger-sync-appmenus_t shell_exec_t : file { read execute };
 
 
@@ -2355,18 +2383,17 @@ allow qubes-trigger-sync-appmenus_t shell_exec_t : file { read execute };
 # qubes-trigger-sync-appmenus_worker_t local policy
 #
 
+# pipe
+allow qubes-trigger-sync-appmenus_worker_t qubes-trigger-sync-appmenus_t : fd use;
+allow qubes-trigger-sync-appmenus_worker_t qubes-trigger-sync-appmenus_t : fifo_file { write getattr };
+allow qubes-trigger-sync-appmenus_worker_t qubes-trigger-sync-appmenus_t : process sigchld;
+
 getty_use_fds(qubes-trigger-sync-appmenus_worker_t)
 userdom_use_user_ttys(qubes-trigger-sync-appmenus_worker_t)
 
 
 neverallow qubes-trigger-sync-appmenus_worker_t ~bin_t : file entrypoint;
 
-# pipe
-#
-allow qubes-trigger-sync-appmenus_worker_t qubes-trigger-sync-appmenus_t : fd use;
-allow qubes-trigger-sync-appmenus_worker_t qubes-trigger-sync-appmenus_t : fifo_file { write getattr };
-
-allow qubes-trigger-sync-appmenus_worker_t qubes-trigger-sync-appmenus_t : process sigchld;
 
 allow qubes-trigger-sync-appmenus_worker_t xenfs_t : file { getattr read write open };
 
@@ -2463,8 +2490,7 @@ allow qvm-copy-to-vm_t shell_exec_t : file { read execute };
     # qvm-copy-to-vm-qrexec-client-vm_sh_t local policy
     #
 
-    # shell bin
-    #
+    # bin
     allow qvm-copy-to-vm-qrexec-client-vm_sh_t qvm-copy-to-vm-qrexec-client-vm_t : fd use;
     allow qvm-copy-to-vm-qrexec-client-vm_sh_t qvm-copy-to-vm-qrexec-client-vm_t : process sigchld;
     allow qvm-copy-to-vm-qrexec-client-vm_sh_t qvm-copy-to-vm-qrexec-client-vm_t : unix_stream_socket { read write };
@@ -2828,6 +2854,17 @@ tunable_policy(`qubes_backdoor',`
 ')
 
 
+tunable_policy(`qubes_core_filecopy',`
+
+	#########################################
+	#
+	# qrexec-agent_su_t local policy
+	#
+
+	userdom_search_user_home_dirs(qrexec-agent_su_t)
+')
+
+
 tunable_policy(`qubes_core_unrestricted_vmshell',`
 
 	#########################################
@@ -2946,6 +2983,7 @@ tunable_policy(`qubes_core_pass_io',`
 	allow qrexec-agent_worker_t qrexec-agent_t : unix_stream_socket getattr;
 ')
 
+
 tunable_policy(`qubes_core_qubes_service_depend_generic_initrc',`
 
 	gen_require(`
@@ -2959,6 +2997,55 @@ tunable_policy(`qubes_core_qubes_service_depend_generic_initrc',`
 	#
 
 	qubes_core_read_inherited_qubes_service_var_run(initrc_t)
+')
+
+
+tunable_policy(`qubes_core_getappmenus',`
+
+	gen_require(`
+
+		type initrc_t;
+	')
+
+	#########################################
+	#
+	# qubes-rpc-multiplexer_t local policy
+	#
+
+	allow qubes-rpc-multiplexer_t qubes-getappmenus_t : process sigchld;
+
+	domain_auto_transition_pattern(qubes-rpc-multiplexer_t, qubes-getappmenus_exec_t, qubes-getappmenus_t)
+
+	#########################################
+	#
+	# qubes-getappmenus_t policy
+	#
+
+	# bin, ld, stderr
+	allow qubes-getappmenus_t qubes-rpc-multiplexer_t : fd use;
+
+	qubes_core_use_qrexec_agent_fds(qubes-getappmenus_t)
+	qubes_core_rw_qrexec_agent_stream_sockets(qubes-getappmenus_t)
+
+	qubes_core_sigchld_qrexec_agent_su(qubes-getappmenus_t)
+
+	qubes_core_write_inherited_qubes_rpc_stderror(qubes-getappmenus_t)
+
+	#########################################
+	#
+	# qubes-getappmenus_worker_t policy
+	#
+
+	qubes_core_use_qrexec_agent_fds(qubes-getappmenus_worker_t)
+	qubes_core_rw_qrexec_agent_stream_sockets(qubes-getappmenus_worker_t)
+
+	#########################################
+	#
+	# qubes-getappmenus_worker_awk_t policy
+	#
+
+	qubes_core_use_qrexec_agent_fds(qubes-getappmenus_worker_awk_t)
+	qubes_core_rw_qrexec_agent_stream_sockets(qubes-getappmenus_worker_awk_t)
 ')
 
 
@@ -3212,4 +3299,12 @@ optional_policy(`
 #
 
 userdom_search_user_home_dirs(qubes-rpc-multiplexer_sh_t)
-auditallow user_t qvm-copy-to-vm_t:process transition;
+
+
+# testing
+allow qvm-copy-to-vm_worker_t qubes_shared_home_t : lnk_file { getattr read create write setattr unlink };
+auditallow qvm-copy-to-vm_worker_t qubes_shared_home_t : lnk_file { read create write setattr unlink };
+#
+allow qfile-agent_t qubes_shared_home_t : lnk_file { getattr read create write setattr unlink };
+auditallow qfile-agent_t qubes_shared_home_t : lnk_file { create write setattr unlink };
+
